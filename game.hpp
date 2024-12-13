@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <functional>
+#include "utils.hpp"
+#include "constant.hpp"
 
 namespace game {
-    typedef long long cashType;
-
     namespace gamePlay {        
         class Tile {
             public:
@@ -35,7 +35,7 @@ namespace game {
             player::Player* owner;
 
             public:
-            Buildable(cashType _cost = 0, cashType _rent = 0) : Tile(buildable), cost(_cost), rent(_rent), owned(false), owner(nullptr) {}
+            Buildable(cashType _cost = constant::defaultCost, cashType _rent = constant::defaultRent) : Tile(buildable), cost(_cost), rent(_rent), owned(false), owner(nullptr) {}
             ~Buildable() override {}
 
             bool isOwned() const {
@@ -55,6 +55,7 @@ namespace game {
             }
 
             int getRent() const {
+                // Dynamic rent TODO
                 return rent;
             }
 
@@ -86,7 +87,7 @@ namespace game {
             double taxRate;
 
             public:
-            Tax(double _rate = 0.0f) : Tile(tax), taxRate(_rate) {}
+            Tax(double _rate = constant::defaultTaxRate) : Tile(tax), taxRate(_rate) {}
             ~Tax() override {}
 
             double getTaxRate() const {
@@ -107,16 +108,29 @@ namespace game {
 
         class GameInstance {
             private:
+            utils::Logger logger;
+
             std::vector<Tile*> tiles;
             std::vector<player::Player*> players;
             int currentPlayerIndex;
 
-            public:
-            std::function<bool(player::Player* player, Buildable* tile)> callbackBuild = [](player::Player*, Buildable*)->bool{ return true; };
-            std::function<void(player::Player* player, Buildable* tile)> callbackRent = [](player::Player*, Buildable*)->void{};
-            std::function<void(player::Player* player, Buildable* tile)> callbackTax = [](player::Player*, Buildable*)->void{};
+            public: 
+            // Notifies the client when a player's data has been modified, if no other callback functions are triggered.
+            std::function<void(player::Player* player)> callbackPlayerUpdate = [](player::Player*)->void{};
 
-            GameInstance() : currentPlayerIndex(0) {}
+            // Whether the player should buy a tile if they can.
+            std::function<bool(player::Player* player, Buildable* tile)> callbackBuy = [](player::Player*, Buildable*)->bool{ return true; };
+
+            // Player has paid rent.
+            std::function<void(player::Player* player, Buildable* tile)> callbackRent = [](player::Player*, Buildable*)->void{};
+
+            // Player has paid tax.
+            std::function<void(player::Player* player, Tax* tile)> callbackTax = [](player::Player*, Tax*)->void{};
+
+            // Player has received cash for passing startpoint.
+            std::function<void(player::Player* player, Home* home)> callbackHomeReward = [](player::Player*, Home*)->void{};
+
+            GameInstance() : currentPlayerIndex(0), logger() {}
             ~GameInstance() {}
             
             const std::vector<Tile*>& getTiles() const {
@@ -154,18 +168,22 @@ namespace game {
                     case Tile::buildable: {
                         Buildable* buildableTile = static_cast<Buildable*>(tile);
                         if (!buildableTile->isOwned()) {
-                            // UI Callback event to be added
-                            if (callbackBuild(player, buildableTile)) {
-                                if (player->getCash() >= buildableTile->getCost()) {
+                            if (player->getCash() >= buildableTile->getCost()) {
+                                if (callbackBuy(player, buildableTile)) {
                                     player->setCash(player->getCash() - buildableTile->getCost());
                                     buildableTile->setOwner(player);
                                 }
                             }
+                            // Auction
+                            // TODO
                         } else if (buildableTile->getOwner() != player) {
                             // Pay rent
-                            player->setCash(player->getCash() - buildableTile->getRent());
-                            buildableTile->getOwner()->setCash(buildableTile->getOwner()->getCash() + buildableTile->getRent());
+                            player->addCash(-buildableTile->getRent());
+                            buildableTile->getOwner()->addCash(buildableTile->getRent());
                             callbackRent(player, buildableTile);
+                        } else if (buildableTile->getOwner() == player) {
+                            // Build
+                            // TODO
                         }
                         break;
                     }
@@ -173,12 +191,17 @@ namespace game {
                         break;
                     case Tile::tax: {
                         Tax* taxTile = static_cast<Tax*>(tile);
-                        //player->setCash(player->getCash() - taxTile->getTaxAmount());
+                        player->setCash(player->getCash() * (1.0f - taxTile->getTaxRate()));
+                        callbackTax(player, taxTile);
                         break;
                     }
                     case Tile::random:
+                        // TODO
                         break;
                     case Tile::home:
+                        Home* homeTile = static_cast<Home*>(tile);
+                        player->addCash(constant::homeReward);
+                        callbackHomeReward(player, homeTile);
                         break;
                     default:
                         break;
@@ -195,7 +218,7 @@ namespace game {
 
             public:
 
-            Player(cashType initialCash = 0) : cash(initialCash), position(0) {}
+            Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0) {}
             virtual ~Player() {}
 
             cashType getCash() {
@@ -224,7 +247,7 @@ namespace game {
             private:
             public:
 
-            ComputerPlayer(cashType initialCash = 0) : Player(initialCash) {}
+            ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
             ~ComputerPlayer() override {}
         };
     }
