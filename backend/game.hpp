@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <functional>
+#include <array>
 #include "utils.hpp"
 #include "constant.hpp"
 
@@ -28,14 +29,27 @@ namespace game {
         };
 
         class Buildable : public Tile {
+            public:
+            struct buildStatus {
+                int house;
+                int hotel;
+            };
             private:
-            cashType cost;
-            cashType rent;
+            cashType plotCost;
+            cashType houseCost;
+            cashType hotelCost;
+            cashType basicRent;
+            std::array<cashType, 5> houseRent;
+            cashType hotelRent;
             bool owned;
             player::Player* owner;
+            buildStatus status;
 
             public:
-            Buildable(cashType _cost = constant::defaultCost, cashType _rent = constant::defaultRent) : Tile(buildable), cost(_cost), rent(_rent), owned(false), owner(nullptr) {}
+            Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, cashType _hotelCost = constant::defaultHotelCost, 
+                      cashType _basicRent = constant::defaultBasicRent, auto& _houseRent = constant::defaultHouseRent, cashType _hotelRent = constant::defaultHotelRent) 
+                    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), hotelCost(_hotelCost), basicRent(_basicRent), houseRent(_houseRent), hotelRent(_hotelRent), 
+                      owned(false), owner(nullptr), status({0, 0}) {}
             ~Buildable() override {}
 
             bool isOwned() const {
@@ -50,22 +64,35 @@ namespace game {
                 owner = newOwner;
             }
 
-            int getCost() const {
-                return cost;
+            cashType getPlotCost() const {
+                return plotCost;
             }
 
-            int getRent() const {
+            cashType getHouseCost() const {
+                return houseCost;
+            }
+            
+            cashType getHotelCost() const {
+                return hotelCost;
+            }
+
+            cashType getRent() const {
                 // Dynamic rent TODO
+                cashType rent = basicRent;
+                if (status.house) 
+                    rent += houseRent[status.house - 1];
+                if (status.hotel) 
+                    rent += hotelRent;
                 return rent;
             }
 
-            void setCost(int newCost) {
-                cost = newCost;
+            buildStatus getStatus() const {
+                return status;
             }
 
-            void setRent(int newRent) {
-                rent = newRent;
-            }
+            void setStatus(buildStatus newStatus) {
+                status = newStatus;
+            } 
         };
 
         class Home : public Tile {
@@ -168,9 +195,9 @@ namespace game {
                     case Tile::buildable: {
                         Buildable* buildableTile = static_cast<Buildable*>(tile);
                         if (!buildableTile->isOwned()) {
-                            if (player->getCash() >= buildableTile->getCost()) {
+                            if (player->getCash() >= buildableTile->getPlotCost()) {
                                 if (callbackBuy(player, buildableTile)) {
-                                    player->setCash(player->getCash() - buildableTile->getCost());
+                                    player->setCash(player->getCash() - buildableTile->getPlotCost());
                                     buildableTile->setOwner(player);
                                 }
                             }
@@ -217,7 +244,6 @@ namespace game {
             int position;
 
             public:
-
             Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0) {}
             virtual ~Player() {}
 
@@ -246,7 +272,6 @@ namespace game {
         class ComputerPlayer : Player {
             private:
             public:
-
             ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
             ~ComputerPlayer() override {}
         };
