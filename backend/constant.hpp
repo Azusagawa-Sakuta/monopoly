@@ -10,12 +10,14 @@ namespace game {
         double defaultTaxRate = 0.0f;
         cashType defaultPlotCost = 10000;
         cashType defaultHouseCost = 2000;
-        cashType defaultHotelCost = 5000;
         cashType defaultBasicRent = 1000;
-        std::array<cashType, 5> defaultHouseRent = {1000, 2000, 3000, 4000, 5000};
-        cashType defaultHotelRent = 4000;
+        std::array<cashType, 6> defaultHouseRent = {1000, 2000, 4000, 7000, 10000, 15000};
         cashType initialCash = 0;
         cashType homeReward = 0;
+        cashType auctionReservePrice = 1000;
+        cashType auctionBidIncrement = 500;
+        int diceMinimum = 1;
+        int diceMaximum = 6;
     }
 }
 #endif
