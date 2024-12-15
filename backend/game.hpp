@@ -67,7 +67,7 @@ namespace game {
             cashType getPlotCost() const {
                 return plotCost;
             }
-            
+
             cashType getHouseCost() const {
                 return houseCost;
             }
@@ -147,8 +147,14 @@ namespace game {
             // Notifies the client when a player's data has been modified or should be updated, if no other callback functions are triggered.
             std::function<void(player::Player* player)> callbackPlayerUpdate = [](player::Player*)->void{};
 
-            // Player has thrown a dice.
-            std::function<void(player::Player* player, int diceValue)> callbackDice = [](player::Player*, int)->void{};
+            // Player has thrown two dice.
+            std::function<void(player::Player* player, int diceValue1, int diceValue2)> callbackDice = [](player::Player*, int, int)->void{};
+            
+            // Player has thrown a 3rd die.
+            std::function<void(player::Player* player, int diceValue3)> callbackDice3rd = [](player::Player*, int)->void{};
+
+            // Player has been jailed.
+            std::function<void(player::Player* player, Prison* prison)> callbackPrison = [](player::Player*, Prison*)->void{};
 
             // Whether the player should buy a tile if they can.
             std::function<bool(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy = [](player::Player*, Buildable*, cashType)->bool{ return true; };
@@ -219,10 +225,34 @@ namespace game {
             }
 
             void tick() {
-                // TODO: CHECK IF IN PRISON
-                int diceValue = rollDice();
-                callbackDice(getCurrentPlayer(), diceValue);
-                movePlayer(getCurrentPlayer(), diceValue);
+                if (tiles[getCurrentPlayer()->getPosition()]->getType() == Tile::prison) {
+                    // TODO
+                    for (int i = 0; i < 3; i++) {
+                        int diceValue1 = rollDice(), diceValue2 = rollDice();
+                        callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
+                        if (diceValue1 == diceValue2)
+                        {
+                            movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
+                            nextPlayer();
+                            return;
+                        }
+                        // TODO: Pay to free
+                    }
+                    nextPlayer();
+                    return;
+                }
+                int diceValue1 = rollDice(), diceValue2 = rollDice();
+                callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
+                if (diceValue1 == diceValue2) {
+                    int diceValue3 = rollDice();
+                    callbackDice3rd(getCurrentPlayer(), diceValue3);
+                    if (diceValue3 == diceValue1) {
+                        // TODO: FIND PRISON TILE
+                        //callbackPrison(getCurrentPlayer(), static_cast<Prison*>(tiles[0]));
+                    } else 
+                        movePlayer(getCurrentPlayer(), diceValue1 + diceValue2 + diceValue3);
+                } else 
+                    movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
                 nextPlayer();
             }
 
