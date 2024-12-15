@@ -72,14 +72,16 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Set up Visual Studio Environment
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
     - name: Set up Qt
       uses: jurplel/install-qt-action@v3
       with:
         version: '5.15.2'
         host: 'windows'
-
-    - name: Set up MSBuild
-      uses: microsoft/setup-msbuild@v2
 
     - name: Build Qt Project
       shell: cmd
