@@ -1,0 +1,32 @@
+name: Build Project
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup environment
+        run: |
+          sudo apt update
+          sudo apt install qtcreator qtbase5-dev qt5-qmake
+          sudo apt install build-essential libgl1-mesa-dev
+
+      - name: Build
+        run: |
+          cd ../QtApp
+          qmake
+          make
+
+      - name: Run Tests
+        run: |
+          cd ../QtApp
+          ./QtApp
