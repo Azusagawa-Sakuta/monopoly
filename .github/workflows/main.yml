@@ -94,7 +94,7 @@ jobs:
       shell: cmd
       run: |
         cd build\release
-        windeployqt monopoly.exe
+        windeployqt monopoly.exe --release --no-compiler-runtime
 
     - uses: actions/upload-artifact@v4
       with:
