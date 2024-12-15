@@ -154,7 +154,10 @@ namespace game {
             std::function<void(player::Player* player, int diceValue3)> callbackDice3rd = [](player::Player*, int)->void{};
 
             // Player has been jailed.
-            std::function<void(player::Player* player, Prison* prison)> callbackPrison = [](player::Player*, Prison*)->void{};
+            std::function<void(player::Player* player, Prison* tile)> callbackPrison = [](player::Player*, Prison*)->void{};
+
+            // Whether the player should pay to escape the prison if they can.
+            std::function<bool(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut = [](player::Player*, Prison*, cashType)->bool{ return false; };
 
             // Whether the player should buy a tile if they can.
             std::function<bool(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy = [](player::Player*, Buildable*, cashType)->bool{ return true; };
@@ -205,6 +208,19 @@ namespace game {
                 return ownTiles;
             }
 
+            const int findNextTile(Tile::TileType type, int pos) const {
+                auto it = tiles.begin() + pos;
+                for (int i = 0; i < tiles.size(); i++) {
+                    if (it == tiles.end()) 
+                        it = tiles.begin();
+                    else 
+                        it++;
+                    if ((*it)->getType() == type) 
+                        return it - tiles.begin();
+                }
+                return -1;
+            }
+
             void addTile(Tile* tile) {
                 tiles.push_back(tile);
             }
@@ -225,21 +241,28 @@ namespace game {
             }
 
             void tick() {
-                if (tiles[getCurrentPlayer()->getPosition()]->getType() == Tile::prison) {
-                    // TODO
-                    for (int i = 0; i < 3; i++) {
-                        int diceValue1 = rollDice(), diceValue2 = rollDice();
-                        callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
-                        if (diceValue1 == diceValue2)
-                        {
-                            movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
+                if (tiles[getCurrentPlayer()->getPosition()]->getType() == Tile::TileType::prison) {
+                    // What the fricking hell is this?
+                    if (getCurrentPlayer()->getPrisonTime() < 3) { 
+                        for (int i = 0; i < 3; i++) {
+                            int diceValue1 = rollDice(), diceValue2 = rollDice();
+                            callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
+                            if (diceValue1 == diceValue2) {
+                                movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
+                                nextPlayer();
+                                return;
+                            }
+                        }
+                        if (getCurrentPlayer()->getCash() >= constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()] 
+                            && callbackPrisonPayOut(getCurrentPlayer(), static_cast<Prison*>(tiles[getCurrentPlayer()->getPosition()]), constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()])) {
+                            getCurrentPlayer()->addCash(-constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()]);
+                            getCurrentPlayer()->setPrisonTime(0);
+                        } else {
+                            getCurrentPlayer()->setPrisonTime(getCurrentPlayer()->getPrisonTime() + 1);
                             nextPlayer();
                             return;
                         }
-                        // TODO: Pay to free
                     }
-                    nextPlayer();
-                    return;
                 }
                 int diceValue1 = rollDice(), diceValue2 = rollDice();
                 callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
@@ -247,8 +270,12 @@ namespace game {
                     int diceValue3 = rollDice();
                     callbackDice3rd(getCurrentPlayer(), diceValue3);
                     if (diceValue3 == diceValue1) {
-                        // TODO: FIND PRISON TILE
-                        //callbackPrison(getCurrentPlayer(), static_cast<Prison*>(tiles[0]));
+                        int prisonPos = findNextTile(Tile::TileType::prison, getCurrentPlayer()->getPosition());
+                        if (prisonPos != -1) {
+                            getCurrentPlayer()->setPosition(prisonPos);
+                            getCurrentPlayer()->setPrisonTime(0);
+                            callbackPrison(getCurrentPlayer(), static_cast<Prison*>(tiles[prisonPos]));
+                        }
                     } else 
                         movePlayer(getCurrentPlayer(), diceValue1 + diceValue2 + diceValue3);
                 } else 
@@ -307,6 +334,8 @@ namespace game {
                         break;
                     }
                     case Tile::prison:
+                        player->setPrisonTime(0);
+                        callbackPrison(player, static_cast<Prison*>(tile));
                         break;
                     case Tile::tax: {
                         Tax* taxTile = static_cast<Tax*>(tile);
@@ -332,9 +361,10 @@ namespace game {
             private:
             cashType cash;
             int position;
+            int prisonTime;
 
             public:
-            Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0) {}
+            Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0), prisonTime(0) {}
             virtual ~Player() {}
 
             cashType getCash() {
@@ -356,6 +386,14 @@ namespace game {
 
             void setPosition(int pos) { 
                 position = pos; 
+            }
+            
+            int getPrisonTime() const {
+                return prisonTime;
+            }
+
+            void setPrisonTime(int time) {
+                prisonTime = time;
             }
         };
 

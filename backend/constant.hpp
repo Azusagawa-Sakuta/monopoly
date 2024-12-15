@@ -16,6 +16,7 @@ namespace game {
         cashType homeReward = 0;
         cashType auctionReservePrice = 1000;
         cashType auctionBidIncrement = 500;
+        std::array<cashType, 3> prisonReleasePrice = {5000, 3500, 1000};
         int diceMinimum = 1;
         int diceMaximum = 6;
     }
