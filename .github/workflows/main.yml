@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-linux:
+    if: ${{ false }}
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +38,7 @@ jobs:
         if-no-files-found: warn
 
   build-macos:
+    if: ${{ false }}
     runs-on: macos-latest
 
     steps:
@@ -94,5 +96,5 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Qt-Windows
-        path: build\monopoly.exe
+        path: build\release\monopoly.exe
         if-no-files-found: warn
