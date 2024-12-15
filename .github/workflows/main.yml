@@ -1,10 +1,7 @@
 name: Qt Build
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build-linux:
@@ -93,8 +90,14 @@ jobs:
         qmake ..\QtApp\test.pro
         nmake
 
+    - name: Deploy Qt Dependencies
+      shell: cmd
+      run: |
+        cd build\release
+        windeployqt monopoly.exe
+
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Qt-Windows
-        path: build\release\monopoly.exe
+        path: build\release\**
         if-no-files-found: warn
