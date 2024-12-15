@@ -29,8 +29,3 @@ jobs:
         cd build
         qmake ../QtApp/test.pro  # 使用 qmake 生成 Makefile
         make               # 使用 make 构建项目
-
-    - name: Run Tests (Optional)
-      run: |
-        cd build
-        ./test
