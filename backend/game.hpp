@@ -4,6 +4,9 @@
 #include <vector>
 #include <functional>
 #include <array>
+#include <algorithm>
+#include <utility>
+#include <random>
 #include "utils.hpp"
 #include "constant.hpp"
 
@@ -37,19 +40,16 @@ namespace game {
             private:
             cashType plotCost;
             cashType houseCost;
-            cashType hotelCost;
             cashType basicRent;
-            std::array<cashType, 5> houseRent;
-            cashType hotelRent;
+            std::array<cashType, 6> houseRent;
             bool owned;
             player::Player* owner;
             buildStatus status;
 
             public:
-            Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, cashType _hotelCost = constant::defaultHotelCost, 
-                      cashType _basicRent = constant::defaultBasicRent, auto& _houseRent = constant::defaultHouseRent, cashType _hotelRent = constant::defaultHotelRent) 
-                    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), hotelCost(_hotelCost), basicRent(_basicRent), houseRent(_houseRent), hotelRent(_hotelRent), 
-                      owned(false), owner(nullptr), status({0, 0}) {}
+            Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
+                      cashType _basicRent = constant::defaultBasicRent, auto& _houseRent = constant::defaultHouseRent) 
+                    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owned(false), owner(nullptr), status({0, 0}) {}
             ~Buildable() override {}
 
             bool isOwned() const {
@@ -67,13 +67,9 @@ namespace game {
             cashType getPlotCost() const {
                 return plotCost;
             }
-
+            
             cashType getHouseCost() const {
                 return houseCost;
-            }
-            
-            cashType getHotelCost() const {
-                return hotelCost;
             }
 
             cashType getRent() const {
@@ -81,8 +77,6 @@ namespace game {
                 cashType rent = basicRent;
                 if (status.house) 
                     rent += houseRent[status.house - 1];
-                if (status.hotel) 
-                    rent += hotelRent;
                 return rent;
             }
 
@@ -135,31 +129,57 @@ namespace game {
 
         class GameInstance {
             private:
-            utils::Logger logger;
-
             std::vector<Tile*> tiles;
             std::vector<player::Player*> players;
             int currentPlayerIndex;
 
+            GameInstance() : currentPlayerIndex(0) {
+                utils::Logger::getInstance();
+            }
+
+            ~GameInstance() {}
+
+            GameInstance(const GameInstance&) = delete;
+
+            GameInstance& operator=(const GameInstance&) = delete;
+
             public: 
-            // Notifies the client when a player's data has been modified, if no other callback functions are triggered.
+            // Notifies the client when a player's data has been modified or should be updated, if no other callback functions are triggered.
             std::function<void(player::Player* player)> callbackPlayerUpdate = [](player::Player*)->void{};
 
+            // Player has thrown a dice.
+            std::function<void(player::Player* player, int diceValue)> callbackDice = [](player::Player*, int)->void{};
+
             // Whether the player should buy a tile if they can.
-            std::function<bool(player::Player* player, Buildable* tile)> callbackBuy = [](player::Player*, Buildable*)->bool{ return true; };
+            std::function<bool(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy = [](player::Player*, Buildable*, cashType)->bool{ return true; };
 
             // Player has paid rent.
-            std::function<void(player::Player* player, Buildable* tile)> callbackRent = [](player::Player*, Buildable*)->void{};
+            std::function<void(player::Player* player, Buildable* tile, cashType cashPaid)> callbackRent = [](player::Player*, Buildable*, cashType)->void{};
 
             // Player has paid tax.
-            std::function<void(player::Player* player, Tax* tile)> callbackTax = [](player::Player*, Tax*)->void{};
+            std::function<void(player::Player* player, Tax* tile, cashType cashPaid)> callbackTax = [](player::Player*, Tax*, cashType)->void{};
 
             // Player has received cash for passing startpoint.
-            std::function<void(player::Player* player, Home* home)> callbackHomeReward = [](player::Player*, Home*)->void{};
+            std::function<void(player::Player* player, Home* tile, cashType cashReceived)> callbackHomeReward = [](player::Player*, Home*, cashType)->void{};
 
-            GameInstance() : currentPlayerIndex(0), logger() {}
-            ~GameInstance() {}
+            // A tile should be auctioned. Returning value less than reserve price or nullptr means no one has participated or the auction has failed.
+            std::function<std::pair<cashType, player::Player*>(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction 
+                = [](Buildable*, cashType, cashType)->std::pair<cashType, player::Player*>{ return std::make_pair<cashType, player::Player*>(0, nullptr); };
             
+            // Player has to sell their own properties if the total value of their properties can cover the debt. WIP
+            //std::function<std::vector<Tile*>(player::Player* player, std::vector<Tile*>& tilesToBeSold)> callbackAuction;
+            
+            // Whether the player should build a house or hotel if they can. WIP
+            //std::function<bool(player::Player* player, Buildable* tile)> callbackHouseBuild = [](player::Player*, Buildable*)->bool{ return true; };
+            
+            // Notifies the client when a tile's data has been modified, if no other callback functions are triggered.
+            std::function<void(Tile* tile)> callbackTileUpdate = [](Tile*)->void{};
+
+            static GameInstance& getInstance() {
+                static GameInstance instance;
+                return instance;
+            }
+
             const std::vector<Tile*>& getTiles() const {
                 return tiles;
             }
@@ -168,6 +188,17 @@ namespace game {
                 return players;
             }
             
+            const std::vector<Tile*> findOwnTiles(player::Player* p) const {
+                std::vector<Tile*> ownTiles;
+                std::copy_if(tiles.begin(), tiles.end(), std::back_inserter(ownTiles), [p](Tile* t) {
+                    if (t->getType() == Tile::buildable) {
+                        return static_cast<Buildable*>(t)->getOwner() == p;
+                    }
+                    return false;
+                });
+                return ownTiles;
+            }
+
             void addTile(Tile* tile) {
                 tiles.push_back(tile);
             }
@@ -176,8 +207,23 @@ namespace game {
                 players.push_back(player);
             }
 
+            static int rollDice(int minimum = constant::diceMinimum, int maximum = constant::diceMaximum) {
+                std::random_device rd;
+                std::mt19937 gen(rd());
+                std::uniform_int_distribution<int> dis(minimum, maximum);
+                return dis(gen);
+            }
+
             player::Player* getCurrentPlayer() const {
                 return players[currentPlayerIndex];
+            }
+
+            void tick() {
+                // TODO: CHECK IF IN PRISON
+                int diceValue = rollDice();
+                callbackDice(getCurrentPlayer(), diceValue);
+                movePlayer(getCurrentPlayer(), diceValue);
+                nextPlayer();
             }
 
             void nextPlayer() {
@@ -185,8 +231,23 @@ namespace game {
             }
 
             void movePlayer(player::Player* player, int steps) {
-                int newPosition = (player->getPosition() + steps) % tiles.size();
+                int origPosition = player->getPosition();
+                int overPosition = (origPosition + steps);
+                int newPosition = overPosition % tiles.size();
                 player->setPosition(newPosition);
+                int i = steps;
+                auto it = tiles.begin() + origPosition;
+                while (i--) {
+                    if (it == tiles.end()) 
+                        it = tiles.begin();
+                    else 
+                        it++;
+                    if ((*it)->getType() == Tile::TileType::home) {
+                        player->addCash(constant::homeReward);
+                        callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward);
+                    }
+                }
+                callbackPlayerUpdate(player);
                 handleTileEvent(player, tiles[newPosition]);
             }
 
@@ -195,19 +256,20 @@ namespace game {
                     case Tile::buildable: {
                         Buildable* buildableTile = static_cast<Buildable*>(tile);
                         if (!buildableTile->isOwned()) {
-                            if (player->getCash() >= buildableTile->getPlotCost()) {
-                                if (callbackBuy(player, buildableTile)) {
-                                    player->setCash(player->getCash() - buildableTile->getPlotCost());
-                                    buildableTile->setOwner(player);
+                            if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
+                                player->setCash(player->getCash() - buildableTile->getPlotCost());
+                                buildableTile->setOwner(player);
+                            } else {
+                                auto auctionResult = callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+                                if (auctionResult.first >= constant::auctionReservePrice) {
+                                    auctionResult.second->addCash(-auctionResult.first);
+                                    buildableTile->setOwner(auctionResult.second);
                                 }
                             }
-                            // Auction
-                            // TODO
                         } else if (buildableTile->getOwner() != player) {
-                            // Pay rent
                             player->addCash(-buildableTile->getRent());
                             buildableTile->getOwner()->addCash(buildableTile->getRent());
-                            callbackRent(player, buildableTile);
+                            callbackRent(player, buildableTile, buildableTile->getRent());
                         } else if (buildableTile->getOwner() == player) {
                             // Build
                             // TODO
@@ -219,16 +281,14 @@ namespace game {
                     case Tile::tax: {
                         Tax* taxTile = static_cast<Tax*>(tile);
                         player->setCash(player->getCash() * (1.0f - taxTile->getTaxRate()));
-                        callbackTax(player, taxTile);
+                        callbackTax(player, taxTile, player->getCash() * taxTile->getTaxRate());
                         break;
                     }
                     case Tile::random:
                         // TODO
                         break;
                     case Tile::home:
-                        Home* homeTile = static_cast<Home*>(tile);
-                        player->addCash(constant::homeReward);
-                        callbackHomeReward(player, homeTile);
+                        // Maybe some rewards?
                         break;
                     default:
                         break;

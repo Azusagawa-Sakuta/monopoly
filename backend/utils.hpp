@@ -14,6 +14,20 @@ namespace utils {
         std::ofstream logFile;
         std::string logFileName;
 
+        Logger() {
+            logFileName = generateLogFileName();
+            logFile.open(logFileName, std::ios::out | std::ios::app);
+        }
+
+        ~Logger() {
+            if (logFile.is_open()) {
+                logFile.close();
+            }
+        }
+
+        Logger(const Logger&) = delete;
+        Logger& operator=(const Logger&) = delete;
+
         std::string generateLogFileName() {
             auto t = std::time(nullptr);
             auto tm = *std::localtime(&t);
@@ -33,26 +47,18 @@ namespace utils {
         }
 
     public:
-        Logger() {
-            logFileName = generateLogFileName();
-            logFile.open(logFileName, std::ios::out | std::ios::app);
-            if (!logFile.is_open()) {
-                throw std::runtime_error("Failed to open log file");
-            }
-        }
-
-        ~Logger() {
-            if (logFile.is_open()) {
-                logFile.close();
-            }
+        static Logger& getInstance() {
+            static Logger instance;
+            return instance;
         }
 
         void log(const std::string& message) {
             if (logFile.is_open()) {
-                logFile << "[" << getCurrentTime() << "]" << message << std::endl;
+                logFile << getCurrentTime() << " - " << message << std::endl;
             }
         }
     };
-}
 
-#endif
+} // namespace utils
+
+#endif // UTILS_H
