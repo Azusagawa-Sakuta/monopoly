@@ -1,4 +1,4 @@
-name: Build Project
+name: Qt Build
 
 on:
   push:
@@ -11,22 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Setup environment
-        run: |
-          sudo apt update
-          sudo apt install qtcreator qtbase5-dev qt5-qmake
-          sudo apt install build-essential libgl1-mesa-dev
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'  # 指定需要的 Qt 版本
+        host: 'linux'      # 使用 Linux 构建环境
+        modules: 'qtbase'  # 只安装基本模块（可根据需要扩展）
 
-      - name: Build
-        run: |
-          cd ../QtApp
-          qmake
-          make
+    - name: Install Build Tools
+      run: sudo apt-get update && sudo apt-get install -y build-essential cmake qt5-qmake qtbase5-dev
 
-      - name: Run Tests
-        run: |
-          cd ../QtApp
-          ./QtApp
+    - name: Build Qt Project
+      run: |
+        mkdir build
+        cd build
+        qmake ../QtApp/test.pro  # 使用 qmake 生成 Makefile
+        make               # 使用 make 构建项目
+
+    - name: Run Tests (Optional)
+      run: |
+        cd build
+        ./test.app # 替换为生成的可执行文件
