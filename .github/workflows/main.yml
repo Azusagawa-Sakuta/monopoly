@@ -33,4 +33,4 @@ jobs:
     - name: Run Tests (Optional)
       run: |
         cd build
-        ./test.app  # 替换为生成的可执行文件
+        ./test
