@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,8 +17,8 @@ jobs:
     - name: Set up Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '5.15.2'  # 指定需要的 Qt 版本
-        host: 'linux'      # 使用 Linux 构建环境
+        version: '5.15.2'
+        host: 'linux'
 
     - name: Install Build Tools
       run: sudo apt-get update && sudo apt-get install -y build-essential cmake qt5-qmake qtbase5-dev
@@ -27,5 +27,70 @@ jobs:
       run: |
         mkdir build
         cd build
-        qmake ../QtApp/test.pro  # 使用 qmake 生成 Makefile
-        make               # 使用 make 构建项目
+        qmake ../QtApp/test.pro
+        make
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-Linux
+        path: build/monopoly
+        if-no-files-found: warn
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'mac'
+
+    - name: Install Build Tools
+      run: brew install cmake
+
+    - name: Build Qt Project
+      run: |
+        mkdir build
+        cd build
+        qmake ../QtApp/test.pro
+        make
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-macOS
+        path: build/monopoly.app
+        if-no-files-found: warn
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'windows'
+
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build Qt Project
+      shell: cmd
+      run: |
+        mkdir build
+        cd build
+        qmake ..\QtApp\test.pro
+        nmake
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-Windows
+        path: build\monopoly.exe
+        if-no-files-found: warn
