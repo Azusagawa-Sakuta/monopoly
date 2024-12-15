@@ -22,7 +22,7 @@ jobs:
         modules: 'qtbase'  # 只安装基本模块（可根据需要扩展）
 
     - name: Install Build Tools
-      run: sudo apt-get update && sudo apt-get install -y build-essential cmake qt5-qmake qtbase5-dev
+      run: sudo apt update && sudo apt install -y build-essential cmake qt5-qmake qtbase5-dev
 
     - name: Build Qt Project
       run: |
