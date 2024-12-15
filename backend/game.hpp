@@ -11,6 +11,55 @@
 #include "constant.hpp"
 
 namespace game {
+    namespace player {
+        class Player {
+            private:
+            cashType cash;
+            int position;
+            int prisonTime;
+
+            public:
+            Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0), prisonTime(0) {}
+            virtual ~Player() {}
+
+            cashType getCash() {
+                return cash;
+            }
+
+            void setCash(cashType newCash) {
+                cash = newCash;
+            }
+
+            cashType addCash(cashType delta) {
+                cash += delta;
+                return cash;
+            }
+
+            int getPosition() const { 
+                return position; 
+            }
+
+            void setPosition(int pos) { 
+                position = pos; 
+            }
+            
+            int getPrisonTime() const {
+                return prisonTime;
+            }
+
+            void setPrisonTime(int time) {
+                prisonTime = time;
+            }
+        };
+
+        class ComputerPlayer : Player {
+            private:
+            public:
+            ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
+            ~ComputerPlayer() override {}
+        };
+    }
+
     namespace gamePlay {        
         class Tile {
             public:
@@ -48,7 +97,7 @@ namespace game {
 
             public:
             Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
-                      cashType _basicRent = constant::defaultBasicRent, auto& _houseRent = constant::defaultHouseRent) 
+                      cashType _basicRent = constant::defaultBasicRent, std::array<game::cashType, 6>& _houseRent = constant::defaultHouseRent) 
                     : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owned(false), owner(nullptr), status({0, 0}) {}
             ~Buildable() override {}
 
@@ -211,13 +260,16 @@ namespace game {
             const int findNextTile(Tile::TileType type, int pos) const {
                 auto it = tiles.begin() + pos;
                 for (int i = 0; i < tiles.size(); i++) {
-                    if (it == tiles.end()) 
+                    if (++it == tiles.end()) 
                         it = tiles.begin();
-                    else 
-                        it++;
-                    if ((*it)->getType() == type) 
-                        return it - tiles.begin();
                 }
+                return -1;
+            }
+
+            const int findTile(Tile* tile) const {
+                auto it = std::find(tiles.begin(), tiles.end(), tile);
+                if (it != tiles.end()) 
+                    return it - tiles.begin();
                 return -1;
             }
 
@@ -241,7 +293,9 @@ namespace game {
             }
 
             void tick() {
+                utils::Logger::getInstance().log("Tick start. Player: " + std::to_string(currentPlayerIndex) + ", Position: " + std::to_string(getCurrentPlayer()->getPosition()) + ".");
                 if (tiles[getCurrentPlayer()->getPosition()]->getType() == Tile::TileType::prison) {
+                    utils::Logger::getInstance().log("Player is in prison.");
                     // What the fricking hell is this?
                     if (getCurrentPlayer()->getPrisonTime() < 3) { 
                         for (int i = 0; i < 3; i++) {
@@ -265,17 +319,21 @@ namespace game {
                     }
                 }
                 int diceValue1 = rollDice(), diceValue2 = rollDice();
+                utils::Logger::getInstance().log("Player rolled dice " + std::to_string(diceValue1) + ", " + std::to_string(diceValue2) + ".");
                 callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
                 if (diceValue1 == diceValue2) {
                     int diceValue3 = rollDice();
+                    utils::Logger::getInstance().log("Player rolling a third dice " + std::to_string(diceValue3) + ".");
                     callbackDice3rd(getCurrentPlayer(), diceValue3);
                     if (diceValue3 == diceValue1) {
                         int prisonPos = findNextTile(Tile::TileType::prison, getCurrentPlayer()->getPosition());
                         if (prisonPos != -1) {
                             getCurrentPlayer()->setPosition(prisonPos);
                             getCurrentPlayer()->setPrisonTime(0);
+                            utils::Logger::getInstance().log("Player prisoned for 3 same dice.");
                             callbackPrison(getCurrentPlayer(), static_cast<Prison*>(tiles[prisonPos]));
-                        }
+                        } else 
+                            utils::Logger::getInstance().log("No prison found.");
                     } else 
                         movePlayer(getCurrentPlayer(), diceValue1 + diceValue2 + diceValue3);
                 } else 
@@ -285,26 +343,30 @@ namespace game {
 
             void nextPlayer() {
                 currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+                utils::Logger::getInstance().log("Next player.");
             }
 
             void movePlayer(player::Player* player, int steps) {
                 int origPosition = player->getPosition();
                 int overPosition = (origPosition + steps);
                 int newPosition = overPosition % tiles.size();
+                utils::Logger::getInstance().log("Player moving from " + std::to_string(origPosition) + " to " + std::to_string(newPosition) + ".");
                 player->setPosition(newPosition);
-                int i = steps;
+                int i = steps - 1;
                 auto it = tiles.begin() + origPosition;
+                if (it == tiles.end()) 
+                    it = tiles.begin();
                 while (i--) {
-                    if (it == tiles.end()) 
+                    if (++it == tiles.end()) 
                         it = tiles.begin();
-                    else 
-                        it++;
                     if ((*it)->getType() == Tile::TileType::home) {
                         player->addCash(constant::homeReward);
+                        utils::Logger::getInstance().log("Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
                         callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward);
                     }
                 }
                 callbackPlayerUpdate(player);
+                utils::Logger::getInstance().log("Handling tile event.");
                 handleTileEvent(player, tiles[newPosition]);
             }
 
@@ -353,55 +415,6 @@ namespace game {
                         break;
                 }
             }
-        };
-    }
-    
-    namespace player {
-        class Player {
-            private:
-            cashType cash;
-            int position;
-            int prisonTime;
-
-            public:
-            Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0), prisonTime(0) {}
-            virtual ~Player() {}
-
-            cashType getCash() {
-                return cash;
-            }
-
-            void setCash(cashType newCash) {
-                cash = newCash;
-            }
-
-            cashType addCash(cashType delta) {
-                cash += delta;
-                return cash;
-            }
-
-            int getPosition() const { 
-                return position; 
-            }
-
-            void setPosition(int pos) { 
-                position = pos; 
-            }
-            
-            int getPrisonTime() const {
-                return prisonTime;
-            }
-
-            void setPrisonTime(int time) {
-                prisonTime = time;
-            }
-        };
-
-        class ComputerPlayer : Player {
-            private:
-            public:
-            ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
-            ~ComputerPlayer() override {}
         };
     }
 }
