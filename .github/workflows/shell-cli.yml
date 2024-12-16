@@ -22,7 +22,7 @@ jobs:
         cd backend/shell-cli
         mkdir build
         cd build
-        ${{ steps.install_cc.outputs.cxx }} ../client.cpp -o client.exe
+        ${{ steps.install_cc.outputs.cxx }} ../client.cpp -o client.exe -static
     
     - uses: actions/upload-artifact@v4
       with:
