@@ -1,0 +1,31 @@
+name: Shell-Cli Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install Compiler
+      id: install_cc
+      uses: rlalik/setup-cpp-compiler@master
+      with:
+        compiler: gcc-latest
+
+    - name: Build Project
+      run: |
+        cd backend/shell-cli
+        mkdir build
+        cd build
+        ${{ steps.install_cc.outputs.cc }} ../cilent.cpp -o cilent.exe
+    
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Shell-Windows
+        path: backend/shell-cli/build/cilent.exe
+        if-no-files-found: warn

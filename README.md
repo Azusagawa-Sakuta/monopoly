@@ -4,11 +4,14 @@ Actions build for Linux and MacOS disabled.
 
 [![Build Status](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml/badge.svg)](https://github.com/Azusagawa-Sakuta/monopoly/actions)   
 
-[Click here to build!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml)
+[Click here to build QT!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml)
+[Click here to build Shell-Cli!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/shell-cli.yml)
 
 ## Commandline client
-Commandline client designed to test backend interface. To build:  
+Windows commandline client designed to test backend interface. To build:  
 ```
-cd backend/shell-cli/build
+cd backend/shell-cli/
+mkdir build
+cd build
 g++ ../client.cpp
 ```
