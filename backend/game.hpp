@@ -246,6 +246,13 @@ namespace game {
                 return players;
             }
             
+            const int findPlayerPos(player::Player* p) const {
+                auto it = std::find(players.begin(), players.end(), p);
+                if (it != players.end()) 
+                    return it - players.begin();
+                return -1;
+            }
+
             const std::vector<Tile*> findOwnTiles(player::Player* p) const {
                 std::vector<Tile*> ownTiles;
                 std::copy_if(tiles.begin(), tiles.end(), std::back_inserter(ownTiles), [p](Tile* t) {
