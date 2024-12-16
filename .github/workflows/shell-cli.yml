@@ -22,10 +22,10 @@ jobs:
         cd backend/shell-cli
         mkdir build
         cd build
-        ${{ steps.install_cc.outputs.cc }} ../cilent.cpp -o cilent.exe
+        ${{ steps.install_cc.outputs.cc }} ../client.cpp -o client.exe
     
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Shell-Windows
-        path: backend/shell-cli/build/cilent.exe
+        path: backend/shell-cli/build/client.exe
         if-no-files-found: warn

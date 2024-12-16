@@ -2,10 +2,11 @@
 
 Actions build for Linux and MacOS disabled.  
 
-[![Build Status](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml/badge.svg)](https://github.com/Azusagawa-Sakuta/monopoly/actions)   
+[![Qt Build Status](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml/badge.svg)](https://github.com/Azusagawa-Sakuta/monopoly/actions)   
+[![Shell-Cli Build Status](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/shell-cli.yml/badge.svg)](https://github.com/Azusagawa-Sakuta/monopoly/actions)   
 
-[Click here to build QT!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml)
-[Click here to build Shell-Cli!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/shell-cli.yml)
+[Click here to build QT!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/main.yml)  
+[Click here to build Shell-Cli!](https://github.com/Azusagawa-Sakuta/monopoly/actions/workflows/shell-cli.yml)  
 
 ## Commandline client
 Windows commandline client designed to test backend interface. To build:  
