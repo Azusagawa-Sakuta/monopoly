@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <string>
 #include <ctime>
+#include <mutex>
 
 namespace utils {
 
@@ -13,6 +14,7 @@ namespace utils {
     private:
         std::ofstream logFile;
         std::string logFileName;
+        mutable std::shared_mutex mtx;
 
         Logger() {
             logFileName = generateLogFileName();
@@ -53,6 +55,7 @@ namespace utils {
         }
 
         void log(const std::string& message) {
+            std::unique_lock<std::shared_mutex> lock(mtx);
             if (logFile.is_open()) {
                 logFile << getCurrentTime() << " - " << message << std::endl;
             }

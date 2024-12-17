@@ -1,23 +1,20 @@
 #include "../game.hpp"
 #include <iostream>
+#include <iomanip>
 #include <windows.h>
-
-game::player::Player p1, p2;
 
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-void printPlayerInfo(game::player::Player* p) {
-    std::cout << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " Cash: " << p->getCash() << ", position: " << p->getPosition() << std::endl;
-}
-
 void printMap() {
     int colorList[] = { FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, FOREGROUND_GREEN, FOREGROUND_RED | FOREGROUND_GREEN, FOREGROUND_RED, FOREGROUND_RED | FOREGROUND_BLUE, FOREGROUND_GREEN | FOREGROUND_BLUE };
+    char shortList[] = {'X', 'H', 'B', 'P', 'T', 'R'};
     for (auto &tile : game::gamePlay::GameInstance::getInstance().getTiles()) {
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->isOwned()) 
             SetConsoleTextAttribute(hConsole, colorList[tile->getType()] | FOREGROUND_INTENSITY);
         else
             SetConsoleTextAttribute(hConsole, colorList[tile->getType()] & ~FOREGROUND_INTENSITY);
-        std::cout << tile->getType() << " ";
+        std::cout << (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->isOwned() 
+            ? std::to_string(game::gamePlay::GameInstance::getInstance().findPlayerPos(static_cast<game::gamePlay::Buildable*>(tile)->getOwner())) : std::string() + shortList[tile->getType()]) << " ";
     }
     SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
     std::cout << std::endl;
@@ -26,20 +23,18 @@ void printMap() {
 void printPlayerPos(game::player::Player* p) {
     for (int i = 0; i < game::gamePlay::GameInstance::getInstance().getTiles().size(); i++) {
         if (i == p->getPosition()) 
-            std::cout << "^";
+            std::cout << "^ ";
         else
             std::cout << "  ";
     }
-    std::cout << std::endl;
+    std::cout << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " " << std::setw(5) << std::right << p->getCash() << "$, Pos: " << p->getPosition() << std::endl;
 }
 
 void refresh() { 
     system("cls");
-    printPlayerInfo(&p1); 
-    printPlayerInfo(&p2);
     printMap();
-    printPlayerPos(&p1);
-    printPlayerPos(&p2);
+    for (auto &p : game::gamePlay::GameInstance::getInstance().getPlayers()) 
+        printPlayerPos(p);
 }
 
 void callbackPlayerUpdate(game::player::Player* p) { 
@@ -52,11 +47,14 @@ bool callbackBuy(game::player::Player* p, game::gamePlay::Buildable* tile, game:
 };
 
 int main() {
-    game::constant::homeReward = 1000;
+    int playerCount = 4;
+    game::constant::homeReward = 2500;
+    game::constant::defaultTaxRate = 0.1f;
+    game::constant::initialCash = 10000;
     game::gamePlay::GameInstance &g = game::gamePlay::GameInstance::getInstance();
-    // Initializing
-    g.addPlayer(&p1);
-    g.addPlayer(&p2);
+    
+    for (int i = 0; i < playerCount; i++) 
+        game::gamePlay::GameInstance::getInstance().addPlayer(new game::player::Player);
     
     g.addTile(new game::gamePlay::Home);
     g.addTile(new game::gamePlay::Buildable);
@@ -80,7 +78,13 @@ int main() {
     g.callbackPrison = [](game::player::Player* p, game::gamePlay::Prison* tile) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " is in jail " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl; };
     g.callbackBuy = callbackBuy;
     g.callbackHomeReward = [](game::player::Player* p, game::gamePlay::Home* tile, game::cashType cash) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " received " << cash << " for passing home " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl; };
-    g.callbackRent = [](game::player::Player* p, game::gamePlay::Buildable* tile, game::cashType cash) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " paid " << cash << " in tile " << game::gamePlay::GameInstance::getInstance().findTile(tile) << " to " << game::gamePlay::GameInstance::getInstance().findPlayerPos(tile->getOwner()) << std::endl; };
+    g.callbackRent = [](game::player::Player* p, game::gamePlay::Buildable* tile, game::cashType cash) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " paid " << cash << " to " << game::gamePlay::GameInstance::getInstance().findPlayerPos(tile->getOwner()) << " in tile " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl; };
+    g.callbackTax = [](game::player::Player* p, game::gamePlay::Tax* tile, game::cashType cash) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " paid " << cash << " in tax " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl; };
+    g.callbackAuction = [](game::gamePlay::Buildable* tile, game::cashType reservePrice, game::cashType bidIncrement) { 
+        std::cout << "Auctioning tile " << game::gamePlay::GameInstance::getInstance().findTile(tile) << " with reserve price " << reservePrice << " and bid increment " << bidIncrement << std::endl;
+        std::cout << "However, no one participated :D" << std::endl;
+        return std::make_pair(0, nullptr);
+    };
     // Main loop
     while (1) {
         refresh();

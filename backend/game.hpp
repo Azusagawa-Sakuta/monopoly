@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <utility>
 #include <random>
+#include <future>
+#include <mutex>
+#include <shared_mutex>
 #include "utils.hpp"
 #include "constant.hpp"
 
@@ -17,43 +20,52 @@ namespace game {
             cashType cash;
             int position;
             int prisonTime;
+            mutable std::shared_mutex mtx;
 
             public:
             Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0), prisonTime(0) {}
             virtual ~Player() {}
 
             cashType getCash() {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return cash;
             }
 
             void setCash(cashType newCash) {
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 cash = newCash;
             }
 
             cashType addCash(cashType delta) {
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 cash += delta;
                 return cash;
             }
 
             int getPosition() const { 
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return position; 
             }
 
             void setPosition(int pos) { 
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 position = pos; 
             }
             
-            int getPrisonTime() const {
+            int getPrisonTime() const { 
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return prisonTime;
             }
 
-            void setPrisonTime(int time) {
+            void setPrisonTime(int time) { 
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 prisonTime = time;
             }
         };
 
         class ComputerPlayer : Player {
             private:
+            std::shared_mutex mtxComputer;
             public:
             ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
             ~ComputerPlayer() override {}
@@ -66,16 +78,15 @@ namespace game {
             enum TileType {placeholder, home, buildable, prison, tax, random};
 
             private:
-            // Tile type
-            // What should I write here?
             TileType type;
+            mutable std::shared_mutex mtx;
 
             public:
-
             Tile(TileType _type = placeholder) : type(_type) {}
             virtual ~Tile() {}
 
-            TileType getType() const {
+            TileType getType() const { 
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return type;
             }
         };
@@ -91,37 +102,43 @@ namespace game {
             cashType houseCost;
             cashType basicRent;
             std::array<cashType, 6> houseRent;
-            bool owned;
             player::Player* owner;
             buildStatus status;
+            mutable std::shared_mutex mtxBuildable;
 
             public:
             Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
                       cashType _basicRent = constant::defaultBasicRent, std::array<game::cashType, 6>& _houseRent = constant::defaultHouseRent) 
-                    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owned(false), owner(nullptr), status({0, 0}) {}
+                    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status({0, 0}) {}
             ~Buildable() override {}
 
             bool isOwned() const {
-                return owned;
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
+                return owner != nullptr;
             }
 
             player::Player* getOwner() const {
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
                 return owner;
             }
 
             void setOwner(player::Player* newOwner) {
+                std::unique_lock<std::shared_mutex> lock(mtxBuildable);
                 owner = newOwner;
             }
 
             cashType getPlotCost() const {
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
                 return plotCost;
             }
 
             cashType getHouseCost() const {
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
                 return houseCost;
             }
 
             cashType getRent() const {
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
                 // Dynamic rent TODO
                 cashType rent = basicRent;
                 if (status.house) 
@@ -130,16 +147,19 @@ namespace game {
             }
 
             buildStatus getStatus() const {
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
                 return status;
             }
 
             void setStatus(buildStatus newStatus) {
+                std::unique_lock<std::shared_mutex> lock(mtxBuildable);
                 status = newStatus;
             } 
         };
 
         class Home : public Tile {
             private:
+            mutable std::shared_mutex mtxHome;
             public:
             Home() : Tile(home) {}
             ~Home() override {}
@@ -147,6 +167,7 @@ namespace game {
 
         class Prison : public Tile {
             private:
+            mutable std::shared_mutex mtxPrison;
             public:
             Prison() : Tile(prison) {}
             ~Prison() override {}
@@ -155,22 +176,27 @@ namespace game {
         class Tax : public Tile {
             private:
             double taxRate;
+            mutable std::shared_mutex mtxTax;
 
             public:
             Tax(double _rate = constant::defaultTaxRate) : Tile(tax), taxRate(_rate) {}
             ~Tax() override {}
 
             double getTaxRate() const {
+                std::shared_lock<std::shared_mutex> lock(mtxTax);
                 return taxRate;
             }
 
             void setTaxRate(double newRate) {
+                std::unique_lock<std::shared_mutex> lock(mtxTax);
                 taxRate = newRate;
             }
         };
 
         class Random : public Tile {
             private:
+            mutable std::shared_mutex mtxRandom;
+
             public:
             Random() : Tile(random) {};
             ~Random() override {}
@@ -181,6 +207,7 @@ namespace game {
             std::vector<Tile*> tiles;
             std::vector<player::Player*> players;
             int currentPlayerIndex;
+            mutable std::shared_mutex mtx;
 
             GameInstance() : currentPlayerIndex(0) {
                 utils::Logger::getInstance();
@@ -192,6 +219,85 @@ namespace game {
 
             GameInstance& operator=(const GameInstance&) = delete;
 
+            // Shouldn't be called by the client to avoid mutex deadlock.
+            void nextPlayer() {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+                utils::Logger::getInstance().log("nextPlayer(): Next player.");
+            }
+
+            // Shouldn't be called by the client to avoid mutex deadlock.
+            void movePlayer(player::Player* player, int steps) {
+                int origPosition = player->getPosition();
+                int overPosition = (origPosition + steps);
+                int newPosition = overPosition % tiles.size();
+                utils::Logger::getInstance().log("movePlayer(): Player moving from " + std::to_string(origPosition) + " to " + std::to_string(newPosition) + ".");
+                player->setPosition(newPosition);
+                int i = steps - 1;
+                auto it = tiles.begin() + origPosition;
+                if (it == tiles.end()) 
+                    it = tiles.begin();
+                while (i--) {
+                    if (++it == tiles.end()) 
+                        it = tiles.begin();
+                    if ((*it)->getType() == Tile::TileType::home) {
+                        player->addCash(constant::homeReward);
+                        utils::Logger::getInstance().log("movePlayer(): Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
+                        callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward);
+                    }
+                }
+                callbackPlayerUpdate(player);
+                utils::Logger::getInstance().log("movePlayer(): Handling tile event.");
+                handleTileEvent(player, tiles[newPosition]);
+            }
+
+            // Shouldn't be called by the client to avoid mutex deadlock.
+            void handleTileEvent(player::Player* player, Tile* tile) {
+                switch (tile->getType()) {
+                    case Tile::buildable: {
+                        Buildable* buildableTile = static_cast<Buildable*>(tile);
+                        if (!buildableTile->isOwned()) {
+                            if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
+                                player->setCash(player->getCash() - buildableTile->getPlotCost());
+                                buildableTile->setOwner(player);
+                            } else {
+                                auto auctionResult = callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+                                if (auctionResult.first >= constant::auctionReservePrice) {
+                                    auctionResult.second->addCash(-auctionResult.first);
+                                    buildableTile->setOwner(auctionResult.second);
+                                }
+                            }
+                        } else if (buildableTile->getOwner() != player) {
+                            player->addCash(-buildableTile->getRent());
+                            buildableTile->getOwner()->addCash(buildableTile->getRent());
+                            callbackRent(player, buildableTile, buildableTile->getRent());
+                        } else if (buildableTile->getOwner() == player) {
+                            // Build
+                            // TODO
+                        }
+                        break;
+                    }
+                    case Tile::prison:
+                        player->setPrisonTime(0);
+                        callbackPrison(player, static_cast<Prison*>(tile));
+                        break;
+                    case Tile::tax: {
+                        Tax* taxTile = static_cast<Tax*>(tile);
+                        cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate());
+                        utils::Logger::getInstance().log("handleTileEvent(): Player paid tax " + std::to_string(taxTile->getTaxRate()) + " * " + std::to_string(player->getCash()) + " = " + std::to_string(taxToPay) + ".");
+                        player->addCash(-taxToPay);
+                        callbackTax(player, taxTile, taxToPay);
+                        break;
+                    }
+                    case Tile::random:
+                        // TODO
+                        break;
+                    case Tile::home:
+                        // Maybe some rewards?
+                        break;
+                    default:
+                        break;
+                }
+            }
             public: 
             // Notifies the client when a player's data has been modified or should be updated, if no other callback functions are triggered.
             std::function<void(player::Player* player)> callbackPlayerUpdate = [](player::Player*)->void{};
@@ -239,14 +345,17 @@ namespace game {
             }
 
             const std::vector<Tile*>& getTiles() const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return tiles;
             }
 
             const std::vector<player::Player*>& getPlayers() const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return players;
             }
             
             const int findPlayerPos(player::Player* p) const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 auto it = std::find(players.begin(), players.end(), p);
                 if (it != players.end()) 
                     return it - players.begin();
@@ -254,6 +363,7 @@ namespace game {
             }
 
             const std::vector<Tile*> findOwnTiles(player::Player* p) const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 std::vector<Tile*> ownTiles;
                 std::copy_if(tiles.begin(), tiles.end(), std::back_inserter(ownTiles), [p](Tile* t) {
                     if (t->getType() == Tile::buildable) {
@@ -265,6 +375,7 @@ namespace game {
             }
 
             const int findNextTile(Tile::TileType type, int pos) const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 auto it = tiles.begin() + pos;
                 for (int i = 0; i < tiles.size(); i++) {
                     if (++it == tiles.end()) 
@@ -274,6 +385,7 @@ namespace game {
             }
 
             const int findTile(Tile* tile) const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 auto it = std::find(tiles.begin(), tiles.end(), tile);
                 if (it != tiles.end()) 
                     return it - tiles.begin();
@@ -281,10 +393,12 @@ namespace game {
             }
 
             void addTile(Tile* tile) {
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 tiles.push_back(tile);
             }
 
             void addPlayer(player::Player* player) {
+                std::unique_lock<std::shared_mutex> lock(mtx);
                 players.push_back(player);
             }
 
@@ -296,132 +410,98 @@ namespace game {
             }
 
             player::Player* getCurrentPlayer() const {
+                std::shared_lock<std::shared_mutex> lock(mtx);
                 return players[currentPlayerIndex];
             }
 
             void tick() {
-                utils::Logger::getInstance().log("Tick start. Player: " + std::to_string(currentPlayerIndex) + ", Position: " + std::to_string(getCurrentPlayer()->getPosition()) + ".");
-                if (tiles[getCurrentPlayer()->getPosition()]->getType() == Tile::TileType::prison) {
-                    utils::Logger::getInstance().log("Player is in prison.");
-                    // What the fricking hell is this?
-                    if (getCurrentPlayer()->getPrisonTime() < 3) { 
+                utils::Logger::getInstance().log("tick(): Trying to acquire lock...");
+
+                // Use local variables to avoid deadlock
+                player::Player* currentPlayer;
+                int currentPosition;
+                Tile::TileType currentTileType;
+
+                {
+                    std::shared_lock<std::shared_mutex> lock(mtx);
+                    currentPlayer = getCurrentPlayer();
+                    currentPosition = currentPlayer->getPosition();
+                    currentTileType = tiles[currentPosition]->getType();
+                }
+
+                utils::Logger::getInstance().log("tick(): Lock released.");
+                utils::Logger::getInstance().log("tick(): Tick start. Player: " + std::to_string(currentPlayerIndex) + ", Position: " + std::to_string(currentPosition) + ".");
+
+                // Check if in prison
+                if (currentTileType == Tile::TileType::prison) {
+                    utils::Logger::getInstance().log("tick(): Player is in prison.");
+
+                    // If player has been in prison for less than 3 turns
+                    if (currentPlayer->getPrisonTime() < 3) {
                         for (int i = 0; i < 3; i++) {
+                            utils::Logger::getInstance().log("tick(): Rolling dice for prison, try: " + std::to_string(i) + ".");
                             int diceValue1 = rollDice(), diceValue2 = rollDice();
-                            callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
+                            callbackDice(currentPlayer, diceValue1, diceValue2);
                             if (diceValue1 == diceValue2) {
-                                movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
+                                utils::Logger::getInstance().log("tick(): Player successfully got out of prison.");
+                                movePlayer(currentPlayer, diceValue1 + diceValue2);
                                 nextPlayer();
                                 return;
                             }
                         }
-                        if (getCurrentPlayer()->getCash() >= constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()] 
-                            && callbackPrisonPayOut(getCurrentPlayer(), static_cast<Prison*>(tiles[getCurrentPlayer()->getPosition()]), constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()])) {
-                            getCurrentPlayer()->addCash(-constant::prisonReleasePrice[getCurrentPlayer()->getPrisonTime()]);
-                            getCurrentPlayer()->setPrisonTime(0);
+
+                        // Pay to free
+                        if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()] 
+                            && callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()])) {
+                            utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
+                            currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]);
+                            currentPlayer->setPrisonTime(0);
                         } else {
-                            getCurrentPlayer()->setPrisonTime(getCurrentPlayer()->getPrisonTime() + 1);
+                            utils::Logger::getInstance().log("tick(): Player failed to get out of prison.");
+                            currentPlayer->setPrisonTime(currentPlayer->getPrisonTime() + 1);
                             nextPlayer();
                             return;
                         }
                     }
                 }
+
+                // Roll dice
                 int diceValue1 = rollDice(), diceValue2 = rollDice();
-                utils::Logger::getInstance().log("Player rolled dice " + std::to_string(diceValue1) + ", " + std::to_string(diceValue2) + ".");
-                callbackDice(getCurrentPlayer(), diceValue1, diceValue2);
+                utils::Logger::getInstance().log("tick(): Player rolled dice " + std::to_string(diceValue1) + ", " + std::to_string(diceValue2) + ".");
+                callbackDice(currentPlayer, diceValue1, diceValue2);
+
                 if (diceValue1 == diceValue2) {
                     int diceValue3 = rollDice();
-                    utils::Logger::getInstance().log("Player rolling a third dice " + std::to_string(diceValue3) + ".");
-                    callbackDice3rd(getCurrentPlayer(), diceValue3);
+                    utils::Logger::getInstance().log("tick(): Player rolling a third dice " + std::to_string(diceValue3) + ".");
+                    callbackDice3rd(currentPlayer, diceValue3);
+
                     if (diceValue3 == diceValue1) {
-                        int prisonPos = findNextTile(Tile::TileType::prison, getCurrentPlayer()->getPosition());
+                        int prisonPos;
+                        {
+                            // Lock already added in the util function
+                            prisonPos = findNextTile(Tile::TileType::prison, currentPosition);
+                        }
+
                         if (prisonPos != -1) {
-                            getCurrentPlayer()->setPosition(prisonPos);
-                            getCurrentPlayer()->setPrisonTime(0);
-                            utils::Logger::getInstance().log("Player prisoned for 3 same dice.");
-                            callbackPrison(getCurrentPlayer(), static_cast<Prison*>(tiles[prisonPos]));
-                        } else 
-                            utils::Logger::getInstance().log("No prison found.");
-                    } else 
-                        movePlayer(getCurrentPlayer(), diceValue1 + diceValue2 + diceValue3);
-                } else 
-                    movePlayer(getCurrentPlayer(), diceValue1 + diceValue2);
+                            {
+                                currentPlayer->setPosition(prisonPos);
+                                currentPlayer->setPrisonTime(0);
+                            }
+                            utils::Logger::getInstance().log("tick(): Player prisoned for 3 same dice.");
+                            callbackPrison(currentPlayer, static_cast<Prison*>(tiles[prisonPos]));
+                        } else {
+                            utils::Logger::getInstance().log("tick(): No prison found.");
+                        }
+                    } else {
+                        movePlayer(currentPlayer, diceValue1 + diceValue2 + diceValue3);
+                    }
+                } else {
+                    movePlayer(currentPlayer, diceValue1 + diceValue2);
+                }
+
                 nextPlayer();
             }
 
-            void nextPlayer() {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-                utils::Logger::getInstance().log("Next player.");
-            }
-
-            void movePlayer(player::Player* player, int steps) {
-                int origPosition = player->getPosition();
-                int overPosition = (origPosition + steps);
-                int newPosition = overPosition % tiles.size();
-                utils::Logger::getInstance().log("Player moving from " + std::to_string(origPosition) + " to " + std::to_string(newPosition) + ".");
-                player->setPosition(newPosition);
-                int i = steps - 1;
-                auto it = tiles.begin() + origPosition;
-                if (it == tiles.end()) 
-                    it = tiles.begin();
-                while (i--) {
-                    if (++it == tiles.end()) 
-                        it = tiles.begin();
-                    if ((*it)->getType() == Tile::TileType::home) {
-                        player->addCash(constant::homeReward);
-                        utils::Logger::getInstance().log("Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
-                        callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward);
-                    }
-                }
-                callbackPlayerUpdate(player);
-                utils::Logger::getInstance().log("Handling tile event.");
-                handleTileEvent(player, tiles[newPosition]);
-            }
-
-            void handleTileEvent(player::Player* player, Tile* tile) {
-                switch (tile->getType()) {
-                    case Tile::buildable: {
-                        Buildable* buildableTile = static_cast<Buildable*>(tile);
-                        if (!buildableTile->isOwned()) {
-                            if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
-                                player->setCash(player->getCash() - buildableTile->getPlotCost());
-                                buildableTile->setOwner(player);
-                            } else {
-                                auto auctionResult = callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
-                                if (auctionResult.first >= constant::auctionReservePrice) {
-                                    auctionResult.second->addCash(-auctionResult.first);
-                                    buildableTile->setOwner(auctionResult.second);
-                                }
-                            }
-                        } else if (buildableTile->getOwner() != player) {
-                            player->addCash(-buildableTile->getRent());
-                            buildableTile->getOwner()->addCash(buildableTile->getRent());
-                            callbackRent(player, buildableTile, buildableTile->getRent());
-                        } else if (buildableTile->getOwner() == player) {
-                            // Build
-                            // TODO
-                        }
-                        break;
-                    }
-                    case Tile::prison:
-                        player->setPrisonTime(0);
-                        callbackPrison(player, static_cast<Prison*>(tile));
-                        break;
-                    case Tile::tax: {
-                        Tax* taxTile = static_cast<Tax*>(tile);
-                        player->setCash(player->getCash() * (1.0f - taxTile->getTaxRate()));
-                        callbackTax(player, taxTile, player->getCash() * taxTile->getTaxRate());
-                        break;
-                    }
-                    case Tile::random:
-                        // TODO
-                        break;
-                    case Tile::home:
-                        // Maybe some rewards?
-                        break;
-                    default:
-                        break;
-                }
-            }
         };
     }
 }
