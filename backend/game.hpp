@@ -16,88 +16,161 @@
 namespace game {
     namespace player {
         class Player {
-            private:
+        private:
             cashType cash;
             int position;
             int prisonTime;
             mutable std::shared_mutex mtx;
 
-            public:
+        public:
+            // Constructor; initializes the player with the given cash amount.
             Player(cashType initialCash = constant::initialCash) : cash(initialCash), position(0), prisonTime(0) {}
+            // Destructor; virtual to allow derived classes to override.
             virtual ~Player() {}
 
             cashType getCash() {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return cash;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     cashType cash amount of the player
+                    * Get the cash amount of the player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return cash;                                   // Return the cash amount
             }
 
             void setCash(cashType newCash) {
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                cash = newCash;
+                /*
+                    * Args:
+                    *     cashType: to set new cash amount
+                    * Returns:
+                    *     None
+                    * Set the cash amount of the player
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                cash = newCash;                                // Set the cash amount
             }
 
             cashType addCash(cashType delta) {
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                cash += delta;
-                return cash;
+                /*
+                    * Args:
+                    *     cashType: to add to the cash amount
+                    * Returns:
+                    *     cashType: cash amount of the player
+                    * Add the given amount to the cash amount of the player
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                cash += delta;                                 // Add the given amount to the cash amount
+                return cash;                                   // Return the cash amount
             }
 
             int getPosition() const { 
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return position; 
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     int: position of the player
+                    * Get the position of the player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return position;                               // Return the position
             }
 
             void setPosition(int pos) { 
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                position = pos; 
+                /*
+                    * Args:
+                    *     int: position to set
+                    * Returns:
+                    *     None
+                    * Set the position of the player
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                position = pos;                                // Set the position
             }
             
             int getPrisonTime() const { 
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return prisonTime;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     int: prison time of the player
+                    * Get the prison time of the player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return prisonTime;                             // Return the prison time
             }
 
             void setPrisonTime(int time) { 
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                prisonTime = time;
+                /*
+                    * Args:
+                    *     int: prison time to set
+                    * Returns:
+                    *     None
+                    * Set the prison time of the player
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                prisonTime = time;                             // Set the prison time
             }
         };
 
         class ComputerPlayer : Player {
-            private:
+        private:
             std::shared_mutex mtxComputer;
-            public:
+
+        public:
+            // Constructor; initializes the player with the given cash amount.
             ComputerPlayer(cashType initialCash = constant::initialCash) : Player(initialCash) {}
+            // Destructor;
             ~ComputerPlayer() override {}
         };
     }
 
     namespace gamePlay {        
         class Tile {
-            public:
+        public:
+            // Enum for the type of the tile
             enum TileType {placeholder, home, buildable, prison, tax, random};
 
-            private:
+        private:
             TileType type;
             mutable std::shared_mutex mtx;
 
-            public:
+        public:
+            // Constructor; initializes the tile with the given type.
             Tile(TileType _type = placeholder) : type(_type) {}
+            // Destructor; virtual to allow derived classes to override.
             virtual ~Tile() {}
 
             TileType getType() const { 
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return type;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     TileType: type of the tile
+                    * Get the type of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return type;                                   // Return the type
             }
         };
 
         class Buildable : public Tile {
-            public:
+        public:
             struct buildStatus {
                 int house;
                 int hotel;
             };
-            private:
+
+        private:
             cashType plotCost;
             cashType houseCost;
             cashType basicRent;
@@ -106,98 +179,187 @@ namespace game {
             buildStatus status;
             mutable std::shared_mutex mtxBuildable;
 
-            public:
+        public:
+            // Constructor; initializes the buildable tile with the given parameters.
             Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
                       cashType _basicRent = constant::defaultBasicRent, std::array<game::cashType, 6>& _houseRent = constant::defaultHouseRent) 
                     : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status({0, 0}) {}
+            // Destructor;
             ~Buildable() override {}
 
             bool isOwned() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
-                return owner != nullptr;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     bool: whether the tile is owned
+                    * Check if the tile is owned
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
+                return owner != nullptr;                                // Return whether the tile is owned
             }
 
             player::Player* getOwner() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
-                return owner;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     player::Player*: owner of the tile
+                    * Get the owner of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
+                return owner;                                           // Return the owner
             }
 
             void setOwner(player::Player* newOwner) {
-                std::unique_lock<std::shared_mutex> lock(mtxBuildable);
-                owner = newOwner;
+                /*
+                    * Args:
+                    *     player::Player*: new owner to set
+                    * Returns:
+                    *     None
+                    * Set the owner of the tile
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in unique mode
+                owner = newOwner;                                       // Set the owner
             }
 
             cashType getPlotCost() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
-                return plotCost;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     cashType: plot cost of the tile
+                    * Get the plot cost of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
+                return plotCost;                                        // Return the plot cost
             }
 
             cashType getHouseCost() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
-                return houseCost;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     cashType: house cost of the tile
+                    * Get the house cost of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
+                return houseCost;                                       // Return the house cost
             }
 
             cashType getRent() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     cashType: rent of the tile
+                    * Get the rent of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
                 // Dynamic rent TODO
-                cashType rent = basicRent;
-                if (status.house) 
-                    rent += houseRent[status.house - 1];
-                return rent;
+                cashType rent = basicRent;                              // Set the rent to the basic rent
+
+                if (status.house)
+                    rent += houseRent[status.house - 1];                // Add the house rent if there is a house
+                return rent;                                            // Return the rent
             }
 
             buildStatus getStatus() const {
-                std::shared_lock<std::shared_mutex> lock(mtxBuildable);
-                return status;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     buildStatus: status of the tile
+                    * Get the status of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in shared mode
+                return status;                                          // Return the status
             }
 
             void setStatus(buildStatus newStatus) {
-                std::unique_lock<std::shared_mutex> lock(mtxBuildable);
-                status = newStatus;
+                /*
+                    * Args:
+                    *     buildStatus: new status to set
+                    * Returns:
+                    *     None
+                    * Set the status of the tile
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock the mutex in unique mode
+                status = newStatus;                                     // Set the status
             } 
         };
 
+        // GO tile
         class Home : public Tile {
-            private:
+        private:
             mutable std::shared_mutex mtxHome;
-            public:
+
+        public:
             Home() : Tile(home) {}
             ~Home() override {}
         };
 
+        // Prison tile
         class Prison : public Tile {
-            private:
+        private:
             mutable std::shared_mutex mtxPrison;
-            public:
+
+        public:
             Prison() : Tile(prison) {}
             ~Prison() override {}
         };
 
+        // Tax-collecting tile
         class Tax : public Tile {
-            private:
+        private:
             double taxRate;
             mutable std::shared_mutex mtxTax;
 
-            public:
+        public:
             Tax(double _rate = constant::defaultTaxRate) : Tile(tax), taxRate(_rate) {}
             ~Tax() override {}
 
             double getTaxRate() const {
-                std::shared_lock<std::shared_mutex> lock(mtxTax);
-                return taxRate;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     double: tax rate of the tile
+                    * Get the tax rate of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtxTax); // Lock the mutex in shared mode
+                return taxRate;                                   // Return the tax rate
             }
 
             void setTaxRate(double newRate) {
-                std::unique_lock<std::shared_mutex> lock(mtxTax);
-                taxRate = newRate;
+                /*
+                    * Args:
+                    *     double: new tax rate to set
+                    * Returns:
+                    *     None
+                    * Set the tax rate of the tile
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtxTax); // Lock the mutex in unique mode
+                taxRate = newRate;                                // Set the tax rate
             }
         };
 
+        // Random event tile
         class Random : public Tile {
-            private:
+        private:
             mutable std::shared_mutex mtxRandom;
 
-            public:
+        public:
             Random() : Tile(random) {};
             ~Random() override {}
         };
@@ -221,40 +383,77 @@ namespace game {
 
             // Shouldn't be called by the client to avoid mutex deadlock.
             void nextPlayer() {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-                utils::Logger::getInstance().log("nextPlayer(): Next player.");
+                /* 
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     None
+                    * Move to the next player
+                 */
+
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.size(); // Move to the next player
+                utils::Logger::getInstance().log("nextPlayer(): Next player."); // Log the next player
             }
 
             // Shouldn't be called by the client to avoid mutex deadlock.
             void movePlayer(player::Player* player, int steps) {
-                int origPosition = player->getPosition();
-                int overPosition = (origPosition + steps);
-                int newPosition = overPosition % tiles.size();
+                /* 
+                    * Args:
+                    *     player::Player*: player to move
+                    *     int: steps to move
+                    * Returns:
+                    *     None
+                    * Move the player by the given steps
+                 */
+
+                int origPosition = player->getPosition();      // Get the original position of the player
+                int overPosition = (origPosition + steps);     // Get the new position of the player ignoring the board size
+                int newPosition = overPosition % tiles.size(); // Get the new position of the player
+                
+                // Log the movement
                 utils::Logger::getInstance().log("movePlayer(): Player moving from " + std::to_string(origPosition) + " to " + std::to_string(newPosition) + ".");
-                player->setPosition(newPosition);
-                int i = steps - 1;
-                auto it = tiles.begin() + origPosition;
-                if (it == tiles.end()) 
-                    it = tiles.begin();
+                
+                player->setPosition(newPosition);       // Set the new position of the player
+                
+                int i = steps - 1;                      // Set the number of steps to move
+                auto it = tiles.begin() + origPosition; // Set the iterator to the original position
+                if (it == tiles.end())                  // If the iterator is at the end of the tiles
+                    it = tiles.begin();                 // Set the iterator to the beginning of the tiles
                 while (i--) {
+                    // Move the iterator
                     if (++it == tiles.end()) 
                         it = tiles.begin();
+                    
+                    // Add cash and log if the player passes the GO tile
                     if ((*it)->getType() == Tile::TileType::home) {
                         player->addCash(constant::homeReward);
                         utils::Logger::getInstance().log("movePlayer(): Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
                         callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward);
                     }
                 }
-                callbackPlayerUpdate(player);
-                utils::Logger::getInstance().log("movePlayer(): Handling tile event.");
-                handleTileEvent(player, tiles[newPosition]);
+                
+                callbackPlayerUpdate(player);                                           // Update the player
+                utils::Logger::getInstance().log("movePlayer(): Handling tile event."); // Log the handling of the tile event
+                handleTileEvent(player, tiles[newPosition]);                            // Handle the tile event
             }
 
             // Shouldn't be called by the client to avoid mutex deadlock.
             void handleTileEvent(player::Player* player, Tile* tile) {
+                /* 
+                    * Args:
+                    *     player::Player*: player to handle the event
+                    *     Tile*: tile to handle the event
+                    * Returns:
+                    *     None
+                    * Handle the event of the tile
+                 */
+
+                // Handle the event based on the type of the tile
                 switch (tile->getType()) {
                     case Tile::buildable: {
                         Buildable* buildableTile = static_cast<Buildable*>(tile);
+
+                        // Buy if not owned
                         if (!buildableTile->isOwned()) {
                             if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
                                 player->setCash(player->getCash() - buildableTile->getPlotCost());
@@ -266,34 +465,51 @@ namespace game {
                                     buildableTile->setOwner(auctionResult.second);
                                 }
                             }
-                        } else if (buildableTile->getOwner() != player) {
+                        }
+
+                        // Pay rent if owned by someone else
+                        else if (buildableTile->getOwner() != player) {
                             player->addCash(-buildableTile->getRent());
                             buildableTile->getOwner()->addCash(buildableTile->getRent());
                             callbackRent(player, buildableTile, buildableTile->getRent());
-                        } else if (buildableTile->getOwner() == player) {
+                        }
+
+                        // Build if owned by the player
+                        else if (buildableTile->getOwner() == player) {
                             // Build
                             // TODO
                         }
                         break;
                     }
+
                     case Tile::prison:
+                        // Go to prison
                         player->setPrisonTime(0);
                         callbackPrison(player, static_cast<Prison*>(tile));
                         break;
+                    
                     case Tile::tax: {
+                        // Get the tax to pay
                         Tax* taxTile = static_cast<Tax*>(tile);
                         cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate() / 100.0f) * 100;
+                        
+                        // Log the tax payment
                         utils::Logger::getInstance().log("handleTileEvent(): Player paid tax " + std::to_string(taxTile->getTaxRate()) + " * " + std::to_string(player->getCash()) + " = " + std::to_string(taxToPay) + ".");
+                        
+                        // Pay the tax
                         player->addCash(-taxToPay);
                         callbackTax(player, taxTile, taxToPay);
                         break;
                     }
+
                     case Tile::random:
                         // TODO
                         break;
+                    
                     case Tile::home:
                         // Maybe some rewards?
                         break;
+                    
                     default:
                         break;
                 }
@@ -340,81 +556,187 @@ namespace game {
             std::function<void(Tile* tile)> callbackTileUpdate = [](Tile*)->void{};
 
             static GameInstance& getInstance() {
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     GameInstance& instance
+                    * Get the instance of the GameInstance class
+                 */
+
                 static GameInstance instance;
                 return instance;
             }
 
             const std::vector<Tile*>& getTiles() const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return tiles;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     std::vector<Tile*>: tiles
+                    * Get the tiles
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return tiles;                                  // Return the tiles
             }
 
             const std::vector<player::Player*>& getPlayers() const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return players;
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     std::vector<player::Player*>: players
+                    * Get the players
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return players;                                // Return the players
             }
             
             const int findPlayerPos(player::Player* p) const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                auto it = std::find(players.begin(), players.end(), p);
+                /*
+                    * Args:
+                    *     player::Player*: player to find
+                    * Returns:
+                    *     int: position of the player
+                    * Find the position of the player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx);          // Lock the mutex in shared mode
+                auto it = std::find(players.begin(), players.end(), p); // Find the player
+                
                 if (it != players.end()) 
-                    return it - players.begin();
+                    return it - players.begin();                        // Return the position of the player
+                
                 return -1;
             }
 
             const std::vector<Tile*> findOwnTiles(player::Player* p) const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                std::vector<Tile*> ownTiles;
+                /*
+                    * Args:
+                    *     player::Player*: player to find the tiles of
+                    * Returns:
+                    *     std::vector<Tile*>: tiles owned by the player
+                    * Find the tiles owned by the player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                std::vector<Tile*> ownTiles;                   // Initialize the vector of tiles owned by the player
+
+                // Copy the tiles owned by the player to the vector
                 std::copy_if(tiles.begin(), tiles.end(), std::back_inserter(ownTiles), [p](Tile* t) {
                     if (t->getType() == Tile::buildable) {
                         return static_cast<Buildable*>(t)->getOwner() == p;
                     }
                     return false;
                 });
+
                 return ownTiles;
             }
 
             const int findNextTile(Tile::TileType type, int pos) const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                auto it = tiles.begin() + pos;
+                /*
+                    * Args:
+                    *     Tile::TileType: type of the tile to find
+                    *     int: position to start from
+                    * Returns:
+                    *     int: position of the tile
+                    * Find the position of the next tile of the given type
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                auto it = tiles.begin() + pos;                 // Set the iterator to the given position
+                
                 for (int i = 0; i < tiles.size(); i++) {
                     if (++it == tiles.end()) 
                         it = tiles.begin();
                 }
+
                 return -1;
             }
 
             const int findTile(Tile* tile) const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                auto it = std::find(tiles.begin(), tiles.end(), tile);
+                /*
+                    * Args:
+                    *     Tile*: tile to find
+                    * Returns:
+                    *     int: position of the tile
+                    * Find the position of the tile
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx);         // Lock the mutex in shared mode
+                auto it = std::find(tiles.begin(), tiles.end(), tile); // Find the tile
+
                 if (it != tiles.end()) 
                     return it - tiles.begin();
                 return -1;
             }
 
             void addTile(Tile* tile) {
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                tiles.push_back(tile);
+                /*
+                    * Args:
+                    *     Tile*: tile to add
+                    * Returns:
+                    *     None
+                    * Add the tile
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                tiles.push_back(tile);                         // Add the tile
             }
 
             void addPlayer(player::Player* player) {
-                std::unique_lock<std::shared_mutex> lock(mtx);
-                players.push_back(player);
+                /*
+                    * Args:
+                    *     player::Player*: player to add
+                    * Returns:
+                    *     None
+                    * Add the player
+                 */
+
+                std::unique_lock<std::shared_mutex> lock(mtx); // Lock the mutex in unique mode
+                players.push_back(player);                     // Add the player
             }
 
             static int rollDice(int minimum = constant::diceMinimum, int maximum = constant::diceMaximum) {
-                static std::random_device rd;
-                static std::mt19937 gen(rd());
-                std::uniform_int_distribution<int> dis(minimum, maximum);
-                return dis(gen);
+                /*
+                    * Args:
+                    *     int: minimum value of the dice
+                    *     int: maximum value of the dice
+                    * Returns:
+                    *     int: value of the dice
+                    * Roll the dice
+                 */
+
+                static std::random_device rd;                             // Initialize the random device
+                static std::mt19937 gen(rd());                            // Initialize the random number generator
+                std::uniform_int_distribution<int> dis(minimum, maximum); // Initialize the uniform distribution
+                return dis(gen);                                          // Return the random number
             }
 
             player::Player* getCurrentPlayer() const {
-                std::shared_lock<std::shared_mutex> lock(mtx);
-                return players[currentPlayerIndex];
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     player::Player*: current player
+                    * Get the current player
+                 */
+
+                std::shared_lock<std::shared_mutex> lock(mtx); // Lock the mutex in shared mode
+                return players[currentPlayerIndex];            // Return the current player
             }
 
             void tick() {
+                /*
+                    * Args:
+                    *     None
+                    * Returns:
+                    *     None
+                    * Perform a tick
+                 */
+
                 utils::Logger::getInstance().log("tick(): Trying to acquire lock...");
 
                 // Use local variables to avoid deadlock
@@ -470,6 +792,7 @@ namespace game {
                 utils::Logger::getInstance().log("tick(): Player rolled dice " + std::to_string(diceValue1) + ", " + std::to_string(diceValue2) + ".");
                 callbackDice(currentPlayer, diceValue1, diceValue2);
 
+                // Check for 3 same dice
                 if (diceValue1 == diceValue2) {
                     int diceValue3 = rollDice();
                     utils::Logger::getInstance().log("tick(): Player rolling a third dice " + std::to_string(diceValue3) + ".");
