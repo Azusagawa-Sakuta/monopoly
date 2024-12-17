@@ -282,7 +282,7 @@ namespace game {
                         break;
                     case Tile::tax: {
                         Tax* taxTile = static_cast<Tax*>(tile);
-                        cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate());
+                        cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate() / 100.0f) * 100;
                         utils::Logger::getInstance().log("handleTileEvent(): Player paid tax " + std::to_string(taxTile->getTaxRate()) + " * " + std::to_string(player->getCash()) + " = " + std::to_string(taxToPay) + ".");
                         player->addCash(-taxToPay);
                         callbackTax(player, taxTile, taxToPay);
