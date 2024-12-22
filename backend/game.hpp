@@ -10,6 +10,8 @@
 #include <future>
 #include <mutex>
 #include <shared_mutex>
+#include <condition_variable>
+#include <any>
 #include "utils.hpp"
 #include "constant.hpp"
 
@@ -370,6 +372,9 @@ namespace game {
             std::vector<player::Player*> players;
             int currentPlayerIndex;
             mutable std::shared_mutex mtx;
+            mutable std::condition_variable_any cv;
+            bool userInputReady = false;
+            std::any userInputResult;
 
             GameInstance() : currentPlayerIndex(0) {
                 utils::Logger::getInstance();
@@ -455,14 +460,16 @@ namespace game {
 
                         // Buy if not owned
                         if (!buildableTile->isOwned()) {
-                            if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
+                            callbackBuy(player, buildableTile, buildableTile->getPlotCost());
+                            if (player->getCash() >= buildableTile->getPlotCost() && std::any_cast<bool>(waitForUserInput())) {
                                 player->setCash(player->getCash() - buildableTile->getPlotCost());
                                 buildableTile->setOwner(player);
                             } else {
-                                auto auctionResult = callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
-                                if (auctionResult.first >= constant::auctionReservePrice) {
-                                    auctionResult.second->addCash(-auctionResult.first);
-                                    buildableTile->setOwner(auctionResult.second);
+                                callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+                                auctionResult result = std::any_cast<auctionResult>(waitForUserInput());
+                                if (result.price >= constant::auctionReservePrice) {
+                                    result.player->addCash(-result.price);
+                                    buildableTile->setOwner(result.player);
                                 }
                             }
                         }
@@ -528,10 +535,10 @@ namespace game {
             std::function<void(player::Player* player, Prison* tile)> callbackPrison = [](player::Player*, Prison*)->void{};
 
             // Whether the player should pay to escape the prison if they can.
-            std::function<bool(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut = [](player::Player*, Prison*, cashType)->bool{ return false; };
+            std::function<void(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut = [](player::Player*, Prison*, cashType)->void{};
 
             // Whether the player should buy a tile if they can.
-            std::function<bool(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy = [](player::Player*, Buildable*, cashType)->bool{ return true; };
+            std::function<void(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy = [](player::Player*, Buildable*, cashType)->void{};
 
             // Player has paid rent.
             std::function<void(player::Player* player, Buildable* tile, cashType cashPaid)> callbackRent = [](player::Player*, Buildable*, cashType)->void{};
@@ -543,8 +550,8 @@ namespace game {
             std::function<void(player::Player* player, Home* tile, cashType cashReceived)> callbackHomeReward = [](player::Player*, Home*, cashType)->void{};
 
             // A tile should be auctioned. Returning value less than reserve price or nullptr means no one has participated or the auction has failed.
-            std::function<std::pair<cashType, player::Player*>(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction 
-                = [](Buildable*, cashType, cashType)->std::pair<cashType, player::Player*>{ return std::make_pair<cashType, player::Player*>(0, nullptr); };
+            std::function<void(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction 
+                = [](Buildable*, cashType, cashType)->void{};
             
             // Player has to sell their own properties if the total value of their properties can cover the debt. WIP
             //std::function<std::vector<Tile*>(player::Player* player, std::vector<Tile*>& tilesToBeSold)> callbackAuction;
@@ -554,6 +561,25 @@ namespace game {
             
             // Notifies the client when a tile's data has been modified, if no other callback functions are triggered.
             std::function<void(Tile* tile)> callbackTileUpdate = [](Tile*)->void{};
+
+            struct auctionResult {
+                cashType price;
+                player::Player* player;
+            };
+
+            void notifyUserInput(const std::any& result) {
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                userInputResult = result;
+                userInputReady = true;
+                cv.notify_one();
+            }
+
+            std::any waitForUserInput() {
+                std::unique_lock<std::shared_mutex> lock(mtx);
+                cv.wait(lock, [this] { return userInputReady; });
+                userInputReady = false;
+                return userInputResult;
+            }
 
             static GameInstance& getInstance() {
                 /*
@@ -773,8 +799,9 @@ namespace game {
                         }
 
                         // Pay to free
+                        callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()]);
                         if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()] 
-                            && callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()])) {
+                            && std::any_cast<bool>(waitForUserInput())) {
                             utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
                             currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]);
                             currentPlayer->setPrisonTime(0);
