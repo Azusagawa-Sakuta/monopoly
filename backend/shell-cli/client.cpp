@@ -41,9 +41,11 @@ void callbackPlayerUpdate(game::player::Player* p) {
     std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " updated" << std::endl;
 }
 
-bool callbackBuy(game::player::Player* p, game::gamePlay::Buildable* tile, game::cashType cashToPay) {
-    std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " bought " << game::gamePlay::GameInstance::getInstance().findTile(tile) << " for " << cashToPay << std::endl;
-    return true; 
+void callbackBuy(game::player::Player* p, game::gamePlay::Buildable* tile, game::cashType cashToPay) {
+    std::cout << "Should player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " bought " << game::gamePlay::GameInstance::getInstance().findTile(tile) << " for " << cashToPay << "?" << std::endl;
+    int i;
+    std::cin >> i;
+    game::gamePlay::GameInstance::getInstance().notifyUserInput(static_cast<bool>(i));
 };
 
 int main() {
@@ -82,14 +84,29 @@ int main() {
     g.callbackTax = [](game::player::Player* p, game::gamePlay::Tax* tile, game::cashType cash) { std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " paid " << cash << " in tax " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl; };
     g.callbackAuction = [](game::gamePlay::Buildable* tile, game::cashType reservePrice, game::cashType bidIncrement) { 
         std::cout << "Auctioning tile " << game::gamePlay::GameInstance::getInstance().findTile(tile) << " with reserve price " << reservePrice << " and bid increment " << bidIncrement << std::endl;
-        std::cout << "However, no one participated :D" << std::endl;
-        return std::make_pair(0, nullptr);
+        std::cout << "Input the final player id and price" << std::endl;
+        int i;
+        game::cashType p;
+        std::cin >> i >> p;
+        game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{p, game::gamePlay::GameInstance::getInstance().getPlayers()[i]});
+    };
+    g.callbackPrisonPayOut = [](game::player::Player* p, game::gamePlay::Prison* tile, game::cashType cash) { 
+        std::cout << "Player " << game::gamePlay::GameInstance::getInstance().findPlayerPos(p) << " could pay " << cash << " to get out of jail " << game::gamePlay::GameInstance::getInstance().findTile(tile) << std::endl;
+        std::cout << "Input 1 to pay" << std::endl;
+        int i;
+        std::cin >> i;
+        game::gamePlay::GameInstance::getInstance().notifyUserInput(static_cast<bool>(i));
     };
     // Main loop
-    while (1) {
-        refresh();
-        g.tick();
-        system("pause");
-    }
+    std::thread t([]() {
+        while (1) {
+            refresh();
+            game::gamePlay::GameInstance::getInstance().tick();
+            system("pause");
+        }
+    });
+
+    t.detach();
+    while(1);
     return 0;
 }
