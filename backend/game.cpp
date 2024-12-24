@@ -162,7 +162,8 @@ Tile::TileType Tile::getType() const {
 Buildable::Buildable(cashType _plotCost, cashType _houseCost, cashType _basicRent, std::array<cashType, 6>& _houseRent)
     : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status(empty) {
         static int colorCounter = 0;
-        color = (colorCounter++) % 3;
+        color = colorCounter++;
+        colorCounter %= 4;
     }
 
 /**

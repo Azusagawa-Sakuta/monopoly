@@ -6,12 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
+    <width>1800</width>
     <height>860</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Monopoly Game</string>
+  </property>
+  <property name="windowOpacity">
+   <double>3.000000000000000</double>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -19,16 +22,22 @@
    </property>
    <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
     <widget class="QGraphicsView" name="graphicsView">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="minimumSize">
       <size>
-       <width>1000</width>
-       <height>600</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>1000</width>
-       <height>600</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
     </widget>
