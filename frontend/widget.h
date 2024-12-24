@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QGraphicsScene>
+#include <QVector>
+#include <QGraphicsPixmapItem>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -18,10 +20,10 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
-    void loadPhotos();
-
 signals:
     void playerSelected(int playerCount);
+
+    void thumbnailDoubleClicked(int index);
 
 private slots:
 
@@ -47,9 +49,26 @@ private slots:
 
     void on_addPlayer_4_clicked();
 
+    void handleThumbnailDoubleClick(int index);
+
 private:
     Ui::Widget *ui;
     QGraphicsScene *scene;
     int selectedPlayers;
+
+    void loadPhotos();
 };
+
+class ClickablePixmapItem : public QGraphicsPixmapItem
+{
+public:
+    ClickablePixmapItem(const QPixmap &pixmap, const int index);
+
+protected:
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
+
+private:
+    int index;
+};
+
 #endif // WIDGET_H

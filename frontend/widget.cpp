@@ -22,9 +22,6 @@ Widget::Widget(QWidget *parent)
 
     ui->profilePhotoList->setScene(scene);
 
-    // load photos
-    loadPhotos();
-
     ui->commitButton->setEnabled(false);
 
     connect(this, &Widget::playerSelected, [this](int count) {
@@ -59,6 +56,10 @@ Widget::Widget(QWidget *parent)
             QMessageBox::information(this, "Input Cancelled", "No number was entered, please try again");
         }
     });
+
+    connect(this, &Widget::thumbnailDoubleClicked, this, &Widget::handleThumbnailDoubleClick);
+
+    loadPhotos();
 }
 
 Widget::~Widget()
@@ -68,13 +69,15 @@ Widget::~Widget()
 }
 
 void Widget::loadPhotos() {
-    QStringList imagePaths = {"image1.png", "image2.png", "image3.png", "image4.png"};
+    QStringList imagePaths = {"use.png", "absolute.png", "path.png", "here.png"};
     // 加载图片缩略图到场景
     // TODO (try parameters)
+    // ---FINISHED---
     int x = 0; // 起始 x 坐标
     int y = 0; // 起始 y 坐标
     const int spacing = 50; // 缩略图间距
     QRectF totalBoundingRect; // 用于计算总的边界矩形
+    int index = 0;
 
     for (const QString &path : imagePaths) {
         QPixmap pixmap(path);
@@ -83,7 +86,7 @@ void Widget::loadPhotos() {
         QPixmap thumbnail = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
         // 创建图形项并添加到场景
-        QGraphicsPixmapItem *item = new QGraphicsPixmapItem(thumbnail);
+        ClickablePixmapItem *item = new ClickablePixmapItem(thumbnail, index++);
         item->setPos(x, y); // 设置位置
         scene->addItem(item);
 
@@ -93,6 +96,9 @@ void Widget::loadPhotos() {
 
         // 更新下一个图片的 x 坐标
         x += thumbnail.width() + spacing;
+
+        item->setFlag(QGraphicsItem::ItemIsSelectable);  // 允许选择项
+        item->setFlag(QGraphicsItem::ItemIsFocusable);    // 允许焦点
     }
 
     // 调整场景范围为总的边界矩形
@@ -100,6 +106,22 @@ void Widget::loadPhotos() {
 
     // 将 QGraphicsView 居中显示
     ui->profilePhotoList->centerOn(totalBoundingRect.center());
+}
+
+void Widget::handleThumbnailDoubleClick(int index) {
+    // IMPORTANT!!
+    // Use the double click function here
+    qDebug() << "Thumbnail double clicked: " << index;
+}
+
+ClickablePixmapItem::ClickablePixmapItem(const QPixmap &pixmap, const int index)
+    : QGraphicsPixmapItem(pixmap), index(index) {
+    setAcceptHoverEvents(true);
+}
+
+void ClickablePixmapItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsPixmapItem::mouseDoubleClickEvent(event);
+    emit static_cast<Widget*>(scene()->parent())->thumbnailDoubleClicked(index);
 }
 
 void Widget::on_manualButton_clicked()
