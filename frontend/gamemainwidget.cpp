@@ -10,6 +10,7 @@
 #include <QColor>
 #include <QPointF>
 #include <QPolygonF>
+#include <QTransform>
 #include <cmath>
 #include "../backend/game.h"
 
@@ -49,6 +50,10 @@ void gameMainWidget::generateMap()
 
     int index = 0;
 
+    // Create a transform for rotation
+    QTransform transform;
+    transform.rotate(45);
+
     auto addCube = [&](int x, int y, QColor color, int tileNumber) {
         // Calculate points for the cube
         QPointF topFrontLeft(x, y);
@@ -73,14 +78,15 @@ void gameMainWidget::generateMap()
         // Add text label on the top face
         QGraphicsTextItem* textItem = scene->addText(QString::number(tileNumber));
         textItem->setDefaultTextColor(Qt::black);
-        textItem->setPos((topFrontLeft + topBackRight) / 2 - QPointF(tileW / 4, tileH / 4));
+        QPointF labelPos = (topFrontLeft + topBackRight) / 2 - QPointF(tileW / 4, tileH / 4);
+        textItem->setPos(labelPos);
     };
 
     // Top row
     for (int col = 0; col < numCols && index < numTiles; ++col) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = col * (tileW + spacing);
-        int y = 0;
+        int x = col * (tileW + spacing + tileD);
+        int y = -col * tileD;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
@@ -93,8 +99,8 @@ void gameMainWidget::generateMap()
     // Right column
     for (int row = 1; row < numRows - 1 && index < numTiles; ++row) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = (numCols - 1) * (tileW + spacing);
-        int y = row * (tileH + spacing);
+        int x = (numCols - 1) * (tileW + spacing + tileD) + row * tileD;
+        int y = row * (tileH + spacing) - row * tileD;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
@@ -107,8 +113,8 @@ void gameMainWidget::generateMap()
     // Bottom row
     for (int col = numCols - 1; col >= 0 && index < numTiles; --col) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = col * (tileW + spacing);
-        int y = (numRows - 1) * (tileH + spacing);
+        int x = col * (tileW + spacing + tileD);
+        int y = (numRows - 1) * (tileH + spacing) - col * tileD;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
@@ -121,8 +127,8 @@ void gameMainWidget::generateMap()
     // Left column
     for (int row = numRows - 2; row > 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = 0;
-        int y = row * (tileH + spacing);
+        int x = row * tileD;
+        int y = row * (tileH + spacing) - row * tileD;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
