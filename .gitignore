@@ -2,3 +2,4 @@
 /build
 /backend/shell-cli/build
 /frontend/build
+.DS_Store
