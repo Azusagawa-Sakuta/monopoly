@@ -2,6 +2,7 @@
 
 #include <QApplication>
 #include <thread>
+#include "../backend/game.h"
 
 int main(int argc, char *argv[]) {
     std::thread([]() {
@@ -11,7 +12,7 @@ int main(int argc, char *argv[]) {
         game::constant::initialCash = 10000;
         game::gamePlay::GameInstance &g = game::gamePlay::GameInstance::getInstance();
     }).detach();
-    
+
     QApplication a(argc, argv);
     Widget w;
     w.show();

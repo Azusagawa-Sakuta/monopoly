@@ -5,7 +5,7 @@
 #include <QPen>
 #include <QBrush>
 #include <cmath>
-#include "backend/game.h"
+#include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
