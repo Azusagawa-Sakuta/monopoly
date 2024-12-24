@@ -38,7 +38,7 @@ void gameMainWidget::generateMap()
 
     // Calculate the number of rows and columns to form a hollow rectangle
     int numTiles = tiles.size();
-    int numCols = static_cast<int>(std::ceil(std::sqrt(numTiles)));
+    int numCols = static_cast<int>(std::ceil(numTiles / 4.0f)) + 1;
     int numRows = static_cast<int>(std::ceil(numTiles / 2.0f)) - numCols + 2;
 
     int index = 0;
