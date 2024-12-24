@@ -79,7 +79,7 @@ jobs:
     - name: Set up Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '5.15.2'
+        version: '6.8.*'
         host: 'windows'
 
     - name: Build Qt Project
@@ -87,7 +87,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        qmake ..\QtApp\test.pro
+        qmake ..\frontend\frontend.pro
         nmake
 
     - name: Deploy Qt Dependencies
