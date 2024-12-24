@@ -79,9 +79,8 @@ jobs:
     - name: Set up Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.8.*'
+        version: '6.8'
         host: 'windows'
-        modules: 'qtbase,qttools'
 
     - name: Build Qt Project
       shell: cmd
