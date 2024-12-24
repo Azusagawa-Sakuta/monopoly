@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <string>
 #include <vector>
 #include <functional>
 #include <array>
@@ -18,6 +19,7 @@ namespace game {
             int position;
             int prisonTime;
             mutable std::shared_mutex mtx;
+            std::string nickname;
 
         public:
             Player(cashType initialCash = constant::initialCash);
@@ -30,6 +32,8 @@ namespace game {
             void setPosition(int pos);
             int getPrisonTime() const;
             void setPrisonTime(int time);
+            std::string getNickname() const;
+            void setNickname(const std::string& newNickname);
         };
 
         class ComputerPlayer : public Player {

@@ -94,6 +94,26 @@ void Player::setPrisonTime(int time) {
 }
 
 /**
+ * @brief Get player's nickname
+ * @param None
+ * @return Player's nickname
+ */
+std::string Player::getNickname() const {
+    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    return nickname;
+}
+
+/**
+ * @brief Set player's nickname
+ * @param newNickname New nickname to set
+ * @return None
+ */
+void Player::setNickname(const std::string& newNickname) {
+    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    nickname = newNickname;
+}
+
+/**
  * @brief ComputerPlayer constructor
  * @param initialCash Initial cash amount for computer player
  * @return None
