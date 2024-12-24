@@ -64,10 +64,7 @@ namespace game {
 
         class Buildable : public Tile {
         public:
-            struct buildStatus {
-                int house;
-                int hotel;
-            };
+            enum buildStatus { empty, house1, house2, house3, house4, house5, hotel };
 
         private:
             cashType plotCost;
@@ -76,6 +73,7 @@ namespace game {
             std::array<cashType, 6> houseRent;
             player::Player* owner;
             buildStatus status;
+            int color;
             mutable std::shared_mutex mtxBuildable;
             mutable std::condition_variable_any cv;
             mutable bool userInputReady = false;
@@ -94,6 +92,8 @@ namespace game {
             cashType getRent() const;
             buildStatus getStatus() const;
             void setStatus(buildStatus newStatus);
+            int getColor() const;
+            void setColor(int newColor);
         };
 
         class Home : public Tile {

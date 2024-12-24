@@ -160,7 +160,10 @@ Tile::TileType Tile::getType() const {
  * @return None
  */
 Buildable::Buildable(cashType _plotCost, cashType _houseCost, cashType _basicRent, std::array<cashType, 6>& _houseRent)
-    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status({0, 0}) {}
+    : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status(empty) {
+        static int colorCounter = 0;
+        color = (colorCounter++) % 3;
+    }
 
 /**
  * @brief Buildable destructor
@@ -227,8 +230,8 @@ cashType Buildable::getHouseCost() const {
 cashType Buildable::getRent() const {
     std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
     cashType rent = basicRent;
-    if (status.house)
-        rent += houseRent[status.house - 1];
+    if (status)
+        rent += houseRent[status - 1];
     return rent;
 }
 
@@ -250,6 +253,26 @@ Buildable::buildStatus Buildable::getStatus() const {
 void Buildable::setStatus(buildStatus newStatus) {
     std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
     status = newStatus;
+}
+
+/**
+ * @brief Get color
+ * @param None
+ * @return Color
+ */
+int Buildable::getColor() const {
+    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
+    return color;
+}
+
+/**
+ * @brief Set color
+ * @param newColor New color to set
+ * @return None
+ */
+void Buildable::setColor(int newColor) {
+    std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
+    color = newColor;
 }
 
 /**
@@ -342,7 +365,14 @@ GameInstance::GameInstance() : currentPlayerIndex(0) {
  * @param None
  * @return None
  */
-GameInstance::~GameInstance() {}
+GameInstance::~GameInstance() {
+    for (auto& t : tiles) 
+        if (t != nullptr) 
+            delete t; // Delete all tiles
+    for (auto& p : players) 
+        if (p != nullptr) 
+            delete p; // Delete all players
+}
 
 /**
  * @brief Notifies the game instance that user input is ready

@@ -13,7 +13,7 @@ class gameMainWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit gameMainWidget(QWidget *parent = nullptr, int len = 0);
+    explicit gameMainWidget(QWidget *parent = nullptr);
     ~gameMainWidget();
 
 private slots:
@@ -21,9 +21,8 @@ private slots:
 private:
     Ui::gameMainWidget *ui;
     QGraphicsScene *scene; // Scene to show the map
-    int mapLength;
 
-    void generateMap(int n); // Helper to create 4n tiles (up, down, left, right)
+    void generateMap(); // Helper to create 4n tiles (up, down, left, right)
 };
 
 #endif // GAMEMAINWIDGET_H

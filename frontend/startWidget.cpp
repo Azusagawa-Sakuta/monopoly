@@ -7,6 +7,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QInputDialog>
+#include "../backend/game.h"
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -20,7 +21,25 @@ Widget::Widget(QWidget *parent)
         bool ok;
         int number = QInputDialog::getInt(this, "Input the length of map", "Please enter a number range in (4, 10) to generate the map: ", 4, 4, 10, 1, &ok);
         if(ok) {
-            gameMainWidget *w = new gameMainWidget(nullptr, number);
+            auto& g = game::gamePlay::GameInstance::getInstance();
+            for (int i = 0; i < count; i++) 
+                g.addPlayer(new game::player::Player);
+
+            g.addTile(game::gamePlay::Home);
+            for (int i = 1; i < number; i++) 
+                g.addTile(new game::gamePlay::Buildable);
+            g.addTile(game::gamePlay::Prison);
+            for (int i = 1; i < number; i++) 
+                g.addTile(new game::gamePlay::Buildable);
+            g.addTile(game::gamePlay::Random);
+            for (int i = 1; i < number; i++) 
+                g.addTile(new game::gamePlay::Buildable);
+            g.addTile(game::gamePlay::Tax);
+            for (int i = 1; i < number; i++) 
+                g.addTile(new game::gamePlay::Buildable);
+
+            
+            gameMainWidget *w = new gameMainWidget(nullptr);
 
             w->show(); // Show the game main widget
             this->close(); // Close the current start widget
