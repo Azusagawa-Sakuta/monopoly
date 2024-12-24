@@ -22,23 +22,23 @@ Widget::Widget(QWidget *parent)
         int number = QInputDialog::getInt(this, "Input the length of map", "Please enter a number range in (4, 10) to generate the map: ", 4, 4, 10, 1, &ok);
         if(ok) {
             auto& g = game::gamePlay::GameInstance::getInstance();
+            
             for (int i = 0; i < count; i++) 
                 g.addPlayer(new game::player::Player);
 
-            g.addTile(game::gamePlay::Home);
+            g.addTile(new game::gamePlay::Home);
             for (int i = 1; i < number; i++) 
                 g.addTile(new game::gamePlay::Buildable);
-            g.addTile(game::gamePlay::Prison);
+            g.addTile(new game::gamePlay::Prison);
             for (int i = 1; i < number; i++) 
                 g.addTile(new game::gamePlay::Buildable);
-            g.addTile(game::gamePlay::Random);
+            g.addTile(new game::gamePlay::Random);
             for (int i = 1; i < number; i++) 
                 g.addTile(new game::gamePlay::Buildable);
-            g.addTile(game::gamePlay::Tax);
+            g.addTile(new game::gamePlay::Tax);
             for (int i = 1; i < number; i++) 
                 g.addTile(new game::gamePlay::Buildable);
 
-            
             gameMainWidget *w = new gameMainWidget(nullptr);
 
             w->show(); // Show the game main widget
