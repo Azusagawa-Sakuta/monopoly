@@ -97,6 +97,16 @@ jobs:
         cd build\release
         windeployqt frontend.exe --release --no-compiler-runtime
 
+    - name: Clean up build directory
+      shell: cmd
+      run: |
+        del /s /q build\release\*.pdb
+        del /s /q build\release\*.ilk
+        del /s /q build\release\*.exp
+        del /s /q build\release\*.lib
+        del /s /q build\release\*.obj
+        del /s /q build\release\*.h
+
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Qt-Windows
