@@ -28,7 +28,8 @@ void gameMainWidget::generateMap()
 
     // Basic tile size and spacing
     int tileW = 50, tileH = 50;
-    int spacing = 5;
+    int horizontalSpacing = 60;
+    int verticalSpacing = 40;
 
     // Retrieve tiles from GameInstance
     const std::vector<game::gamePlay::Tile*>& tiles = game::gamePlay::GameInstance::getInstance().getTiles();
@@ -36,62 +37,66 @@ void gameMainWidget::generateMap()
     // Define colors for the tiles
     QColor colors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
 
-    // Calculate the number of rows and columns to form a hollow rectangle
+    // Calculate the number of rows and columns to form a diamond shape
     int numTiles = tiles.size();
-    int numCols = static_cast<int>(std::sqrt(numTiles));
-    int numRows = (numTiles + numCols - 1) / numCols; // Ceiling division
+    int numCols = static_cast<int>(std::ceil(numTiles / 4.0f)) + 1;
+    int numRows = static_cast<int>(std::ceil(numTiles / 2.0f)) - numCols + 2;
 
     int index = 0;
 
-    // Top row
-    for (int col = 0; col < numCols && index < numTiles; ++col) {
+    // Left column (bottom to top)
+    for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index++];
-        int x = col * (tileW + spacing);
-        int y = 0;
+        int x = horizontalSpacing * (- numRows + row + 1);
+        int y = row * verticalSpacing;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor() % 4];
+            color = colors[buildableTile->getColor()];
         }
         scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        scene->addText(QString::number(index))->setPos(x, y);
     }
 
-    // Right column
-    for (int row = 1; row < numRows - 1 && index < numTiles; ++row) {
+    // Top row (left to right)
+    for (int col = 1; col < numCols && index < numTiles; ++col) {
         game::gamePlay::Tile* tile = tiles[index++];
-        int x = (numCols - 1) * (tileW + spacing);
-        int y = row * (tileH + spacing);
+        int x = horizontalSpacing * (- numRows + col + 1);
+        int y = - col * verticalSpacing;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor() % 4];
+            color = colors[buildableTile->getColor()];
         }
         scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        scene->addText(QString::number(index))->setPos(x, y);
     }
 
-    // Bottom row
-    for (int col = numCols - 1; col >= 0 && index < numTiles; --col) {
+    // Right column (top to bottom)
+    for (int row = 1; row < numRows && index < numTiles; ++row) {
         game::gamePlay::Tile* tile = tiles[index++];
-        int x = col * (tileW + spacing);
-        int y = (numRows - 1) * (tileH + spacing);
+        int x = horizontalSpacing * row;
+        int y = (- numRows + row + 1) * verticalSpacing;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor() % 4];
+            color = colors[buildableTile->getColor()];
         }
         scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        scene->addText(QString::number(index))->setPos(x, y);
     }
 
-    // Left column
-    for (int row = numRows - 2; row > 0 && index < numTiles; --row) {
+    // Bottom row (right to left)
+    for (int col = numCols - 2; col > 0 && index < numTiles; --col) {
         game::gamePlay::Tile* tile = tiles[index++];
-        int x = 0;
-        int y = row * (tileH + spacing);
+        int x = horizontalSpacing * col;
+        int y = (numCols - col - 1) * verticalSpacing;
         QColor color = Qt::gray;
         if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor() % 4];
+            color = colors[buildableTile->getColor()];
         }
         scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        scene->addText(QString::number(index))->setPos(x, y);
     }
 }
