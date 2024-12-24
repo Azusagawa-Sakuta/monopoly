@@ -48,8 +48,12 @@ void gameMainWidget::generateMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = col * (tileW + spacing);
         int y = 0;
-        int colorIndex = tile->getColor() % 4;
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(colors[colorIndex]));
+        QColor color = Qt::gray;
+        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
+            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
+            color = colors[buildableTile->getColor() % 4];
+        }
+        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
     }
 
     // Right column
@@ -57,8 +61,12 @@ void gameMainWidget::generateMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = (numCols - 1) * (tileW + spacing);
         int y = row * (tileH + spacing);
-        int colorIndex = tile->getColor() % 4;
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(colors[colorIndex]));
+        QColor color = Qt::gray;
+        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
+            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
+            color = colors[buildableTile->getColor() % 4];
+        }
+        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
     }
 
     // Bottom row
@@ -66,8 +74,12 @@ void gameMainWidget::generateMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = col * (tileW + spacing);
         int y = (numRows - 1) * (tileH + spacing);
-        int colorIndex = tile->getColor() % 4;
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(colors[colorIndex]));
+        QColor color = Qt::gray;
+        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
+            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
+            color = colors[buildableTile->getColor() % 4];
+        }
+        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
     }
 
     // Left column
@@ -75,7 +87,11 @@ void gameMainWidget::generateMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = 0;
         int y = row * (tileH + spacing);
-        int colorIndex = tile->getColor() % 4;
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(colors[colorIndex]));
+        QColor color = Qt::gray;
+        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
+            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
+            color = colors[buildableTile->getColor() % 4];
+        }
+        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
     }
 }
