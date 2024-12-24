@@ -3,3 +3,4 @@
 /backend/shell-cli/build
 /frontend/build
 .DS_Store
+/frontend/frontend.pro.*
