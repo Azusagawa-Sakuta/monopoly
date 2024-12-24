@@ -1,4 +1,4 @@
-#include "../game.hpp"
+#include "../game.h"
 #include <iostream>
 #include <iomanip>
 #include <windows.h>

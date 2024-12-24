@@ -14,5 +14,5 @@ Windows commandline client designed to test backend interface. To build:
 cd backend/shell-cli/
 mkdir build
 cd build
-g++ ../client.cpp
+g++ ../client.cpp ../../game.cpp ../../utils.cpp ../../constant.cpp
 ```
