@@ -5,6 +5,8 @@
 #include <functional>
 #include <array>
 #include <shared_mutex>
+#include <any>
+#include <condition_variable>
 #include "utils.h"
 #include "constant.h"
 
@@ -71,6 +73,9 @@ namespace game {
             player::Player* owner;
             buildStatus status;
             mutable std::shared_mutex mtxBuildable;
+            mutable std::condition_variable_any cv;
+            mutable bool userInputReady = false;
+            mutable std::any userInputResult;
 
         public:
             Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
@@ -133,6 +138,9 @@ namespace game {
             std::vector<player::Player*> players;
             int currentPlayerIndex;
             mutable std::shared_mutex mtx;
+            mutable std::condition_variable_any cv;
+            mutable bool userInputReady = false;
+            mutable std::any userInputResult;
 
             GameInstance();
             ~GameInstance();
@@ -148,14 +156,21 @@ namespace game {
             std::function<void(player::Player* player, int diceValue1, int diceValue2)> callbackDice;
             std::function<void(player::Player* player, int diceValue3)> callbackDice3rd;
             std::function<void(player::Player* player, Prison* tile)> callbackPrison;
-            std::function<bool(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut;
-            std::function<bool(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy;
+            std::function<void(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut;
+            std::function<void(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy;
             std::function<void(player::Player* player, Buildable* tile, cashType cashPaid)> callbackRent;
             std::function<void(player::Player* player, Tax* tile, cashType cashPaid)> callbackTax;
             std::function<void(player::Player* player, Home* tile, cashType cashReceived)> callbackHomeReward;
-            std::function<std::pair<cashType, player::Player*>(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction;
+            std::function<void(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction;
             std::function<void(Tile* tile)> callbackTileUpdate;
 
+            struct auctionResult {
+                cashType price;
+                player::Player* player;
+            };
+
+            void notifyUserInput(const std::any& result);
+            std::any waitForUserInput();
             static GameInstance& getInstance();
             const std::vector<Tile*>& getTiles() const;
             const std::vector<player::Player*>& getPlayers() const;

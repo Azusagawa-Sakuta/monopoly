@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "constant.h"
 #include <random>
+#include <algorithm>
 
 using namespace game;
 using namespace player;
@@ -324,6 +325,30 @@ GameInstance::GameInstance() : currentPlayerIndex(0) {
 GameInstance::~GameInstance() {}
 
 /**
+ * @brief Notifies the game instance that user input is ready
+ * @param User input value
+ * @return None 
+ */
+void GameInstance::notifyUserInput(const std::any& result) {
+    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    userInputResult = result; // Set user input result
+    userInputReady = true; // Set user input ready flag
+    cv.notify_one(); // Notify waiting thread
+}
+
+/**
+ * @brief Called by the game instance to wait for user input
+ * @param None
+ * @return User input value
+ */
+std::any GameInstance::waitForUserInput() {
+    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    cv.wait(lock, [this] { return userInputReady; }); // Wait for user input
+    userInputReady = false; // Reset user input ready flag
+    return userInputResult; // Return user input result
+}
+
+/**
  * @brief Get singleton instance
  * @param None
  * @return Reference to GameInstance singleton
@@ -495,8 +520,9 @@ void GameInstance::tick() {
                 }
             }
 
+            callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()]);
             if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()] 
-                && callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()])) {
+                && std::any_cast<bool>(waitForUserInput())) {
                 utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
                 currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]); // Deduct prison release price from player
                 currentPlayer->setPrisonTime(0); // Reset prison time
@@ -592,14 +618,16 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
             Buildable* buildableTile = static_cast<Buildable*>(tile);
 
             if (!buildableTile->isOwned()) { // If the tile is not owned
-                if (player->getCash() >= buildableTile->getPlotCost() && callbackBuy(player, buildableTile, buildableTile->getPlotCost())) {
+                callbackBuy(player, buildableTile, buildableTile->getPlotCost());
+                if (player->getCash() >= buildableTile->getPlotCost() && std::any_cast<bool>(waitForUserInput())) {
                     player->setCash(player->getCash() - buildableTile->getPlotCost()); // Deduct plot cost from player
                     buildableTile->setOwner(player); // Set player as owner
                 } else {
-                    auto auctionResult = callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
-                    if (auctionResult.first >= constant::auctionReservePrice) {
-                        auctionResult.second->addCash(-auctionResult.first); // Deduct auction price from winner
-                        buildableTile->setOwner(auctionResult.second); // Set auction winner as owner
+                    callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+                    auctionResult result = std::any_cast<auctionResult>(waitForUserInput());
+                    if (result.price >= constant::auctionReservePrice) {
+                        result.player->addCash(-result.price); // Deduct auction price from winner
+                        buildableTile->setOwner(result.player); // Set auction winner as owner
                     }
                 }
             } else if (buildableTile->getOwner() != player) { // If the tile is owned by another player

@@ -1,6 +1,7 @@
 #include "../game.h"
 #include <iostream>
 #include <iomanip>
+#include <thread>
 #include <windows.h>
 
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
