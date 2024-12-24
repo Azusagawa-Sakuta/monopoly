@@ -81,6 +81,7 @@ jobs:
       with:
         version: '6.8.*'
         host: 'windows'
+        modules: 'qtbase,qttools'
 
     - name: Build Qt Project
       shell: cmd
