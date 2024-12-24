@@ -166,9 +166,9 @@ void Widget::on_addComputer_1_clicked()
     QString txt = ui->addComputer_1->text();
 
     if (txt == static_cast<QString>("Add Computer")) {
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 0) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
         ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
@@ -179,15 +179,20 @@ void Widget::on_addComputer_1_clicked()
         // determine the photo
         // TODO
 
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 0) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
         }
+        selectedPlayers++;
         ui->addComputer_1->setText(static_cast<QString>("Unready"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose profile again?"));
     }
 
     else if (txt == static_cast<QString>("Unready")) {
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Unready failed", "You should cancel all candidates at the right first.");
+            return;
+        }
         ui->addComputer_1->setText(static_cast<QString>("Ready!"));
         selectedPlayers--;
         if (selectedPlayers < 2) {
@@ -196,6 +201,10 @@ void Widget::on_addComputer_1_clicked()
     }
 
     else if (txt == static_cast<QString>("Ready!")) {
+        if (selectedPlayers != 0) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addComputer_1->setText(static_cast<QString>("Unready"));
         selectedPlayers++;
         if (selectedPlayers >= 2) {
@@ -213,6 +222,10 @@ void Widget::on_addPlayer_1_clicked()
     QString txt = ui->addPlayer_1->text();
 
     if (txt == static_cast<QString>("Add Player")) {
+        if (selectedPlayers != 0) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         g.addPlayer(new game::player::Player);
         ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
@@ -221,6 +234,10 @@ void Widget::on_addPlayer_1_clicked()
         // delete the last player
         // TODO
 
+        if (selectedPlayers > 0) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addPlayer_1->setText(static_cast<QString>("Add Player"));
         ui->addComputer_1->setText(static_cast<QString>("Add Computer"));
     }
@@ -228,10 +245,11 @@ void Widget::on_addPlayer_1_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all candidates at the right first.");
+            return;
         }
+        selectedPlayers--;
         ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
     }
@@ -244,9 +262,9 @@ void Widget::on_addComputer_2_clicked()
     QString txt = ui->addComputer_2->text();
 
     if (txt == static_cast<QString>("Add Computer")) {
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
         ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
@@ -257,28 +275,34 @@ void Widget::on_addComputer_2_clicked()
         // determine the photo
         // TODO
 
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
+            return;
         }
+        selectedPlayers++;
+        ui->commitButton->setEnabled(true);
         ui->addComputer_2->setText(static_cast<QString>("Unready"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose profile again?"));
     }
 
     else if (txt == static_cast<QString>("Unready")) {
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Unready failed", "You should cancel all the candidates at the right first.");
+            return;
+        }
         ui->addComputer_2->setText(static_cast<QString>("Ready!"));
         selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
-        }
+        ui->commitButton->setEnabled(false);
     }
 
     else if (txt == static_cast<QString>("Ready!")) {
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addComputer_2->setText(static_cast<QString>("Unready"));
         selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
-        }
+        ui->commitButton->setEnabled(true);
     }
 }
 
@@ -289,6 +313,10 @@ void Widget::on_addPlayer_2_clicked()
     QString txt = ui->addPlayer_2->text();
 
     if (txt == static_cast<QString>("Add Player")) {
+        if (selectedPlayers != 1) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
+        }
         g.addPlayer(new game::player::Player);
         ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
@@ -297,6 +325,10 @@ void Widget::on_addPlayer_2_clicked()
         // delete the last player
         // TODO
 
+        if (selectedPlayers > 1) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addPlayer_2->setText(static_cast<QString>("Add Player"));
         ui->addComputer_2->setText(static_cast<QString>("Add Computer"));
     }
@@ -304,10 +336,12 @@ void Widget::on_addPlayer_2_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
+            return;
         }
+        selectedPlayers--;
+        ui->commitButton->setEnabled(false);
         ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
     }
@@ -319,9 +353,9 @@ void Widget::on_addComputer_3_clicked()
     QString txt = ui->addComputer_3->text();
 
     if (txt == static_cast<QString>("Add Computer")) {
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
         ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
@@ -332,28 +366,31 @@ void Widget::on_addComputer_3_clicked()
         // determine the photo
         // TODO
 
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
+            return;
         }
+        selectedPlayers++;
         ui->addComputer_3->setText(static_cast<QString>("Unready"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose profile again?"));
     }
 
     else if (txt == static_cast<QString>("Unready")) {
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Unready failed", "You should cancel all the candidates at the right first.");
+            return;
+        }
         ui->addComputer_3->setText(static_cast<QString>("Ready!"));
         selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
-        }
     }
 
     else if (txt == static_cast<QString>("Ready!")) {
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addComputer_3->setText(static_cast<QString>("Unready"));
         selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
-        }
     }
 }
 
@@ -364,6 +401,10 @@ void Widget::on_addPlayer_3_clicked()
     QString txt = ui->addPlayer_3->text();
 
     if (txt == static_cast<QString>("Add Player")) {
+        if (selectedPlayers != 2) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
+        }
         g.addPlayer(new game::player::Player);
         ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
@@ -372,6 +413,10 @@ void Widget::on_addPlayer_3_clicked()
         // delete the last player
         // TODO
 
+        if (selectedPlayers > 2) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addPlayer_3->setText(static_cast<QString>("Add Player"));
         ui->addComputer_3->setText(static_cast<QString>("Add Computer"));
     }
@@ -379,10 +424,11 @@ void Widget::on_addPlayer_3_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
+            return;
         }
+        selectedPlayers--;
         ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
     }
@@ -394,9 +440,9 @@ void Widget::on_addComputer_4_clicked()
     QString txt = ui->addComputer_4->text();
 
     if (txt == static_cast<QString>("Add Computer")) {
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
         ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
@@ -407,28 +453,31 @@ void Widget::on_addComputer_4_clicked()
         // determine the photo
         // TODO
 
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
+            return;
         }
+        selectedPlayers++;
         ui->addComputer_4->setText(static_cast<QString>("Unready"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose profile again?"));
     }
 
     else if (txt == static_cast<QString>("Unready")) {
+        if (selectedPlayers != 4) {
+            QMessageBox::critical(this, "Unready failed", "You should cancel all the candidates at the right first.");
+            return;
+        }
         ui->addComputer_4->setText(static_cast<QString>("Ready!"));
         selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
-        }
     }
 
     else if (txt == static_cast<QString>("Ready!")) {
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addComputer_4->setText(static_cast<QString>("Unready"));
         selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
-        }
     }
 }
 
@@ -439,6 +488,10 @@ void Widget::on_addPlayer_4_clicked()
     QString txt = ui->addPlayer_4->text();
 
     if (txt == static_cast<QString>("Add Player")) {
+        if (selectedPlayers != 3) {
+            QMessageBox::critical(this, "Add failed", "You should not add another role until all left candidates are determined.");
+            return;
+        }
         g.addPlayer(new game::player::Player);
         ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
@@ -447,6 +500,10 @@ void Widget::on_addPlayer_4_clicked()
         // delete the last player
         // TODO
 
+        if (selectedPlayers > 3) {
+            QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
+            return;
+        }
         ui->addPlayer_4->setText(static_cast<QString>("Add Player"));
         ui->addComputer_4->setText(static_cast<QString>("Add Computer"));
     }
@@ -454,10 +511,11 @@ void Widget::on_addPlayer_4_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
+        if (selectedPlayers != 4) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
+            return;
         }
+        selectedPlayers--;
         ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
