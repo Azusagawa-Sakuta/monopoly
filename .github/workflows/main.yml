@@ -106,6 +106,7 @@ jobs:
         del /s /q build\release\*.lib
         del /s /q build\release\*.obj
         del /s /q build\release\*.h
+        del /s /q build\release\*.cpp
 
     - uses: actions/upload-artifact@v4
       with:
