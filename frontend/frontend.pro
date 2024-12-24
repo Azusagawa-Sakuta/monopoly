@@ -14,18 +14,21 @@ SOURCES += \
     ../backend/constant.cpp \
     ../backend/game.cpp \
     ../backend/utils.cpp \
-    startWidget.cpp
+    startwidget.cpp \
+    widget.cpp
 
 HEADERS += \
     ../backend/constant.h \
     ../backend/game.h \
     ../backend/utils.h \
     gamemainwidget.h \
-    startWidget.h
+    startwidget.h \
+    widget.h
 
 FORMS += \
     gamemainwidget.ui \
-    startWidget.ui
+    startwidget.ui \
+    widget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

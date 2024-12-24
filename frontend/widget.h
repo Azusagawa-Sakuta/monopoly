@@ -1,7 +1,8 @@
-#ifndef STARTWIDGET_H
-#define STARTWIDGET_H
+#ifndef WIDGET_H
+#define WIDGET_H
 
 #include <QWidget>
+#include <QGraphicsScene>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,27 +18,38 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
+    void loadPhotos();
+
 signals:
     void playerSelected(int playerCount);
 
 private slots:
 
-    void on_onePlayerButton_toggled(bool checked);
-
-    void on_twoPlayersButton_toggled(bool checked);
-
-    void on_threePlayersButton_toggled(bool checked);
-
-    void on_fourPlayersButton_toggled(bool checked);
-
-    void on_startButton_clicked();
-
-    void on_exitButton_clicked();
-
     void on_manualButton_clicked();
+
+    void on_cancelButton_clicked();
+
+    void on_commitButton_clicked();
+
+    void on_addComputer_1_clicked();
+
+    void on_addPlayer_1_clicked();
+
+    void on_addComputer_2_clicked();
+
+    void on_addPlayer_2_clicked();
+
+    void on_addComputer_3_clicked();
+
+    void on_addPlayer_3_clicked();
+
+    void on_addComputer_4_clicked();
+
+    void on_addPlayer_4_clicked();
 
 private:
     Ui::Widget *ui;
+    QGraphicsScene *scene;
     int selectedPlayers;
 };
-#endif // STARTWIDGET_H
+#endif // WIDGET_H

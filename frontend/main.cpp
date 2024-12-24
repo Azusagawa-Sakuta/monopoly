@@ -1,4 +1,4 @@
-#include "startWidget.h"
+#include "startwidget.h"
 
 #include <QApplication>
 #include <thread>
@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     }).detach();
 
     QApplication a(argc, argv);
-    Widget w;
+    startWidget w;
     w.show();
     return a.exec();
 }
