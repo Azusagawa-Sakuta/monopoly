@@ -95,6 +95,7 @@ jobs:
       shell: cmd
       run: |
         cd build\release
+        dir /b | findstr /v "monopoly.exe" | xargs -I {}
         windeployqt monopoly.exe --release --no-compiler-runtime
 
     - uses: actions/upload-artifact@v4
