@@ -31,6 +31,11 @@ Widget::Widget(QWidget *parent)
     ui->playerProfilePhoto_3->setScene(scenePlayer3);
     ui->playerProfilePhoto_4->setScene(scenePlayer4);
 
+    ui->playerProfilePhoto_1->hide();
+    ui->playerProfilePhoto_2->hide();
+    ui->playerProfilePhoto_3->hide();
+    ui->playerProfilePhoto_4->hide();
+
     ui->commitButton->setEnabled(false);
 
     connect(this, &Widget::playerSelected, [this](int count) {
@@ -67,6 +72,8 @@ Widget::Widget(QWidget *parent)
     });
 
     connect(this, &Widget::thumbnailDoubleClicked, this, &Widget::handleThumbnailDoubleClick);
+
+    loadPhotos();
 }
 
 Widget::~Widget()
@@ -76,7 +83,7 @@ Widget::~Widget()
 }
 
 void Widget::loadPhotos() {
-    QStringList imagePaths = {"../../resources/use.png", "../../resources/absolute.png", "../../resources/path.png", "../../resources/here.png"};
+    QStringList imagePaths = {"/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/use.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/absolute.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/path.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/here.png"};
     // 加载图片缩略图到场景
     // TODO (try parameters)
     // ---FINISHED---
@@ -113,28 +120,38 @@ void Widget::loadPhotos() {
 
     // 将 QGraphicsView 居中显示
     ui->profilePhotoList->centerOn(totalBoundingRect.center());
+
+    ui->profilePhotoList->hide();
 }
 
 void Widget::loadProfiles(int player, int index) {
-    QStringList imagePaths = {"../../resources/use.png", "../../resources/absolute.png", "../../resources/path.png", "../../resources/here.png"};
+    QStringList imagePaths = {"/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/use.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/absolute.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/path.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/here.png"};
     QPixmap pixmap(imagePaths[index]);
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);
     switch (player) {
     case 1:
+        scenePlayer1->clear();
         scenePlayer1->addItem(item);
         ui->playerProfilePhoto_1->setScene(scenePlayer1);
+        ui->playerProfilePhoto_1->show();
         break;
     case 2:
+        scenePlayer2->clear();
         scenePlayer2->addItem(item);
         ui->playerProfilePhoto_2->setScene(scenePlayer2);
+        ui->playerProfilePhoto_2->show();
         break;
     case 3:
+        scenePlayer3->clear();
         scenePlayer3->addItem(item);
         ui->playerProfilePhoto_3->setScene(scenePlayer3);
+        ui->playerProfilePhoto_3->show();
         break;
     case 4:
+        scenePlayer4->clear();
         scenePlayer4->addItem(item);
         ui->playerProfilePhoto_4->setScene(scenePlayer4);
+        ui->playerProfilePhoto_4->show();
         break;
     }
 }
@@ -142,7 +159,7 @@ void Widget::loadProfiles(int player, int index) {
 void Widget::handleThumbnailDoubleClick(int index) {
     // IMPORTANT!!
     // Use the double click function here
-    loadProfiles(selectedPlayers, index);
+    loadProfiles(selectedPlayers + 1, index);
     qDebug() << "Thumbnail double clicked: " << index;
 }
 
@@ -206,9 +223,8 @@ void Widget::on_addComputer_1_clicked()
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
-        selectedPlayers++;
-        loadPhotos();
-        ui->addComputer_1->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->show();
+        ui->addComputer_1->setText(static_cast<QString>("Ready!"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose profile again?"));
     }
 
@@ -219,9 +235,6 @@ void Widget::on_addComputer_1_clicked()
         }
         ui->addComputer_1->setText(static_cast<QString>("Ready!"));
         selectedPlayers--;
-        if (selectedPlayers < 2) {
-            ui->commitButton->setEnabled(false);
-        }
     }
 
     else if (txt == static_cast<QString>("Ready!")) {
@@ -229,11 +242,13 @@ void Widget::on_addComputer_1_clicked()
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
-        ui->addComputer_1->setText(static_cast<QString>("Unready"));
-        selectedPlayers++;
-        if (selectedPlayers >= 2) {
-            ui->commitButton->setEnabled(true);
+        if (!ui->playerProfilePhoto_1->isVisible()) {
+            QMessageBox::critical(this, "Ready Failure", "You should not ready until choose your profile photo.");
+            return;
         }
+        ui->addComputer_1->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->hide();
+        selectedPlayers++;
     }
 }
 
@@ -258,7 +273,7 @@ void Widget::on_addPlayer_1_clicked()
         // delete the last player
         // TODO
 
-        if (selectedPlayers > 0) {
+        if (selectedPlayers != 0) {
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
@@ -269,11 +284,14 @@ void Widget::on_addPlayer_1_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        if (selectedPlayers != 1) {
+        if (!ui->playerProfilePhoto_2->isVisible() && selectedPlayers == 1) {
+            selectedPlayers--;
+        }
+        if (!ui->playerProfilePhoto_1->isVisible()) {
             QMessageBox::critical(this, "Re-choose failed", "You should cancel all candidates at the right first.");
             return;
         }
-        selectedPlayers--;
+        ui->playerProfilePhoto_1->hide();
         ui->addComputer_1->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
     }
@@ -303,10 +321,9 @@ void Widget::on_addComputer_2_clicked()
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
-        selectedPlayers++;
-        loadPhotos();
+        ui->profilePhotoList->show();
         ui->commitButton->setEnabled(true);
-        ui->addComputer_2->setText(static_cast<QString>("Unready"));
+        ui->addComputer_2->setText(static_cast<QString>("Ready!"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose profile again?"));
     }
 
@@ -325,7 +342,12 @@ void Widget::on_addComputer_2_clicked()
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
+        if (!ui->playerProfilePhoto_2->isVisible()) {
+            QMessageBox::critical(this, "Ready Failure", "You should not ready until choose your profile photo.");
+            return;
+        }
         ui->addComputer_2->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->hide();
         selectedPlayers++;
         ui->commitButton->setEnabled(true);
     }
@@ -361,11 +383,14 @@ void Widget::on_addPlayer_2_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        if (selectedPlayers != 2) {
+        if (!ui->playerProfilePhoto_3->isVisible() && selectedPlayers == 2) {
+            selectedPlayers--;
+        }
+        if (!ui->playerProfilePhoto_2->isVisible()) {
             QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
             return;
         }
-        selectedPlayers--;
+        ui->playerProfilePhoto_2->hide();
         ui->commitButton->setEnabled(false);
         ui->addComputer_2->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
@@ -395,9 +420,8 @@ void Widget::on_addComputer_3_clicked()
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
-        selectedPlayers++;
-        loadPhotos();
-        ui->addComputer_3->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->show();
+        ui->addComputer_3->setText(static_cast<QString>("Ready!"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose profile again?"));
     }
 
@@ -415,7 +439,12 @@ void Widget::on_addComputer_3_clicked()
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
+        if (!ui->playerProfilePhoto_3->isVisible()) {
+            QMessageBox::critical(this, "Ready Failure", "You should not ready until choose your profile photo.");
+            return;
+        }
         ui->addComputer_3->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->hide();
         selectedPlayers++;
     }
 }
@@ -449,12 +478,14 @@ void Widget::on_addPlayer_3_clicked()
     else if (txt == static_cast<QString>("Choose profile again?")) {
         // change the graphic view of the player into question mark
         // TODO
-
-        if (selectedPlayers != 3) {
+        if (!ui->playerProfilePhoto_4->isVisible() && selectedPlayers == 3) {
+            selectedPlayers--;
+        }
+        if (!ui->playerProfilePhoto_3->isVisible()) {
             QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
             return;
         }
-        selectedPlayers--;
+        ui->playerProfilePhoto_3->hide();
         ui->addComputer_3->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
     }
@@ -483,9 +514,8 @@ void Widget::on_addComputer_4_clicked()
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
-        selectedPlayers++;
-        loadPhotos();
-        ui->addComputer_4->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->show();
+        ui->addComputer_4->setText(static_cast<QString>("Ready"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose profile again?"));
     }
 
@@ -503,7 +533,12 @@ void Widget::on_addComputer_4_clicked()
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
+        if (!ui->playerProfilePhoto_4->isVisible()) {
+            QMessageBox::critical(this, "Ready Failure", "You should not ready until choose your profile photo.");
+            return;
+        }
         ui->addComputer_4->setText(static_cast<QString>("Unready"));
+        ui->profilePhotoList->hide();
         selectedPlayers++;
     }
 }
@@ -538,11 +573,14 @@ void Widget::on_addPlayer_4_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
-        if (selectedPlayers != 4) {
+        if (selectedPlayers == 4) {
+            selectedPlayers--;
+        }
+        if (!ui->playerProfilePhoto_4->isVisible()) {
             QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
             return;
         }
-        selectedPlayers--;
+        ui->playerProfilePhoto_4->hide();
         ui->addComputer_4->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
