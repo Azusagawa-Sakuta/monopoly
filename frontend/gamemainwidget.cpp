@@ -26,10 +26,10 @@ void gameMainWidget::generateMap()
 {
     scene->clear(); // Clear old items
 
-    // Basic tile size and spacing
-    int tileW = 50, tileH = 50;
-    int horizontalSpacing = 60;
-    int verticalSpacing = 40;
+    //int tileW = 50, tileH = 50;
+    int spacing = 5;
+    int horizontalSpacing = 64 + spacing * 2;
+    int verticalSpacing = 32 + spacing;
 
     // Retrieve tiles from GameInstance
     const std::vector<game::gamePlay::Tile*>& tiles = game::gamePlay::GameInstance::getInstance().getTiles();
@@ -44,6 +44,16 @@ void gameMainWidget::generateMap()
 
     int index = 0;
 
+    QPixmap tileImage("../../resources/draft/tileTemplate.png");
+    if (tileImage.isNull()) {
+        qDebug() << "Failed to load image";
+    }
+
+    int offsetX = (- tileImage.width()) / 2;
+    int offsetY = (- tileImage.height()) / 2;
+
+    int depth = 0;
+
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index++];
@@ -54,7 +64,10 @@ void gameMainWidget::generateMap()
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
             color = colors[buildableTile->getColor()];
         }
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        auto pixmapItem = scene->addPixmap(tileImage);
+        pixmapItem->setPos(x + offsetX, y + offsetY);
+        pixmapItem->setZValue(depth--);
         scene->addText(QString::number(index))->setPos(x, y);
     }
 
@@ -68,9 +81,14 @@ void gameMainWidget::generateMap()
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
             color = colors[buildableTile->getColor()];
         }
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        auto pixmapItem = scene->addPixmap(tileImage);
+        pixmapItem->setPos(x + offsetX, y + offsetY);
+        pixmapItem->setZValue(depth--);
         scene->addText(QString::number(index))->setPos(x, y);
     }
+
+    depth += 2;
 
     // Right column (top to bottom)
     for (int row = 1; row < numRows && index < numTiles; ++row) {
@@ -82,7 +100,10 @@ void gameMainWidget::generateMap()
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
             color = colors[buildableTile->getColor()];
         }
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        auto pixmapItem = scene->addPixmap(tileImage);
+        pixmapItem->setPos(x + offsetX, y + offsetY);
+        pixmapItem->setZValue(depth++);
         scene->addText(QString::number(index))->setPos(x, y);
     }
 
@@ -96,7 +117,10 @@ void gameMainWidget::generateMap()
             game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
             color = colors[buildableTile->getColor()];
         }
-        scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
+        auto pixmapItem = scene->addPixmap(tileImage);
+        pixmapItem->setPos(x + offsetX, y + offsetY);
+        pixmapItem->setZValue(depth++);
         scene->addText(QString::number(index))->setPos(x, y);
     }
 }

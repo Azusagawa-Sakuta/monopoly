@@ -78,7 +78,7 @@ Widget::~Widget()
 }
 
 void Widget::loadPhotos() {
-    QStringList imagePaths = {"use.png", "absolute.png", "path.png", "here.png"};
+    QStringList imagePaths = {"../../resources/use.png", "../../resources/absolute.png", "../../resources/path.png", "../../resources/here.png"};
     // 加载图片缩略图到场景
     // TODO (try parameters)
     // ---FINISHED---
@@ -118,7 +118,7 @@ void Widget::loadPhotos() {
 }
 
 void Widget::loadProfiles(int player, int index) {
-    QStringList imagePaths = {"use.png", "absolute.png", "path.png", "here.png"};
+    QStringList imagePaths = {"../../resources/use.png", "../../resources/absolute.png", "../../resources/path.png", "../../resources/here.png"};
     QPixmap pixmap(imagePaths[index]);
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);
     switch (player) {
