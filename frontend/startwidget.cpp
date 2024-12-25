@@ -10,6 +10,8 @@ startWidget::startWidget(QWidget *parent)
     , ui(new Ui::startWidget)
 {
     ui->setupUi(this);
+    
+    showMaximized();
 }
 
 startWidget::~startWidget()

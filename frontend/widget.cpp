@@ -23,6 +23,8 @@ Widget::Widget(QWidget *parent)
     , selectedPlayers(0)
 {
     ui->setupUi(this);
+    
+    showMaximized();
 
     ui->profilePhotoList->setScene(scene);
 

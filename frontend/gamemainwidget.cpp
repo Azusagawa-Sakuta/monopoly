@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QPen>
 #include <QBrush>
+#include <QResizeEvent>
 #include <cmath>
 #include "../backend/game.h"
 
@@ -13,8 +14,11 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     scene(new QGraphicsScene(this))
 {
     ui->setupUi(this);
-    generateMap();
-    ui->graphicsView->setScene(scene);
+    showMaximized();
+    scene->clear(); // Clear old items
+    paintMap();
+    //paintPlayerInfo();
+    ui->mapView->setScene(scene);
 }
 
 gameMainWidget::~gameMainWidget()
@@ -22,11 +26,38 @@ gameMainWidget::~gameMainWidget()
     delete ui;
 }
 
-void gameMainWidget::generateMap()
+void gameMainWidget::resizeEvent(QResizeEvent* event)
 {
+    QWidget::resizeEvent(event);
+    QSize newSize = event->size();
+    // 更新 QGraphicsView 的大小以填充窗口
+    ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
     scene->clear(); // Clear old items
+    paintMap();
+    paintPlayerInfo();
+}
 
-    //int tileW = 50, tileH = 50;
+QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
+{
+    QPixmap tileImage;
+    if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
+        const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
+        std::string colors[] = {"../../resources/draft/tileRed.png", "../../resources/draft/tileGreen.png", "../../resources/draft/tileBlue.png", "../../resources/draft/tileYellow.png"};
+        tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getColor()]));
+    } else {
+        tileImage = QPixmap("../../resources/draft/tileTemplate.png");
+    }
+    if (tileImage.isNull()) {
+        qDebug() << "Failed to load image";
+    }
+    return tileImage;
+}
+
+
+void gameMainWidget::paintMap()
+{
+
+    int tileW = 50, tileH = 50;
     int spacing = 5;
     int horizontalSpacing = 64 + spacing * 2;
     int verticalSpacing = 32 + spacing;
@@ -54,6 +85,8 @@ void gameMainWidget::generateMap()
 
     int depth = 0;
 
+    scene->addRect(- tileW / 2.0f, - tileH / 2.0f, tileW, tileH, QPen(Qt::black), QBrush(Qt::blue));
+
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index++];
@@ -65,7 +98,7 @@ void gameMainWidget::generateMap()
             color = colors[buildableTile->getColor()];
         }
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(tileImage);
+        auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth--);
         scene->addText(QString::number(index))->setPos(x, y);
@@ -82,7 +115,7 @@ void gameMainWidget::generateMap()
             color = colors[buildableTile->getColor()];
         }
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(tileImage);
+        auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth--);
         scene->addText(QString::number(index))->setPos(x, y);
@@ -101,7 +134,7 @@ void gameMainWidget::generateMap()
             color = colors[buildableTile->getColor()];
         }
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(tileImage);
+        auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth++);
         scene->addText(QString::number(index))->setPos(x, y);
@@ -118,9 +151,27 @@ void gameMainWidget::generateMap()
             color = colors[buildableTile->getColor()];
         }
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(tileImage);
+        auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth++);
         scene->addText(QString::number(index))->setPos(x, y);
     }
+}
+
+void gameMainWidget::paintPlayerInfo()
+{
+    int rectWidth = 100, rectHeight = 100;
+    QColor playerColors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
+
+    // Top-left corner
+    scene->addRect(- this->width() / 2.0f + 2, - this->height() / 2.0f + 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[0]));
+
+    // Top-right corner
+    scene->addRect(this->width() / 2.0f - rectWidth - 2, - this->height() / 2.0f + 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[1]));
+
+    // Bottom-left corner
+    scene->addRect(- this->width() / 2.0f + 2, this->height() / 2.0f - rectHeight - 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[2]));
+
+    // Bottom-right corner
+    scene->addRect(this->width() / 2.0f - rectWidth - 2, this->height() / 2.0f - rectHeight - 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[3]));
 }
