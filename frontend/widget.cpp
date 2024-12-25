@@ -67,8 +67,6 @@ Widget::Widget(QWidget *parent)
     });
 
     connect(this, &Widget::thumbnailDoubleClicked, this, &Widget::handleThumbnailDoubleClick);
-
-    loadPhotos();
 }
 
 Widget::~Widget()
@@ -196,19 +194,20 @@ void Widget::on_addComputer_1_clicked()
             return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
-        ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_1->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
     }
 
-    else if (txt == static_cast<QString>("Select Profile")) {
+    else if (txt == static_cast<QString>("Select Profile (double-click)")) {
         // determine the photo
         // TODO
-
+        // --OK--
         if (selectedPlayers != 0) {
             QMessageBox::critical(this, "Unexpected Failure", "Don't run program which is modified improperly.");
             return;
         }
         selectedPlayers++;
+        loadPhotos();
         ui->addComputer_1->setText(static_cast<QString>("Unready"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose profile again?"));
     }
@@ -252,7 +251,7 @@ void Widget::on_addPlayer_1_clicked()
             return;
         }
         g.addPlayer(new game::player::Player);
-        ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_1->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
     }
     else if (txt == static_cast<QString>("Choose role again?")) {
@@ -275,7 +274,7 @@ void Widget::on_addPlayer_1_clicked()
             return;
         }
         selectedPlayers--;
-        ui->addComputer_1->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_1->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_1->setText(static_cast<QString>("Choose role again?"));
     }
 }
@@ -292,19 +291,20 @@ void Widget::on_addComputer_2_clicked()
             return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
-        ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_2->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
     }
 
-    else if (txt == static_cast<QString>("Select Profile")) {
+    else if (txt == static_cast<QString>("Select Profile (double-click)")) {
         // determine the photo
         // TODO
-
+        // --OK--
         if (selectedPlayers != 1) {
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
         selectedPlayers++;
+        loadPhotos();
         ui->commitButton->setEnabled(true);
         ui->addComputer_2->setText(static_cast<QString>("Unready"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose profile again?"));
@@ -343,7 +343,7 @@ void Widget::on_addPlayer_2_clicked()
             return;
         }
         g.addPlayer(new game::player::Player);
-        ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_2->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
     }
     else if (txt == static_cast<QString>("Choose role again?")) {
@@ -367,7 +367,7 @@ void Widget::on_addPlayer_2_clicked()
         }
         selectedPlayers--;
         ui->commitButton->setEnabled(false);
-        ui->addComputer_2->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_2->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_2->setText(static_cast<QString>("Choose role again?"));
     }
 }
@@ -383,19 +383,20 @@ void Widget::on_addComputer_3_clicked()
             return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
-        ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_3->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
     }
 
-    else if (txt == static_cast<QString>("Select Profile")) {
+    else if (txt == static_cast<QString>("Select Profile (double-click)")) {
         // determine the photo
         // TODO
-
+        // --OK--
         if (selectedPlayers != 2) {
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
         selectedPlayers++;
+        loadPhotos();
         ui->addComputer_3->setText(static_cast<QString>("Unready"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose profile again?"));
     }
@@ -431,7 +432,7 @@ void Widget::on_addPlayer_3_clicked()
             return;
         }
         g.addPlayer(new game::player::Player);
-        ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_3->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
     }
     else if (txt == static_cast<QString>("Choose role again?")) {
@@ -454,7 +455,7 @@ void Widget::on_addPlayer_3_clicked()
             return;
         }
         selectedPlayers--;
-        ui->addComputer_3->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_3->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_3->setText(static_cast<QString>("Choose role again?"));
     }
 }
@@ -470,19 +471,20 @@ void Widget::on_addComputer_4_clicked()
             return;
         }
         g.addPlayer(new game::player::ComputerPlayer);
-        ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_4->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
 
-    else if (txt == static_cast<QString>("Select Profile")) {
+    else if (txt == static_cast<QString>("Select Profile (double-click)")) {
         // determine the photo
         // TODO
-
+        // --OK--
         if (selectedPlayers != 3) {
             QMessageBox::critical(this, "Select failed", "You should not select a profile photo until all left candidates are determined.");
             return;
         }
         selectedPlayers++;
+        loadPhotos();
         ui->addComputer_4->setText(static_cast<QString>("Unready"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose profile again?"));
     }
@@ -518,7 +520,7 @@ void Widget::on_addPlayer_4_clicked()
             return;
         }
         g.addPlayer(new game::player::Player);
-        ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_4->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
     else if (txt == static_cast<QString>("Choose role again?")) {
@@ -541,7 +543,7 @@ void Widget::on_addPlayer_4_clicked()
             return;
         }
         selectedPlayers--;
-        ui->addComputer_4->setText(static_cast<QString>("Select Profile"));
+        ui->addComputer_4->setText(static_cast<QString>("Select Profile (double-click)"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
 }
