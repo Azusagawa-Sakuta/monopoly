@@ -54,9 +54,14 @@ private slots:
 private:
     Ui::Widget *ui;
     QGraphicsScene *scene;
+    QGraphicsScene *scenePlayer1;
+    QGraphicsScene *scenePlayer2;
+    QGraphicsScene *scenePlayer3;
+    QGraphicsScene *scenePlayer4;
     int selectedPlayers;
 
     void loadPhotos();
+    void loadProfiles(int player, int index);
 };
 
 class ClickablePixmapItem : public QGraphicsPixmapItem

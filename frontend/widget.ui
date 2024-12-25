@@ -127,7 +127,7 @@
       <item>
        <layout class="QVBoxLayout" name="playerLayout_2" stretch="13,1,1,1">
         <item>
-         <widget class="QGraphicsView" name="playProfilePhoto_2"/>
+         <widget class="QGraphicsView" name="playerProfilePhoto_2"/>
         </item>
         <item>
          <spacer name="verticalSpacer_9">
@@ -161,7 +161,7 @@
       <item>
        <layout class="QVBoxLayout" name="playerLayout_3" stretch="13,1,1,1">
         <item>
-         <widget class="QGraphicsView" name="playProfilePhoto_3"/>
+         <widget class="QGraphicsView" name="playerProfilePhoto_3"/>
         </item>
         <item>
          <spacer name="verticalSpacer_3">

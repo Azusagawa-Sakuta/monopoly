@@ -16,11 +16,20 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
     , scene(new QGraphicsScene(this))
+    , scenePlayer1(new QGraphicsScene(this))
+    , scenePlayer2(new QGraphicsScene(this))
+    , scenePlayer3(new QGraphicsScene(this))
+    , scenePlayer4(new QGraphicsScene(this))
     , selectedPlayers(0)
 {
     ui->setupUi(this);
 
     ui->profilePhotoList->setScene(scene);
+
+    ui->playerProfilePhoto_1->setScene(scenePlayer1);
+    ui->playerProfilePhoto_2->setScene(scenePlayer2);
+    ui->playerProfilePhoto_3->setScene(scenePlayer3);
+    ui->playerProfilePhoto_4->setScene(scenePlayer4);
 
     ui->commitButton->setEnabled(false);
 
@@ -31,8 +40,8 @@ Widget::Widget(QWidget *parent)
         if(ok) {
             auto& g = game::gamePlay::GameInstance::getInstance();
 
-            for (int i = 0; i < count; i++) 
-                g.addPlayer(new game::player::Player);
+            // for (int i = 0; i < count; i++)
+            //     g.addPlayer(new game::player::Player);
 
             g.addTile(new game::gamePlay::Home);
             for (int i = 2; i < number; i++) 
@@ -108,9 +117,34 @@ void Widget::loadPhotos() {
     ui->profilePhotoList->centerOn(totalBoundingRect.center());
 }
 
+void Widget::loadProfiles(int player, int index) {
+    QStringList imagePaths = {"use.png", "absolute.png", "path.png", "here.png"};
+    QPixmap pixmap(imagePaths[index]);
+    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);
+    switch (player) {
+    case 1:
+        scenePlayer1->addItem(item);
+        ui->playerProfilePhoto_1->setScene(scenePlayer1);
+        break;
+    case 2:
+        scenePlayer2->addItem(item);
+        ui->playerProfilePhoto_2->setScene(scenePlayer2);
+        break;
+    case 3:
+        scenePlayer3->addItem(item);
+        ui->playerProfilePhoto_3->setScene(scenePlayer3);
+        break;
+    case 4:
+        scenePlayer4->addItem(item);
+        ui->playerProfilePhoto_4->setScene(scenePlayer4);
+        break;
+    }
+}
+
 void Widget::handleThumbnailDoubleClick(int index) {
     // IMPORTANT!!
     // Use the double click function here
+    loadProfiles(selectedPlayers, index);
     qDebug() << "Thumbnail double clicked: " << index;
 }
 
@@ -147,16 +181,7 @@ void Widget::on_cancelButton_clicked()
 
 void Widget::on_commitButton_clicked()
 {
-    if (selectedPlayers >= 2)
-    {
-        qDebug() << "Game started with" << selectedPlayers << "players";
-    }
-    else
-    {
-        QMessageBox::critical(this, "Failed to start", "Please select the number of players before starting the game!");
-        qDebug() << "Please select the number of players before starting the game!";
-    }
-
+    qDebug() << "Game started with" << selectedPlayers << "players";
     emit playerSelected(selectedPlayers);
 }
 
