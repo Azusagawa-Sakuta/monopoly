@@ -82,6 +82,11 @@
      <layout class="QVBoxLayout" name="playerLayout_1" stretch="1,5">
       <item>
        <widget class="QLabel" name="playerNickname_1">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
         <property name="textaf" stdset="0">
          <string>TextLabel</string>
         </property>
@@ -125,6 +130,11 @@
      <layout class="QVBoxLayout" name="playerLayout_4" stretch="1,5">
       <item>
        <widget class="QLabel" name="playerNickname_4">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
         <property name="text_5389528734" stdset="0">
          <string>TextLabel</string>
         </property>
@@ -181,6 +191,11 @@
      <layout class="QVBoxLayout" name="playerLayout_2" stretch="1,5">
       <item>
        <widget class="QLabel" name="playerNickname_2">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
         <property name="text_10" stdset="0">
          <string>TextLabel</string>
         </property>
@@ -237,6 +252,11 @@
      <layout class="QVBoxLayout" name="playerLayout_3" stretch="1,5">
       <item>
        <widget class="QLabel" name="playerNickname_3">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>TextLabel</string>
         </property>

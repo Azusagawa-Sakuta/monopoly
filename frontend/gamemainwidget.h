@@ -30,9 +30,11 @@ private:
     void paintMap(); // Paint the map
     void paintPlayerInfo(); // Paint player info
     int loadImage();
+    void update();
 
     void resizeEvent(QResizeEvent* event) override;
     QPixmap getTileImage(const game::gamePlay::Tile* tile);
+    QPixmap getPlayerIndicator(const game::player::Player* p);
 };
 
 #endif // GAMEMAINWIDGET_H

@@ -6,6 +6,7 @@
 #include <QBrush>
 #include <QResizeEvent>
 #include <cmath>
+#include <vector>
 #include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
@@ -19,13 +20,11 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     showMaximized();
-    scene->clear(); // Clear old items
     scenePlayer1->clear();
     scenePlayer2->clear();
     scenePlayer3->clear();
     scenePlayer4->clear();
-    paintMap();
-    //paintPlayerInfo();
+    update();
     int playerNum = loadImage();
     ui->mapView->setScene(scene);
     ui->playerAvatarGraphics_1->setScene(scenePlayer1);
@@ -94,9 +93,13 @@ void gameMainWidget::resizeEvent(QResizeEvent* event)
     QSize newSize = event->size();
     // 更新 QGraphicsView 的大小以填充窗口
     ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
+    update();
+}
+
+void gameMainWidget::update() {
     scene->clear(); // Clear old items
     paintMap();
-    paintPlayerInfo();
+    //paintPlayerInfo();
 }
 
 QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
@@ -115,6 +118,16 @@ QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
     return tileImage;
 }
 
+QPixmap gameMainWidget::getPlayerIndicator(const game::player::Player* p)
+{
+    QPixmap img;
+    std::string imgs[] = {":/resources/draft/1P.png", ":/resources/draft/2P.png", ":/resources/draft/3P.png", ":/resources/draft/4P.png"};
+    img = QPixmap(QString::fromStdString(imgs[p->getPosition()]));
+    if (img.isNull()) {
+        qDebug() << "Failed to load image";
+    }
+    return img;
+}
 
 void gameMainWidget::paintMap()
 {
@@ -142,12 +155,16 @@ void gameMainWidget::paintMap()
         qDebug() << "Failed to load image";
     }
 
+    auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
+
     int offsetX = (- tileImage.width()) / 2;
     int offsetY = (- tileImage.height()) / 2;
 
     int depth = 0;
 
     scene->addRect(- tileW / 2.0f, - tileH / 2.0f, tileW, tileH, QPen(Qt::black), QBrush(Qt::blue));
+
+    bool paintTileIndex = true;
 
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
@@ -163,7 +180,18 @@ void gameMainWidget::paintMap()
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth--);
-        scene->addText(QString::number(index))->setPos(x, y);
+        if (paintTileIndex) 
+            scene->addText(QString::number(index))->setPos(x, y);
+        int i = 0;
+        for (auto& a : players) {
+            if (a->getPosition() == index - 1) {
+                QPixmap playerImage(getPlayerIndicator(a));
+                auto item = scene->addPixmap(playerImage);
+                item->setPos(x + offsetX, y + offsetY + i * 48);
+                item->setZValue(100);
+            }
+            i++;
+        }
     }
 
     // Top row (left to right)

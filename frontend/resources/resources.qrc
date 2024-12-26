@@ -10,5 +10,9 @@
         <file>draft/tileGreen.png</file>
         <file>draft/tileTemplate.png</file>
         <file>draft/tileYellow.png</file>
+        <file>draft/1P.png</file>
+        <file>draft/2P.png</file>
+        <file>draft/3P.png</file>
+        <file>draft/4P.png</file>
     </qresource>
 </RCC>
