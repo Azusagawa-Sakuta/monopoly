@@ -114,6 +114,26 @@ void Player::setNickname(const std::string& newNickname) {
 }
 
 /**
+ * @brief Get player's profile photo path
+ * @param None
+ * @return Player's imagePath
+ */
+std::string Player::getImagePath() const {
+    std::shared_lock<std::shared_mutex> lock(mtx);
+    return imagePath;
+}
+
+/**
+ * @brief Set player's profile photo path
+ * @param newImagePath New path to set
+ * @return None
+ */
+void Player::setImagePath(const std::string& newImagePath) {
+    std::unique_lock<std::shared_mutex> lock(mtx);
+    imagePath = newImagePath;
+}
+
+/**
  * @brief ComputerPlayer constructor
  * @param initialCash Initial cash amount for computer player
  * @return None

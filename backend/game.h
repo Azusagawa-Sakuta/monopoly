@@ -20,6 +20,7 @@ namespace game {
             int prisonTime;
             mutable std::shared_mutex mtx;
             std::string nickname;
+            std::string imagePath;
 
         public:
             Player(cashType initialCash = constant::initialCash);
@@ -34,6 +35,8 @@ namespace game {
             void setPrisonTime(int time);
             std::string getNickname() const;
             void setNickname(const std::string& newNickname);
+            std::string getImagePath() const;
+            void setImagePath(const std::string& newImagePath);
         };
 
         class ComputerPlayer : public Player {

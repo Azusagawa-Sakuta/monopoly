@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QVector>
 #include <QGraphicsPixmapItem>
+#include <QStringList>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -59,6 +60,9 @@ private:
     QGraphicsScene *scenePlayer3;
     QGraphicsScene *scenePlayer4;
     int selectedPlayers;
+    QVector<bool> player;
+    QStringList imagePaths;
+    QStringList finalImagePaths;
 
     void loadPhotos();
     void loadProfiles(int player, int index);
