@@ -40,7 +40,7 @@ Widget::Widget(QWidget *parent)
 
     ui->commitButton->setEnabled(false);
 
-    imagePaths = {":/resources/use.png", ":/resources/absolute.png", ":/resources/path.png", ":/resources/here.png"};
+    imagePaths = {":/resources/avatar1.jpg", ":/resources/avatar2.jpg", ":/resources/avatar3.jpg", ":/resources/avatar4.jpg"};
     finalImagePaths = imagePaths;
 
     connect(this, &Widget::playerSelected, [this](int count) {
@@ -145,7 +145,8 @@ void Widget::loadPhotos() {
 void Widget::loadProfiles(int player, int index) {
     finalImagePaths[player - 1] = imagePaths[index];
     QPixmap pixmap(imagePaths[index]);
-    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);
+    QPixmap thumbnail = pixmap.scaled(300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(thumbnail);
     switch (player) {
     case 1:
         scenePlayer1->clear();
