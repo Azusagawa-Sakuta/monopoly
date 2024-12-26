@@ -52,7 +52,6 @@ Widget::Widget(QWidget *parent)
 
             int i = 0;
             for (const auto& item : player) {
-                ++i;
                 if (item == 1) {
                     g.addPlayer(new game::player::Player);
                     // add profile photo through $(finalImagePaths) here
@@ -65,6 +64,7 @@ Widget::Widget(QWidget *parent)
                     auto playerList = g.getPlayers();
                     playerList.back()->setImagePath((finalImagePaths[i]).toStdString());
                 }
+                ++i;
             }
 
             g.addTile(new game::gamePlay::Home);
@@ -143,7 +143,7 @@ void Widget::loadPhotos() {
 }
 
 void Widget::loadProfiles(int player, int index) {
-    finalImagePaths[player] = imagePaths[index];
+    finalImagePaths[player - 1] = imagePaths[index];
     QPixmap pixmap(imagePaths[index]);
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);
     switch (player) {
@@ -537,7 +537,7 @@ void Widget::on_addComputer_4_clicked()
             return;
         }
         ui->profilePhotoList->show();
-        ui->addComputer_4->setText(static_cast<QString>("Ready"));
+        ui->addComputer_4->setText(static_cast<QString>("Ready!"));
         ui->addPlayer_4->setText(static_cast<QString>("Choose profile again?"));
     }
 
