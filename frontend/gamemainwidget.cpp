@@ -11,14 +11,73 @@
 gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::gameMainWidget),
-    scene(new QGraphicsScene(this))
+    scene(new QGraphicsScene(this)),
+    scenePlayer1(new QGraphicsScene(this)),
+    scenePlayer2(new QGraphicsScene(this)),
+    scenePlayer3(new QGraphicsScene(this)),
+    scenePlayer4(new QGraphicsScene(this))
 {
     ui->setupUi(this);
     showMaximized();
     scene->clear(); // Clear old items
+    scenePlayer1->clear();
+    scenePlayer2->clear();
+    scenePlayer3->clear();
+    scenePlayer4->clear();
     paintMap();
     //paintPlayerInfo();
+    int playerNum = loadImage();
     ui->mapView->setScene(scene);
+    ui->playerAvatarGraphics_1->setScene(scenePlayer1);
+    ui->playerAvatarGraphics_2->setScene(scenePlayer2);
+    ui->playerAvatarGraphics_3->setScene(scenePlayer3);
+    ui->playerAvatarGraphics_4->setScene(scenePlayer4);
+    switch(playerNum) {
+    case 4:
+    case 3:
+        ui->playerAvatarGraphics_4->hide();
+        ui->playerInfo_4_1->hide();
+        ui->playerInfo_4_2->hide();
+        ui->playerInfo_4_3->hide();
+        ui->playerNickname_4->hide();
+    case 2:
+        ui->playerAvatarGraphics_3->hide();
+        ui->playerInfo_3_1->hide();
+        ui->playerInfo_3_2->hide();
+        ui->playerInfo_3_3->hide();
+        ui->playerNickname_3->hide();
+    }
+    int computers = 0, players = 0;
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    const auto& playerList = g.getPlayers();
+    for (const auto& it : playerList) {
+        if (typeid(it) == typeid(game::player::ComputerPlayer*)) {
+            it->setNickname("Computer" + std::to_string(++computers));
+        }
+        else {
+            it->setNickname("Player" + std::to_string(++players));
+        }
+        if (computers + players == 1) {
+            ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
+        }
+        else if (computers + players == 2) {
+            ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Cyan"));
+        }
+        else if (computers + players == 3) {
+            ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Yellow"));
+        }
+        else if (computers + players == 4) {
+            ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Green"));
+        }
+    }
 }
 
 gameMainWidget::~gameMainWidget()
@@ -174,4 +233,38 @@ void gameMainWidget::paintPlayerInfo()
 
     // Bottom-right corner
     scene->addRect(this->width() / 2.0f - rectWidth - 2, this->height() / 2.0f - rectHeight - 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[3]));
+}
+
+int gameMainWidget::loadImage() {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    auto playerList = g.getPlayers();
+    int i = 0;
+    for (const auto& it : playerList) {
+        i++;
+        QPixmap pixmap(QString::fromStdString(it->getImagePath()));
+        QPixmap scaledPixmap = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        QGraphicsPixmapItem *item = new QGraphicsPixmapItem(scaledPixmap);
+        switch(i) {
+        case 1:
+            scenePlayer1->addItem(item);
+            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
+            ui->playerAvatarGraphics_1->fitInView(scenePlayer1->sceneRect(), Qt::KeepAspectRatio);
+            break;
+        case 2:
+            scenePlayer2->addItem(item);
+            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
+            ui->playerAvatarGraphics_2->fitInView(scenePlayer2->sceneRect(), Qt::KeepAspectRatio);
+            break;
+        case 3:
+            scenePlayer3->addItem(item);
+            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
+            ui->playerAvatarGraphics_3->fitInView(scenePlayer3->sceneRect(), Qt::KeepAspectRatio);
+            break;
+        case 4:
+            scenePlayer4->addItem(item);
+            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
+            ui->playerAvatarGraphics_4->fitInView(scenePlayer4->sceneRect(), Qt::KeepAspectRatio);
+        }
+    }
+    return i;
 }

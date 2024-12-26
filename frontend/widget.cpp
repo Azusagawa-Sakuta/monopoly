@@ -41,6 +41,7 @@ Widget::Widget(QWidget *parent)
     ui->commitButton->setEnabled(false);
 
     imagePaths = {"/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/use.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/absolute.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/path.png", "/Users/azusagawasakuta/Desktop/monopoly/frontend/resources/here.png"};
+    finalImagePaths = imagePaths;
 
     connect(this, &Widget::playerSelected, [this](int count) {
         qDebug() << "Player selected: " << count;

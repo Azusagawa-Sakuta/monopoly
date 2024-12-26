@@ -22,9 +22,14 @@ private slots:
 private:
     Ui::gameMainWidget *ui;
     QGraphicsScene *scene; // Scene to show the map
+    QGraphicsScene *scenePlayer1;
+    QGraphicsScene *scenePlayer2;
+    QGraphicsScene *scenePlayer3;
+    QGraphicsScene *scenePlayer4;
 
     void paintMap(); // Paint the map
     void paintPlayerInfo(); // Paint player info
+    int loadImage();
 
     void resizeEvent(QResizeEvent* event) override;
     QPixmap getTileImage(const game::gamePlay::Tile* tile);
