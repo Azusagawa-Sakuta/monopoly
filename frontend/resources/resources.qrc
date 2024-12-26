@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/resources">
+        <file>absolute.png</file>
+        <file>path.png</file>
+        <file>use.png</file>
+        <file>here.png</file>
+        <file>draft/Avatar.png</file>
+        <file>draft/tileBlue.png</file>
+        <file>draft/tileRed.png</file>
+        <file>draft/tileGreen.png</file>
+        <file>draft/tileTemplate.png</file>
+        <file>draft/tileYellow.png</file>
+    </qresource>
+</RCC>

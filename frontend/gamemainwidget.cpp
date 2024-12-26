@@ -33,25 +33,24 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     ui->playerAvatarGraphics_3->setScene(scenePlayer3);
     ui->playerAvatarGraphics_4->setScene(scenePlayer4);
     switch(playerNum) {
-    case 4:
-    case 3:
-        ui->playerAvatarGraphics_4->hide();
-        ui->playerInfo_4_1->hide();
-        ui->playerInfo_4_2->hide();
-        ui->playerInfo_4_3->hide();
-        ui->playerNickname_4->hide();
     case 2:
         ui->playerAvatarGraphics_3->hide();
         ui->playerInfo_3_1->hide();
         ui->playerInfo_3_2->hide();
         ui->playerInfo_3_3->hide();
         ui->playerNickname_3->hide();
+    case 3:
+        ui->playerAvatarGraphics_4->hide();
+        ui->playerInfo_4_1->hide();
+        ui->playerInfo_4_2->hide();
+        ui->playerInfo_4_3->hide();
+        ui->playerNickname_4->hide();
     }
     int computers = 0, players = 0;
     auto& g = game::gamePlay::GameInstance::getInstance();
     const auto& playerList = g.getPlayers();
     for (const auto& it : playerList) {
-        if (typeid(it) == typeid(game::player::ComputerPlayer*)) {
+        if (typeid(*it) == typeid(game::player::ComputerPlayer)) {
             it->setNickname("Computer" + std::to_string(++computers));
         }
         else {
@@ -60,22 +59,26 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
         if (computers + players == 1) {
             ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_2->hide();
             ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
         }
         else if (computers + players == 2) {
             ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Cyan"));
+            ui->playerInfo_2_2->hide();
+            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Cyan"));
         }
         else if (computers + players == 3) {
             ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Yellow"));
+            ui->playerInfo_3_2->hide();
+            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Yellow"));
         }
         else if (computers + players == 4) {
             ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Green"));
+            ui->playerInfo_4_2->hide();
+            ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
         }
     }
 }
@@ -101,10 +104,10 @@ QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
     QPixmap tileImage;
     if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
         const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-        std::string colors[] = {"../../resources/draft/tileRed.png", "../../resources/draft/tileGreen.png", "../../resources/draft/tileBlue.png", "../../resources/draft/tileYellow.png"};
+        std::string colors[] = {":/resources/draft/tileRed.png", ":/resources/draft/tileGreen.png", ":/resources/draft/tileBlue.png", ":/resources/draft/tileYellow.png"};
         tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getColor()]));
     } else {
-        tileImage = QPixmap("../../resources/draft/tileTemplate.png");
+        tileImage = QPixmap(":/resources/draft/tileTemplate.png");
     }
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
@@ -134,7 +137,7 @@ void gameMainWidget::paintMap()
 
     int index = 0;
 
-    QPixmap tileImage("../../resources/draft/tileTemplate.png");
+    QPixmap tileImage(":/resources/draft/tileTemplate.png");
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
     }
