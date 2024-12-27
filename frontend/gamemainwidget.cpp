@@ -20,6 +20,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     showMaximized();
+    //initializeGameInstance();
     scenePlayer1->clear();
     scenePlayer2->clear();
     scenePlayer3->clear();
@@ -80,11 +81,38 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
             ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
         }
     }
+
+    g.notifyUserInput(0);
 }
 
 gameMainWidget::~gameMainWidget()
 {
     delete ui;
+}
+
+void gameMainWidget::initializeGameInstance() {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    g.callbackPlayerUpdate = [this](game::player::Player* p) {
+        if (p->getPosition() == 0) {
+            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
+        }
+        else if (p->getPosition() == 1) {
+            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
+        }
+        else if (p->getPosition() == 2) {
+            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
+        }
+        else if (p->getPosition() == 3) {
+            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
+        }
+        update();
+    };
+    g.callbackTileUpdate = [this](game::gamePlay::Tile* t) {
+        update();
+    };
+    g.callbackDice = [this](game::player::Player* p, int d1, int d2) {
+        QMessageBox::information(this, "Dice Roll", QString::fromStdString(p->getNickname() + " rolled " + std::to_string(d1) + " and " + std::to_string(d2)));
+    };
 }
 
 void gameMainWidget::resizeEvent(QResizeEvent* event)
@@ -187,7 +215,7 @@ void gameMainWidget::paintMap()
             if (a->getPosition() == index - 1) {
                 QPixmap playerImage(getPlayerIndicator(a));
                 auto item = scene->addPixmap(playerImage);
-                item->setPos(x + offsetX, y + offsetY + i * 48);
+                item->setPos(x + offsetX, y + offsetY - i * 64);
                 item->setZValue(100);
             }
             i++;

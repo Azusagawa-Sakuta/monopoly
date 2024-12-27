@@ -27,6 +27,8 @@ private:
     QGraphicsScene *scenePlayer3;
     QGraphicsScene *scenePlayer4;
 
+    void initializeGameInstance();
+
     void paintMap(); // Paint the map
     void paintPlayerInfo(); // Paint player info
     int loadImage();
