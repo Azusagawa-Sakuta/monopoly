@@ -610,4 +610,3 @@ void Widget::on_addPlayer_4_clicked()
         ui->addPlayer_4->setText(static_cast<QString>("Choose role again?"));
     }
 }
-

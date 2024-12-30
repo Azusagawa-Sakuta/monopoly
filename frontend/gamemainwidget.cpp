@@ -7,6 +7,7 @@
 #include <QResizeEvent>
 #include <cmath>
 #include <vector>
+#include <QGuiApplication>
 #include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
@@ -81,7 +82,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
             ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
         }
     }
-
+    ui->mainLayout->setGeometry(this->rect());
     g.notifyUserInput(0);
 }
 
@@ -117,10 +118,11 @@ void gameMainWidget::initializeGameInstance() {
 
 void gameMainWidget::resizeEvent(QResizeEvent* event)
 {
-    QWidget::resizeEvent(event);
     QSize newSize = event->size();
     // 更新 QGraphicsView 的大小以填充窗口
     ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
+    ui->mainLayout->setGeometry(this->rect());
+    QWidget::resizeEvent(event);
     update();
 }
 

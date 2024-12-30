@@ -73,11 +73,17 @@
     <rect>
      <x>9</x>
      <y>9</y>
-     <width>1651</width>
+     <width>1901</width>
      <height>881</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="mainLayout" rowstretch="1,4,1" columnstretch="1,4,1">
+   <layout class="QGridLayout" name="mainLayout" rowstretch="1,4,1" columnstretch="1,4,1" rowminimumheight="1,1,1" columnminimumwidth="1,1,1">
+    <property name="sizeConstraint">
+     <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="playerLayout_1" stretch="1,5">
       <item>
