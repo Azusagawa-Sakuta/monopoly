@@ -100,13 +100,13 @@ gameMainWidget::~gameMainWidget()
 }
 
 void gameMainWidget::onTick() {
-    qDebug() << "Tick";
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto e = g.getActiveEvent();
     switch (e) {
     case game::gamePlay::GameInstance::eventType::None:
         break;
     case game::gamePlay::GameInstance::eventType::Update:
+        qDebug() << "Update!!";
         update();
         g.notifyUserInput(std::monostate());
         break;
@@ -311,7 +311,18 @@ void gameMainWidget::paintMap()
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
         pixmapItem->setZValue(depth--);
-        scene->addText(QString::number(index))->setPos(x, y);
+        if (paintTileIndex) 
+            scene->addText(QString::number(index))->setPos(x, y);
+        int i = 0;
+        for (auto& a : players) {
+            if (a->getPosition() == index - 1) {
+                QPixmap playerImage(getPlayerIndicator(a));
+                auto item = scene->addPixmap(playerImage);
+                item->setPos(x + offsetX, y + offsetY - i * 64);
+                item->setZValue(100);
+            }
+            i++;
+        }
     }
 
     depth += 2;
@@ -329,8 +340,19 @@ void gameMainWidget::paintMap()
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth++);
-        scene->addText(QString::number(index))->setPos(x, y);
+        pixmapItem->setZValue(depth--);
+        if (paintTileIndex) 
+            scene->addText(QString::number(index))->setPos(x, y);
+        int i = 0;
+        for (auto& a : players) {
+            if (a->getPosition() == index - 1) {
+                QPixmap playerImage(getPlayerIndicator(a));
+                auto item = scene->addPixmap(playerImage);
+                item->setPos(x + offsetX, y + offsetY - i * 64);
+                item->setZValue(100);
+            }
+            i++;
+        }
     }
 
     // Bottom row (right to left)
@@ -346,8 +368,19 @@ void gameMainWidget::paintMap()
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth++);
-        scene->addText(QString::number(index))->setPos(x, y);
+        pixmapItem->setZValue(depth--);
+        if (paintTileIndex) 
+            scene->addText(QString::number(index))->setPos(x, y);
+        int i = 0;
+        for (auto& a : players) {
+            if (a->getPosition() == index - 1) {
+                QPixmap playerImage(getPlayerIndicator(a));
+                auto item = scene->addPixmap(playerImage);
+                item->setPos(x + offsetX, y + offsetY - i * 64);
+                item->setZValue(100);
+            }
+            i++;
+        }
     }
 }
 
