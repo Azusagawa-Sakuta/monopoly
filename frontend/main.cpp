@@ -18,7 +18,7 @@ protected:
         qDebug() << "Game started!";
         while (true) {
             g.tick();
-            //QThread::sleep(1);
+            QThread::sleep(1);
         }
     }
 };

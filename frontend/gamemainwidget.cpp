@@ -42,7 +42,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
         ui->playerInfo_3_2->hide();
         ui->playerInfo_3_3->hide();
         ui->playerNickname_3->hide();
-        [[fallthrough]]
+        [[fallthrough]];
     case 3:
         ui->playerAvatarGraphics_4->hide();
         ui->playerInfo_4_1->hide();
