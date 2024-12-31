@@ -340,7 +340,7 @@ void gameMainWidget::paintMap()
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth--);
+        pixmapItem->setZValue(depth++);
         if (paintTileIndex) 
             scene->addText(QString::number(index))->setPos(x, y);
         int i = 0;
@@ -368,7 +368,7 @@ void gameMainWidget::paintMap()
         //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
         auto pixmapItem = scene->addPixmap(getTileImage(tile));
         pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth--);
+        pixmapItem->setZValue(depth++);
         if (paintTileIndex) 
             scene->addText(QString::number(index))->setPos(x, y);
         int i = 0;
