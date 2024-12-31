@@ -2,12 +2,15 @@
 #include "ui_gamemainwidget.h"
 #include <QGraphicsRectItem>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QPen>
 #include <QBrush>
 #include <QResizeEvent>
 #include <cmath>
 #include <vector>
+#include <variant>
 #include <QGuiApplication>
+#include <QTimer>
 #include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
@@ -17,8 +20,8 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     scenePlayer1(new QGraphicsScene(this)),
     scenePlayer2(new QGraphicsScene(this)),
     scenePlayer3(new QGraphicsScene(this)),
-    scenePlayer4(new QGraphicsScene(this))
-{
+    scenePlayer4(new QGraphicsScene(this)),
+    timer(new QTimer(this)) {
     ui->setupUi(this);
     showMaximized();
     //initializeGameInstance();
@@ -26,7 +29,6 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     scenePlayer2->clear();
     scenePlayer3->clear();
     scenePlayer4->clear();
-    update();
     int playerNum = loadImage();
     ui->mapView->setScene(scene);
     ui->playerAvatarGraphics_1->setScene(scenePlayer1);
@@ -40,6 +42,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
         ui->playerInfo_3_2->hide();
         ui->playerInfo_3_3->hide();
         ui->playerNickname_3->hide();
+        [[fallthrough]]
     case 3:
         ui->playerAvatarGraphics_4->hide();
         ui->playerInfo_4_1->hide();
@@ -82,13 +85,86 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
             ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
         }
     }
-    ui->mainLayout->setGeometry(this->rect());
-    g.notifyUserInput(0);
+    update();
+
+    // Connect the timer's timeout signal to the onTick slot
+    connect(timer, &QTimer::timeout, this, &gameMainWidget::onTick);
+
+    timer->start(100);
+    g.notifyUserInput(std::monostate());
 }
 
 gameMainWidget::~gameMainWidget()
 {
     delete ui;
+}
+
+void gameMainWidget::onTick() {
+    qDebug() << "Tick";
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    auto e = g.getActiveEvent();
+    switch (e) {
+    case game::gamePlay::GameInstance::eventType::None:
+        break;
+    case game::gamePlay::GameInstance::eventType::Update:
+        update();
+        g.notifyUserInput(std::monostate());
+        break;
+    case game::gamePlay::GameInstance::eventType::Dice: {
+        g.notifyUserInput(QInputDialog::getInt(this, "Input dice value", "Input dice value of 2/3 dices together, and its negative if three the same", 9, 2, 18, 1, nullptr));
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::Prisoned: {
+        QMessageBox::information(this, "Prisoned", "You are prisoned for 3 same dice");
+        g.notifyUserInput(std::monostate());
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::PrisonPayOut: {
+        QMessageBox::information(this, "Prison Payout", "You can pay to get out but we didn't implement this feature.");
+        g.notifyUserInput(false);
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::PrisonDice: {
+        QMessageBox::information(this, "Prison Dice Out", "You tried to throw three same dices for sure, but apparently you failed.");
+        g.notifyUserInput(false);
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::Buy: {
+        game::gamePlay::GameInstance::buyRequest req = std::any_cast<game::gamePlay::GameInstance::buyRequest>(g.getActiveEventParam());
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Buy Property", QString::fromStdString("Do you want to buy tile #" + std::to_string(g.findTile(req.tile)) + " for $" + std::to_string(req.price)), QMessageBox::Ok | QMessageBox::Cancel);
+        if (reply == QMessageBox::Ok) {
+            g.notifyUserInput(true);
+        } else {
+            g.notifyUserInput(false);
+        }
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::RentPaid: {
+        game::gamePlay::GameInstance::rentRequest req = std::any_cast<game::gamePlay::GameInstance::rentRequest>(g.getActiveEventParam());
+        QMessageBox::information(this, "Rent Paid", QString::fromStdString("You paid $" + std::to_string(req.rent) + " to the owner of tile #" + std::to_string(g.findTile(req.tile))));
+        g.notifyUserInput(std::monostate());
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::Taxed: {
+        game::gamePlay::GameInstance::taxRequest req = std::any_cast<game::gamePlay::GameInstance::taxRequest>(g.getActiveEventParam());
+        QMessageBox::information(this, "Tax Paid", QString::fromStdString("You paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
+        g.notifyUserInput(std::monostate());
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::HomeReward: {
+        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
+        QMessageBox::information(this, "Home Reward", QString::fromStdString("You received $" + std::to_string(req) + " for passing the start tile"));
+        g.notifyUserInput(std::monostate());
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::Auction: {
+        game::gamePlay::GameInstance::auctionRequest req = std::any_cast<game::gamePlay::GameInstance::auctionRequest>(g.getActiveEventParam());
+        QMessageBox::information(this, "Auction", QString::fromStdString("Not implemented"));
+        g.notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
+        break;
+    }
+    }
 }
 
 void gameMainWidget::initializeGameInstance() {
@@ -106,9 +182,6 @@ void gameMainWidget::initializeGameInstance() {
         else if (p->getPosition() == 3) {
             ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
         }
-        update();
-    };
-    g.callbackTileUpdate = [this](game::gamePlay::Tile* t) {
         update();
     };
     g.callbackDice = [this](game::player::Player* p, int d1, int d2) {

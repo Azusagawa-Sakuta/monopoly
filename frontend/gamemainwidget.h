@@ -18,6 +18,7 @@ public:
     ~gameMainWidget();
 
 private slots:
+    void onTick();
 
 private:
     Ui::gameMainWidget *ui;
@@ -26,6 +27,7 @@ private:
     QGraphicsScene *scenePlayer2;
     QGraphicsScene *scenePlayer3;
     QGraphicsScene *scenePlayer4;
+    QTimer *timer;
 
     void initializeGameInstance();
 

@@ -3,6 +3,8 @@
 #include "constant.h"
 #include <random>
 #include <algorithm>
+#include <tuple>
+#include <variant>
 
 using namespace game;
 using namespace player;
@@ -377,7 +379,7 @@ Random::~Random() {}
  * @param None
  * @return None
  */
-GameInstance::GameInstance() : currentPlayerIndex(0) {
+GameInstance::GameInstance() : currentPlayerIndex(0), activeEvent(None) {
     utils::Logger::getInstance(); // Initialize logger
 }
 
@@ -396,14 +398,42 @@ GameInstance::~GameInstance() {
 }
 
 /**
+ * @brief Get active event
+ * @param None
+ * @return Active event type
+ */
+GameInstance::eventType GameInstance::getActiveEvent() const {
+    return activeEvent;
+}
+
+/**
+ * @brief Get active event parameter
+ * @param None
+ * @return Active event parameter
+ */
+std::any GameInstance::getActiveEventParam() const {
+    return eventParam;
+}
+/**
+ * @brief End current active event
+ * @param None
+ * @return None
+ */
+void GameInstance::endEvent() {
+    activeEvent = None;
+}
+
+/**
  * @brief Notifies the game instance that user input is ready
  * @param User input value
  * @return None 
  */
 void GameInstance::notifyUserInput(const std::any& result) {
+    utils::Logger::getInstance().log("uwu");
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     userInputResult = result; // Set user input result
     userInputReady = true; // Set user input ready flag
+    activeEvent = None; // Reset active event
     cv.notify_one(); // Notify waiting thread
 }
 
@@ -412,9 +442,16 @@ void GameInstance::notifyUserInput(const std::any& result) {
  * @param None
  * @return User input value
  */
-std::any GameInstance::waitForUserInput() {
+std::any GameInstance::waitForUserInput(eventType event, std::any param) {
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    cv.wait(lock, [this] { return userInputReady; }); // Wait for user input
+    activeEvent = event; // Set active event
+    eventParam = param; // Set event parameter
+    utils::Logger::getInstance().log("qwq");
+    cv.wait(lock, [this] {
+        utils::Logger::getInstance().log("wait predicate checked"); // Log predicate check
+        return userInputReady;
+    }); // Wait for user input
+    utils::Logger::getInstance().log("awa");
     userInputReady = false; // Reset user input ready flag
     return userInputResult; // Return user input result
 }
@@ -581,22 +618,21 @@ void GameInstance::tick() {
         if (currentPlayer->getPrisonTime() < 3) { // Check if the player has been in prison for less than 3 turns
             for (int i = 0; i < 3; i++) {
                 utils::Logger::getInstance().log("tick(): Rolling dice for prison, try: " + std::to_string(i) + ".");
-                int diceValue1 = rollDice(), diceValue2 = rollDice(); // Roll two dice
-                callbackDice(currentPlayer, diceValue1, diceValue2); // Callback for dice roll
-                if (diceValue1 == diceValue2) { // Check if the player rolled a double
+                int ret = std::any_cast<int>(waitForUserInput(PrisonDice));
+                if (ret) {
                     utils::Logger::getInstance().log("tick(): Player successfully got out of prison.");
-                    movePlayer(currentPlayer, diceValue1 + diceValue2); // Move the player
+                    movePlayer(currentPlayer, ret); // Move the player
                     nextPlayer(); // Advance to the next player
                     return;
                 }
             }
 
-            callbackPrisonPayOut(currentPlayer, static_cast<Prison*>(tiles[currentPosition]), constant::prisonReleasePrice[currentPlayer->getPrisonTime()]);
-            if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()] 
-                && std::any_cast<bool>(waitForUserInput())) {
-                utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
-                currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]); // Deduct prison release price from player
-                currentPlayer->setPrisonTime(0); // Reset prison time
+            if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()]) {
+                if (std::any_cast<bool>(waitForUserInput(PrisonPayOut, constant::prisonReleasePrice[currentPlayer->getPrisonTime()]))) {
+                    utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
+                    currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]); // Deduct prison release price from player
+                    currentPlayer->setPrisonTime(0); // Reset prison time
+                }
             } else {
                 utils::Logger::getInstance().log("tick(): Player failed to get out of prison.");
                 currentPlayer->setPrisonTime(currentPlayer->getPrisonTime() + 1); // Increment prison time
@@ -606,31 +642,21 @@ void GameInstance::tick() {
         }
     }
 
-    int diceValue1 = rollDice(), diceValue2 = rollDice(); // Roll two dice
-    utils::Logger::getInstance().log("tick(): Player rolled dice " + std::to_string(diceValue1) + ", " + std::to_string(diceValue2) + ".");
-    callbackDice(currentPlayer, diceValue1, diceValue2); // Callback for dice roll
+    int diceValue = std::any_cast<int>(waitForUserInput(Dice));
+    utils::Logger::getInstance().log("tick(): Player rolled dice " + std::to_string(diceValue) + ".");
+    if (diceValue < 0) { // Check if the third dice matches the first two
+        int prisonPos = findNextTile(Tile::TileType::prison, currentPosition); // Find the next prison tile
 
-    if (diceValue1 == diceValue2) { // Check if the player rolled a double
-        int diceValue3 = rollDice(); // Roll a third dice
-        utils::Logger::getInstance().log("tick(): Player rolling a third dice " + std::to_string(diceValue3) + ".");
-        callbackDice3rd(currentPlayer, diceValue3); // Callback for third dice roll
-
-        if (diceValue3 == diceValue1) { // Check if the third dice matches the first two
-            int prisonPos = findNextTile(Tile::TileType::prison, currentPosition); // Find the next prison tile
-
-            if (prisonPos != -1) {
-                currentPlayer->setPosition(prisonPos); // Move the player to the prison tile
-                currentPlayer->setPrisonTime(0); // Reset prison time
-                utils::Logger::getInstance().log("tick(): Player prisoned for 3 same dice.");
-                callbackPrison(currentPlayer, static_cast<Prison*>(tiles[prisonPos])); // Callback for prison event
-            } else {
-                utils::Logger::getInstance().log("tick(): No prison found.");
-            }
+        if (prisonPos != -1) {
+            currentPlayer->setPosition(prisonPos); // Move the player to the prison tile
+            currentPlayer->setPrisonTime(0); // Reset prison time
+            utils::Logger::getInstance().log("tick(): Player prisoned for 3 same dice.");
+            waitForUserInput(Prisoned, static_cast<Prison*>(tiles[prisonPos]));
         } else {
-            movePlayer(currentPlayer, diceValue1 + diceValue2 + diceValue3); // Move the player
+            utils::Logger::getInstance().log("tick(): No prison found.");
         }
     } else {
-        movePlayer(currentPlayer, diceValue1 + diceValue2); // Move the player
+        movePlayer(currentPlayer, abs(diceValue)); // Move the player
     }
 
     nextPlayer(); // Advance to the next player
@@ -669,11 +695,11 @@ void GameInstance::movePlayer(Player* player, int steps) {
         if ((*it)->getType() == Tile::TileType::home) { // Check if the tile is a home tile
             player->addCash(constant::homeReward); // Reward the player for passing home
             utils::Logger::getInstance().log("movePlayer(): Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
-            callbackHomeReward(player, static_cast<Home*>(*it), constant::homeReward); // Callback for home reward
+            waitForUserInput(HomeReward, constant::homeReward);
         }
     }
 
-    callbackPlayerUpdate(player); // Callback for player update
+    waitForUserInput(Update); // Wait for the UI to update
     utils::Logger::getInstance().log("movePlayer(): Handling tile event.");
     handleTileEvent(player, tiles[newPosition]); // Handle the event for the new tile
 }
@@ -689,13 +715,11 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
             Buildable* buildableTile = static_cast<Buildable*>(tile);
 
             if (!buildableTile->isOwned()) { // If the tile is not owned
-                callbackBuy(player, buildableTile, buildableTile->getPlotCost());
-                if (player->getCash() >= buildableTile->getPlotCost() && std::any_cast<bool>(waitForUserInput())) {
+                if (player->getCash() >= buildableTile->getPlotCost() && std::any_cast<bool>(waitForUserInput(Buy, buyRequest({ buildableTile->getPlotCost(), buildableTile })))) {
                     player->setCash(player->getCash() - buildableTile->getPlotCost()); // Deduct plot cost from player
                     buildableTile->setOwner(player); // Set player as owner
                 } else {
-                    callbackAuction(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
-                    auctionResult result = std::any_cast<auctionResult>(waitForUserInput());
+                    auctionResult result = std::any_cast<auctionResult>(waitForUserInput(Auction, auctionRequest({ constant::auctionReservePrice, constant::auctionBidIncrement, buildableTile })));
                     if (result.price >= constant::auctionReservePrice) {
                         result.player->addCash(-result.price); // Deduct auction price from winner
                         buildableTile->setOwner(result.player); // Set auction winner as owner
@@ -704,7 +728,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
             } else if (buildableTile->getOwner() != player) { // If the tile is owned by another player
                 player->addCash(-buildableTile->getRent()); // Deduct rent from player
                 buildableTile->getOwner()->addCash(buildableTile->getRent()); // Add rent to owner
-                callbackRent(player, buildableTile, buildableTile->getRent()); // Callback for rent payment
+                waitForUserInput(RentPaid, rentRequest({ buildableTile->getRent(), buildableTile }));
             } else if (buildableTile->getOwner() == player) {
                 // Build
                 // TODO
@@ -714,7 +738,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
 
         case Tile::prison:
             player->setPrisonTime(0); // Set prison time to 0
-            callbackPrison(player, static_cast<Prison*>(tile)); // Callback for prison event
+            waitForUserInput(Prisoned, static_cast<Prison*>(tile));
             break;
 
         case Tile::tax: {
@@ -722,7 +746,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
             cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate() / 100.0f) * 100; // Calculate tax to pay
             utils::Logger::getInstance().log("handleTileEvent(): Player paid tax " + std::to_string(taxTile->getTaxRate()) + " * " + std::to_string(player->getCash()) + " = " + std::to_string(taxToPay) + ".");
             player->addCash(-taxToPay); // Deduct tax from player
-            callbackTax(player, taxTile, taxToPay); // Callback for tax payment
+            waitForUserInput(Taxed, taxRequest({ taxToPay, taxTile }));
             break;
         }
 

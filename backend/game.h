@@ -8,6 +8,7 @@
 #include <shared_mutex>
 #include <any>
 #include <condition_variable>
+#include <variant>
 #include "utils.h"
 #include "constant.h"
 
@@ -140,6 +141,11 @@ namespace game {
         };
 
         class GameInstance {
+        public:
+            enum eventType {
+                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction
+            };
+
         private:
             std::vector<Tile*> tiles;
             std::vector<player::Player*> players;
@@ -148,6 +154,8 @@ namespace game {
             mutable std::condition_variable_any cv;
             mutable bool userInputReady = false;
             mutable std::any userInputResult;
+            mutable eventType activeEvent;
+            mutable std::any eventParam;
 
             GameInstance();
             ~GameInstance();
@@ -175,9 +183,33 @@ namespace game {
                 cashType price;
                 player::Player* player;
             };
+            
+            struct auctionRequest {
+                cashType reservePrice;
+                cashType bidIncrement;
+                Buildable* tile;
+            };
 
+            struct buyRequest {
+                cashType price;
+                Buildable* tile;
+            };
+
+            struct rentRequest {
+                cashType rent;
+                Buildable* tile;
+            };
+
+            struct taxRequest {
+                cashType tax;
+                Tax* tile;
+            };
+
+            eventType getActiveEvent() const;
+            std::any getActiveEventParam() const;
+            void endEvent();
             void notifyUserInput(const std::any& result);
-            std::any waitForUserInput();
+            std::any waitForUserInput(eventType event, std::any param = std::monostate());
             static GameInstance& getInstance();
             const std::vector<Tile*>& getTiles() const;
             const std::vector<player::Player*>& getPlayers() const;
