@@ -1,4 +1,5 @@
 #include "startwidget.h"
+#include "gamemainwidget.h"
 #include "ui_startwidget.h"
 #include <QMessageBox>
 #include <QDialog>
@@ -25,6 +26,42 @@ void startWidget::on_startButton_clicked()
     Widget* w = new Widget;
     w->show();
     this->close();
+}
+
+void startWidget::on_quickStartButton_clicked()
+{
+    QStringList imagePaths = {":/resources/avatar1.jpg", ":/resources/avatar2.jpg", ":/resources/avatar3.jpg", ":/resources/avatar4.jpg"};
+    QStringList finalImagePaths = imagePaths;
+
+    int number = 10;
+
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    int i = 0;
+    for (int i = 0; i < 4; i++) {
+        g.addPlayer(new game::player::ComputerPlayer);
+        // add profile photo through $(finalImagePaths) here
+        auto playerList = g.getPlayers();
+        playerList.back()->setImagePath((finalImagePaths[i]).toStdString());
+    }
+
+    g.addTile(new game::gamePlay::Home);
+    for (int i = 2; i < number; i++) 
+        g.addTile(new game::gamePlay::Buildable);
+    g.addTile(new game::gamePlay::Prison);
+    for (int i = 2; i < number; i++) 
+        g.addTile(new game::gamePlay::Buildable);
+    g.addTile(new game::gamePlay::Random);
+    for (int i = 2; i < number; i++) 
+        g.addTile(new game::gamePlay::Buildable);
+    g.addTile(new game::gamePlay::Tax);
+    for (int i = 2; i < number; i++) 
+        g.addTile(new game::gamePlay::Buildable);
+
+    gameMainWidget *w = new gameMainWidget(nullptr);
+
+    w->show(); // Show the game main widget
+    this->close(); // Close the current start widget
 }
 
 

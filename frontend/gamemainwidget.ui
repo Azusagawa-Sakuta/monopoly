@@ -27,7 +27,7 @@
   </property>
   <widget class="QGraphicsView" name="mapView">
    <property name="enabled">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -68,15 +68,6 @@
     <enum>QGraphicsView::DragMode::NoDrag</enum>
    </property>
   </widget>
-  <widget class="QWidget" name="gridLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>9</x>
-     <y>9</y>
-     <width>1901</width>
-     <height>881</height>
-    </rect>
-   </property>
    <layout class="QGridLayout" name="mainLayout" rowstretch="1,4,1" columnstretch="1,4,1" rowminimumheight="1,1,1" columnminimumwidth="1,1,1">
     <property name="sizeConstraint">
      <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
@@ -303,7 +294,6 @@
      </layout>
     </item>
    </layout>
-  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -24,7 +24,7 @@ protected:
 
 int main(int argc, char *argv[]) {
 
-    GameThread gameThread;
+    GameThread gameThread;  
     gameThread.start();
     /*
     game::constant::homeReward = 2500;

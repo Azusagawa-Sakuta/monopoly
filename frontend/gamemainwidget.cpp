@@ -118,11 +118,11 @@ void gameMainWidget::initializeGameInstance() {
 
 void gameMainWidget::resizeEvent(QResizeEvent* event)
 {
+    QWidget::resizeEvent(event);
     QSize newSize = event->size();
     // 更新 QGraphicsView 的大小以填充窗口
     ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
     ui->mainLayout->setGeometry(this->rect());
-    QWidget::resizeEvent(event);
     update();
 }
 
