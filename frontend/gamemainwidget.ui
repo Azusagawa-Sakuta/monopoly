@@ -25,6 +25,232 @@
   <property name="windowOpacity">
    <double>3.000000000000000</double>
   </property>
+  <layout class="QGridLayout" name="mainLayout" rowstretch="1,4,1" columnstretch="1,4,1">
+   <property name="sizeConstraint">
+    <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="playerLayout_1" stretch="1,5">
+     <item>
+      <widget class="QLabel" name="playerNickname_1">
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="textaf" stdset="0">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="playerMainLayout_1" stretch="3,4">
+       <item>
+        <widget class="QGraphicsView" name="playerAvatarGraphics_1"/>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="playerInfoLayout_1">
+         <item>
+          <widget class="QLabel" name="playerInfo_1_1">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_1_2">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_1_3">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <layout class="QVBoxLayout" name="playerLayout_3" stretch="1,5">
+     <item>
+      <widget class="QLabel" name="playerNickname_3">
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="playerMainLayout_3" stretch="3,4">
+       <item>
+        <widget class="QGraphicsView" name="playerAvatarGraphics_3"/>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="playerInfoLayout_3">
+         <item>
+          <widget class="QLabel" name="playerInfo_3_1">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_3_2">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_3_3">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="2">
+    <layout class="QVBoxLayout" name="playerLayout_4" stretch="1,5">
+     <item>
+      <widget class="QLabel" name="playerNickname_4">
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text_5389528734" stdset="0">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="playerMainLayout_4" stretch="3,4">
+       <item>
+        <widget class="QGraphicsView" name="playerAvatarGraphics_4"/>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="playerInfoLayout_4">
+         <item>
+          <widget class="QLabel" name="playerInfo_4_1">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_4_2">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_4_3">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2">
+    <layout class="QVBoxLayout" name="playerLayout_2" stretch="1,5">
+     <item>
+      <widget class="QLabel" name="playerNickname_2">
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text_10" stdset="0">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="playerMainLayout_2" stretch="3,4">
+       <item>
+        <widget class="QGraphicsView" name="playerAvatarGraphics_2"/>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="playerInfoLayout_2">
+         <item>
+          <widget class="QLabel" name="playerInfo_2_1">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_2_2">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="playerInfo_2_3">
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
   <widget class="QGraphicsView" name="mapView">
    <property name="enabled">
     <bool>false</bool>
@@ -68,232 +294,6 @@
     <enum>QGraphicsView::DragMode::NoDrag</enum>
    </property>
   </widget>
-   <layout class="QGridLayout" name="mainLayout" rowstretch="1,4,1" columnstretch="1,4,1" rowminimumheight="1,1,1" columnminimumwidth="1,1,1">
-    <property name="sizeConstraint">
-     <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
-    </property>
-    <property name="spacing">
-     <number>0</number>
-    </property>
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="playerLayout_1" stretch="1,5">
-      <item>
-       <widget class="QLabel" name="playerNickname_1">
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-         </font>
-        </property>
-        <property name="textaf" stdset="0">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="playerMainLayout_1" stretch="3,4">
-        <item>
-         <widget class="QGraphicsView" name="playerAvatarGraphics_1"/>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="playerInfoLayout_1">
-          <item>
-           <widget class="QLabel" name="playerInfo_1_1">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_1_2">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_1_3">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item row="2" column="2">
-     <layout class="QVBoxLayout" name="playerLayout_4" stretch="1,5">
-      <item>
-       <widget class="QLabel" name="playerNickname_4">
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-         </font>
-        </property>
-        <property name="text_5389528734" stdset="0">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="playerMainLayout_4" stretch="3,4">
-        <item>
-         <widget class="QGraphicsView" name="playerAvatarGraphics_4"/>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="playerInfoLayout_4">
-          <item>
-           <widget class="QLabel" name="playerInfo_4_1">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_4_2">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_4_3">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item row="1" column="0">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Orientation::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="0" column="2">
-     <layout class="QVBoxLayout" name="playerLayout_2" stretch="1,5">
-      <item>
-       <widget class="QLabel" name="playerNickname_2">
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-         </font>
-        </property>
-        <property name="text_10" stdset="0">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="playerMainLayout_2" stretch="3,4">
-        <item>
-         <widget class="QGraphicsView" name="playerAvatarGraphics_2"/>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="playerInfoLayout_2">
-          <item>
-           <widget class="QLabel" name="playerInfo_2_1">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_2_2">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_2_3">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-    <item row="0" column="1">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="0">
-     <layout class="QVBoxLayout" name="playerLayout_3" stretch="1,5">
-      <item>
-       <widget class="QLabel" name="playerNickname_3">
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="playerMainLayout_3" stretch="3,4">
-        <item>
-         <widget class="QGraphicsView" name="playerAvatarGraphics_3"/>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="playerInfoLayout_3">
-          <item>
-           <widget class="QLabel" name="playerInfo_3_1">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_3_2">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="playerInfo_3_3">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
-   </layout>
  </widget>
  <resources/>
  <connections/>
