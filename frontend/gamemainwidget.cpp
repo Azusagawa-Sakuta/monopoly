@@ -442,7 +442,7 @@ void gameMainWidget::rollDiceAgain(game::gamePlay::GameInstance& g, game::gamePl
     } else {
         rollDice();
         if (d3 != d2) {
-            QTimer::singleShot(1000, this, [&g, this]() {
+            QTimer::singleShot(1000, this, [&g]() {
                 g.notifyUserInput(0);
             });
             ui->diceLabel_1->hide();
