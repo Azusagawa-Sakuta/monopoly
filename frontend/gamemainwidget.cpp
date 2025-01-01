@@ -50,47 +50,13 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
         ui->playerInfo_4_3->hide();
         ui->playerNickname_4->hide();
     }
-    int computers = 0, players = 0;
     auto& g = game::gamePlay::GameInstance::getInstance();
-    const auto& playerList = g.getPlayers();
-    for (const auto& it : playerList) {
-        if (typeid(*it) == typeid(game::player::ComputerPlayer)) {
-            it->setNickname("Computer" + std::to_string(++computers));
-        }
-        else {
-            it->setNickname("Player" + std::to_string(++players));
-        }
-        if (computers + players == 1) {
-            ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_1_2->hide();
-            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
-        }
-        else if (computers + players == 2) {
-            ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_2_2->hide();
-            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Cyan"));
-        }
-        else if (computers + players == 3) {
-            ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_3_2->hide();
-            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Yellow"));
-        }
-        else if (computers + players == 4) {
-            ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_4_2->hide();
-            ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
-        }
-    }
-    update();
-
     // Connect the timer's timeout signal to the onTick slot
     connect(timer, &QTimer::timeout, this, &gameMainWidget::onTick);
 
+    qDebug() << "1";
     timer->start(100);
+    update();
     g.notifyUserInput(std::monostate());
 }
 
@@ -126,7 +92,7 @@ void gameMainWidget::onTick() {
     }
     case game::gamePlay::GameInstance::eventType::PrisonDice: {
         QMessageBox::information(this, "Prison Dice Out", "You tried to throw three same dices for sure, but apparently you failed.");
-        g.notifyUserInput(false);
+        g.notifyUserInput(0);
         break;
     }
     case game::gamePlay::GameInstance::eventType::Buy: {
@@ -160,7 +126,7 @@ void gameMainWidget::onTick() {
     }
     case game::gamePlay::GameInstance::eventType::Auction: {
         game::gamePlay::GameInstance::auctionRequest req = std::any_cast<game::gamePlay::GameInstance::auctionRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Auction", QString::fromStdString("Not implemented"));
+        QMessageBox::information(this, "Auction", QString::fromStdString("To be auctioned"));
         g.notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
         break;
     }
@@ -196,16 +162,54 @@ void gameMainWidget::resizeEvent(QResizeEvent* event)
     // 更新 QGraphicsView 的大小以填充窗口
     ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
     ui->mainLayout->setGeometry(this->rect());
-    update();
+    //update();
 }
 
 void gameMainWidget::update() {
     scene->clear(); // Clear old items
     paintMap();
-    //paintPlayerInfo();
+    updatePlayerInfo();
+    qDebug() << "Updated";
 }
 
-QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
+void gameMainWidget::updatePlayerInfo() {
+    int computers = 0, players = 0;
+    const auto& playerList = game::gamePlay::GameInstance::getInstance().getPlayers();
+    for (const auto& it : playerList) {
+        if (typeid(*it) == typeid(game::player::ComputerPlayer)) {
+            it->setNickname("Computer" + std::to_string(++computers));
+        }
+        else {
+            it->setNickname("Player" + std::to_string(++players));
+        }
+        if (computers + players == 1) {
+            ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_1_2->hide();
+            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
+        }
+        else if (computers + players == 2) {
+            ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_2_2->hide();
+            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Cyan"));
+        }
+        else if (computers + players == 3) {
+            ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_3_2->hide();
+            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Yellow"));
+        }
+        else if (computers + players == 4) {
+            ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
+            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
+            ui->playerInfo_4_2->hide();
+            ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
+        }
+    }
+}
+
+QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
 {
     QPixmap tileImage;
     if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
@@ -221,21 +225,44 @@ QPixmap gameMainWidget::getTileImage(const game::gamePlay::Tile* tile)
     return tileImage;
 }
 
-QPixmap gameMainWidget::getPlayerIndicator(const game::player::Player* p)
+QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p)
 {
     QPixmap img;
     std::string imgs[] = {":/resources/draft/1P.png", ":/resources/draft/2P.png", ":/resources/draft/3P.png", ":/resources/draft/4P.png"};
-    img = QPixmap(QString::fromStdString(imgs[p->getPosition()]));
+    img = QPixmap(QString::fromStdString(imgs[game::gamePlay::GameInstance::getInstance().findPlayerPos(p)]));
     if (img.isNull()) {
         qDebug() << "Failed to load image";
     }
     return img;
 }
 
-void gameMainWidget::paintMap()
-{
+void gameMainWidget::paintTile(int x, int y, int index, int depth, QPixmap tileImage) {
+    int offsetX = (- tileImage.width()) / 2;
+    int offsetY = (- tileImage.height()) / 2;
 
-    int tileW = 50, tileH = 50;
+    bool paintTileIndex = true;
+
+    auto pixmapItem = scene->addPixmap(tileImage);
+    pixmapItem->setPos(x + offsetX, y + offsetY);
+    pixmapItem->setZValue(depth--);
+    if (paintTileIndex) 
+        scene->addText(QString::number(index))->setPos(x, y);
+    
+    int i = 0;
+    auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
+    for (auto& a : players) {
+        if (a->getPosition() == index - 1) {
+            QPixmap playerImage(getPlayerIndicator(a));
+            auto item = scene->addPixmap(playerImage);
+            item->setPos(x + offsetX, y + offsetY - i * 64);
+            item->setZValue(100);
+            i++;
+        }
+    }
+}
+
+void gameMainWidget::paintMap() {
+    
     int spacing = 5;
     int horizontalSpacing = 64 + spacing * 2;
     int verticalSpacing = 32 + spacing;
@@ -244,7 +271,7 @@ void gameMainWidget::paintMap()
     const std::vector<game::gamePlay::Tile*>& tiles = game::gamePlay::GameInstance::getInstance().getTiles();
 
     // Define colors for the tiles
-    QColor colors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
+    //QColor colors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
 
     // Calculate the number of rows and columns to form a diamond shape
     int numTiles = tiles.size();
@@ -253,48 +280,16 @@ void gameMainWidget::paintMap()
 
     int index = 0;
 
-    QPixmap tileImage(":/resources/draft/tileTemplate.png");
-    if (tileImage.isNull()) {
-        qDebug() << "Failed to load image";
-    }
-
-    auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
-
-    int offsetX = (- tileImage.width()) / 2;
-    int offsetY = (- tileImage.height()) / 2;
-
     int depth = 0;
 
     scene->addRect(- tileW / 2.0f, - tileH / 2.0f, tileW, tileH, QPen(Qt::black), QBrush(Qt::blue));
-
-    bool paintTileIndex = true;
 
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index++];
         int x = horizontalSpacing * (- numRows + row + 1);
         int y = row * verticalSpacing;
-        QColor color = Qt::gray;
-        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
-            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor()];
-        }
-        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(getTileImage(tile));
-        pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth--);
-        if (paintTileIndex) 
-            scene->addText(QString::number(index))->setPos(x, y);
-        int i = 0;
-        for (auto& a : players) {
-            if (a->getPosition() == index - 1) {
-                QPixmap playerImage(getPlayerIndicator(a));
-                auto item = scene->addPixmap(playerImage);
-                item->setPos(x + offsetX, y + offsetY - i * 64);
-                item->setZValue(100);
-            }
-            i++;
-        }
+        paintTile(x, y, index, depth--, getTileImage(tile));
     }
 
     // Top row (left to right)
@@ -302,27 +297,7 @@ void gameMainWidget::paintMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = horizontalSpacing * (- numRows + col + 1);
         int y = - col * verticalSpacing;
-        QColor color = Qt::gray;
-        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
-            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor()];
-        }
-        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(getTileImage(tile));
-        pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth--);
-        if (paintTileIndex) 
-            scene->addText(QString::number(index))->setPos(x, y);
-        int i = 0;
-        for (auto& a : players) {
-            if (a->getPosition() == index - 1) {
-                QPixmap playerImage(getPlayerIndicator(a));
-                auto item = scene->addPixmap(playerImage);
-                item->setPos(x + offsetX, y + offsetY - i * 64);
-                item->setZValue(100);
-            }
-            i++;
-        }
+        paintTile(x, y, index, depth--, getTileImage(tile));
     }
 
     depth += 2;
@@ -332,27 +307,7 @@ void gameMainWidget::paintMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = horizontalSpacing * row;
         int y = (- numRows + row + 1) * verticalSpacing;
-        QColor color = Qt::gray;
-        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
-            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor()];
-        }
-        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(getTileImage(tile));
-        pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth++);
-        if (paintTileIndex) 
-            scene->addText(QString::number(index))->setPos(x, y);
-        int i = 0;
-        for (auto& a : players) {
-            if (a->getPosition() == index - 1) {
-                QPixmap playerImage(getPlayerIndicator(a));
-                auto item = scene->addPixmap(playerImage);
-                item->setPos(x + offsetX, y + offsetY - i * 64);
-                item->setZValue(100);
-            }
-            i++;
-        }
+        paintTile(x, y, index, depth++, getTileImage(tile));
     }
 
     // Bottom row (right to left)
@@ -360,46 +315,8 @@ void gameMainWidget::paintMap()
         game::gamePlay::Tile* tile = tiles[index++];
         int x = horizontalSpacing * col;
         int y = (numCols - col - 1) * verticalSpacing;
-        QColor color = Qt::gray;
-        if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
-            game::gamePlay::Buildable* buildableTile = static_cast<game::gamePlay::Buildable*>(tile);
-            color = colors[buildableTile->getColor()];
-        }
-        //scene->addRect(x, y, tileW, tileH, QPen(Qt::black), QBrush(color));
-        auto pixmapItem = scene->addPixmap(getTileImage(tile));
-        pixmapItem->setPos(x + offsetX, y + offsetY);
-        pixmapItem->setZValue(depth++);
-        if (paintTileIndex) 
-            scene->addText(QString::number(index))->setPos(x, y);
-        int i = 0;
-        for (auto& a : players) {
-            if (a->getPosition() == index - 1) {
-                QPixmap playerImage(getPlayerIndicator(a));
-                auto item = scene->addPixmap(playerImage);
-                item->setPos(x + offsetX, y + offsetY - i * 64);
-                item->setZValue(100);
-            }
-            i++;
-        }
+        paintTile(x, y, index, depth++, getTileImage(tile));
     }
-}
-
-void gameMainWidget::paintPlayerInfo()
-{
-    int rectWidth = 100, rectHeight = 100;
-    QColor playerColors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
-
-    // Top-left corner
-    scene->addRect(- this->width() / 2.0f + 2, - this->height() / 2.0f + 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[0]));
-
-    // Top-right corner
-    scene->addRect(this->width() / 2.0f - rectWidth - 2, - this->height() / 2.0f + 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[1]));
-
-    // Bottom-left corner
-    scene->addRect(- this->width() / 2.0f + 2, this->height() / 2.0f - rectHeight - 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[2]));
-
-    // Bottom-right corner
-    scene->addRect(this->width() / 2.0f - rectWidth - 2, this->height() / 2.0f - rectHeight - 2, rectWidth, rectHeight, QPen(Qt::black), QBrush(playerColors[3]));
 }
 
 int gameMainWidget::loadImage() {

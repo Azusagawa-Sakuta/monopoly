@@ -428,12 +428,12 @@ void GameInstance::endEvent() {
  * @param User input value
  * @return None 
  */
-void GameInstance::notifyUserInput(const std::any& result) {
-    utils::Logger::getInstance().log("uwu");
+void GameInstance::notifyUserInput(const std::any result) {
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     userInputResult = result; // Set user input result
     userInputReady = true; // Set user input ready flag
-    activeEvent = None; // Reset active event
+    activeEvent = None; // Reset active eventa
+    utils::Logger::getInstance().log("notifyUserInput(): Notifying backend.");
     cv.notify_one(); // Notify waiting thread
 }
 
@@ -446,12 +446,12 @@ std::any GameInstance::waitForUserInput(eventType event, std::any param) {
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     activeEvent = event; // Set active event
     eventParam = param; // Set event parameter
-    utils::Logger::getInstance().log("qwq");
+    utils::Logger::getInstance().log("waitForUserInput(): Waiting for frontend response.");
     cv.wait(lock, [this] {
-        utils::Logger::getInstance().log("wait predicate checked"); // Log predicate check
+        utils::Logger::getInstance().log("waitForUserInput(): Checking predicate..."); // Log predicate check
         return userInputReady;
     }); // Wait for user input
-    utils::Logger::getInstance().log("awa");
+    utils::Logger::getInstance().log("waitForUserInput(): Continuing.");
     userInputReady = false; // Reset user input ready flag
     return userInputResult; // Return user input result
 }
@@ -699,6 +699,8 @@ void GameInstance::movePlayer(Player* player, int steps) {
         }
     }
 
+
+    utils::Logger::getInstance().log("movePlayer(): Waiting for the UI to update.");
     waitForUserInput(Update); // Wait for the UI to update
     utils::Logger::getInstance().log("movePlayer(): Handling tile event.");
     handleTileEvent(player, tiles[newPosition]); // Handle the event for the new tile

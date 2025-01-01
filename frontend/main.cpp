@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QThread>
 #include "../backend/game.h"
+#include "../backend/utils.h"
 
 
 class GameThread : public QThread {
@@ -13,10 +14,11 @@ protected:
         game::constant::initialCash = 10000;
         game::gamePlay::GameInstance &g = game::gamePlay::GameInstance::getInstance();
 
-        qDebug() << "Waiting for the game to start...";
+        utils::Logger::getInstance().log("main(): Waiting for the game to start...");
         g.waitForUserInput(game::gamePlay::GameInstance::eventType::None);
-        qDebug() << "Game started!";
+        utils::Logger::getInstance().log("main(): Game started.");
         while (true) {
+            utils::Logger::getInstance().log("main(): Ticking...");
             g.tick();
             QThread::sleep(1);
         }

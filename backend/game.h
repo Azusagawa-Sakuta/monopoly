@@ -208,7 +208,7 @@ namespace game {
             eventType getActiveEvent() const;
             std::any getActiveEventParam() const;
             void endEvent();
-            void notifyUserInput(const std::any& result);
+            void notifyUserInput(const std::any result);
             std::any waitForUserInput(eventType event, std::any param = std::monostate());
             static GameInstance& getInstance();
             const std::vector<Tile*>& getTiles() const;
