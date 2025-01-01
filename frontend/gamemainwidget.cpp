@@ -371,13 +371,15 @@ void gameMainWidget::on_rollDiceButton_clicked()
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto e = g.getActiveEvent();
 
+    int waitTime = 2000;
+
     QStringList numberList = { "1", "2", "3", "4", "5", "6" };
     srand(time(nullptr));
     if (ui->rollDiceButton->text() == "Roll dice") {
         d1 = rand() % 6 + 1;
         d2 = rand() % 6 + 1;
         QString gifPath1 = ":/resources/dice" + numberList[d1 - 1] + ".gif";
-        QString gifPath2 = ":/resources/dice" + numberList[d2 - 2] + ".gif";
+        QString gifPath2 = ":/resources/dice" + numberList[d2 - 1] + ".gif";
         QMovie* movie1 = new QMovie(gifPath1);
         QMovie* movie2 = new QMovie(gifPath2);
         ui->diceLabel_1->setMovie(movie1);
@@ -386,7 +388,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
         movie2->start();
         if(d1 != d2) {
             if(e == game::gamePlay::GameInstance::eventType::Dice) {
-                QTimer::singleShot(1000, this, [&g, this](){
+                QTimer::singleShot(waitTime, this, [&g, this](){
                     g.notifyUserInput(d1 + d2);
                     ui->diceLabel_1->hide();
                     ui->diceLabel_2->hide();
@@ -402,7 +404,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
             ui->rollDiceButton->setText("Roll dice again");
         }
     }
-    else if (ui->rollDiceButton->text() == "Roll dice again"){
+    else if (ui->rollDiceButton->text() == "Roll dice again") x{
         using game::gamePlay::GameInstance;
         auto e = g.getActiveEvent();
         if(e == GameInstance::eventType::Dice) {
@@ -413,7 +415,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
             ui->diceLabel_1->setMovie(movie3);
             movie3->start();
             if(d2 == d3) {
-                QTimer::singleShot(1000, this, [&g, this](){
+                QTimer::singleShot(waitTime, this, [&g, this](){
                     g.notifyUserInput(-3 * d3);
                     ui->diceLabel_1->hide();
                     ui->diceLabel_2->hide();
@@ -421,7 +423,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
                 });
             }
             else {
-                QTimer::singleShot(1000, this, [&g, this](){
+                QTimer::singleShot(waitTime, this, [&g, this](){
                     g.notifyUserInput(d1 + d3);
                     ui->diceLabel_1->hide();
                     ui->diceLabel_2->hide();
@@ -484,4 +486,3 @@ void gameMainWidget::on_rollDiceButton_clicked()
         }
     }
 }
-
