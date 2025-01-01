@@ -190,7 +190,7 @@
     </layout>
    </item>
    <item row="1" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="7,2,1,11">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="4,2,1,15">
      <item>
       <spacer name="verticalSpacer_3">
        <property name="orientation">
