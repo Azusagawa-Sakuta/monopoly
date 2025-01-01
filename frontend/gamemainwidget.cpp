@@ -12,6 +12,7 @@
 #include <QGuiApplication>
 #include <QTimer>
 #include <QMovie>
+#include <QThread>
 #include "../backend/game.h"
 
 int d1, d2, d3;
@@ -35,9 +36,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     int playerNum = loadImage();
     ui->mapView->setScene(scene);
 
-    ui->diceLabel_1->hide();
-    ui->diceLabel_2->hide();
-    ui->rollDiceButton->hide();
+    ui->rollDiceButton->setDisabled(true);
 
     ui->playerAvatarGraphics_1->setScene(scenePlayer1);
     ui->playerAvatarGraphics_2->setScene(scenePlayer2);
@@ -85,10 +84,7 @@ void gameMainWidget::onTick() {
         g.notifyUserInput(std::monostate());
         break;
     case game::gamePlay::GameInstance::eventType::Dice: {
-        d1 = d2 = d3 = 0;
-        ui->diceLabel_1->show();
-        ui->diceLabel_2->show();
-        ui->rollDiceButton->show();
+        ui->rollDiceButton->setDisabled(false);
         break;
     }
     case game::gamePlay::GameInstance::eventType::Prisoned: {
@@ -102,10 +98,7 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::PrisonDice: {
-        d1 = d2 = d3 = 0;
-        ui->diceLabel_1->show();
-        ui->diceLabel_2->show();
-        ui->rollDiceButton->show();
+        ui->rollDiceButton->setDisabled(false);
         break;
     }
     case game::gamePlay::GameInstance::eventType::Buy: {
@@ -377,7 +370,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
     if (ui->rollDiceButton->text() == "Roll dice") {
         rollDice();
         if (d1 != d2) {
-            handleDiceEvent(g, e, d1 + d2);
+            handleDiceEvent(g, e);
         } else {
             d1 = 2 * d2;
             ui->rollDiceButton->setText("Roll dice again");
@@ -403,15 +396,12 @@ void gameMainWidget::rollDice()
     movie2->start();
 }
 
-void gameMainWidget::handleDiceEvent(game::gamePlay::GameInstance& g, game::gamePlay::GameInstance::eventType e, int result)
+void gameMainWidget::handleDiceEvent(game::gamePlay::GameInstance& g, game::gamePlay::GameInstance::eventType e)
 {
     if (e == game::gamePlay::GameInstance::eventType::Dice) {
-        QTimer::singleShot(1000, this, [&g, result]() {
-            g.notifyUserInput(result);
-        });
-        ui->diceLabel_1->hide();
-        ui->diceLabel_2->hide();
-        ui->rollDiceButton->hide();
+        g.notifyUserInput(d1 + d2);
+        d1 = d2 = 0;
+        ui->rollDiceButton->setDisabled(true);
     } else {
         g.notifyUserInput(0);
     }
@@ -424,32 +414,28 @@ void gameMainWidget::rollDiceAgain(game::gamePlay::GameInstance& g, game::gamePl
         QString gifPath3 = ":/resources/dice" + numberList[d3 - 1] + ".gif";
         QMovie* movie3 = new QMovie(gifPath3);
         ui->diceLabel_1->setMovie(movie3);
-        ui->diceLabel_2->hide();
         movie3->start();
         if (d2 == d3) {
-            QTimer::singleShot(1000, this, [&g]() {
-                g.notifyUserInput(-3 * d3);
-            });
-            ui->diceLabel_1->hide();
-            ui->rollDiceButton->hide();
+            g.notifyUserInput(-3 * d3);
+            ui->rollDiceButton->setDisabled(true);
+            d1 = d2 = d3 = 0;
+            ui->rollDiceButton->setText("Roll dice");
         } else {
-            QTimer::singleShot(1000, this, [&g]() {
-                g.notifyUserInput(d1 + d3);
-            });
-            ui->diceLabel_1->hide();
-            ui->rollDiceButton->hide();
+            g.notifyUserInput(d1 + d3);
+            ui->rollDiceButton->setDisabled(true);
+            d1 = d2 = d3 = 0;
+            ui->rollDiceButton->setText("Roll dice");
         }
     } else {
+        g.notifyUserInput(2 * d1);
         rollDice();
-        if (d3 != d2) {
-            QTimer::singleShot(1000, this, [&g]() {
-                g.notifyUserInput(0);
-            });
-            ui->diceLabel_1->hide();
-            ui->diceLabel_2->hide();
-            ui->rollDiceButton->hide();
+        if (d1 != d2) {
+            g.notifyUserInput(0);
+            ui->rollDiceButton->setDisabled(true);
+            d1 = d2 = d3 = 0;
+            ui->rollDiceButton->setText("Roll dice");
         } else {
-            d1 += 2 * d2;
+            g.notifyUserInput(2 * d1);
             ui->rollDiceButton->setText("Roll dice again and again");
         }
     }
@@ -458,20 +444,17 @@ void gameMainWidget::rollDiceAgain(game::gamePlay::GameInstance& g, game::gamePl
 void gameMainWidget::rollDiceAgainAndAgain(game::gamePlay::GameInstance& g, const QStringList& numberList)
 {
     rollDice();
-    if (d3 != d2) {
-        QTimer::singleShot(1000, this, [&g]() {
-            g.notifyUserInput(0);
+    if (d1 != d2) {
+        QTimer::singleShot(2500, this, []() {
         });
-        ui->diceLabel_1->hide();
-        ui->diceLabel_2->hide();
-        ui->rollDiceButton->hide();
+        g.notifyUserInput(0);
+        ui->rollDiceButton->setDisabled(true);
+        d1 = d2 = d3 = 0;
+        ui->rollDiceButton->setText("Roll dice");
     } else {
-        d1 += 2 * d2;
-        QTimer::singleShot(1000, this, [&g]() {
-            g.notifyUserInput(d1);
-        });
-        ui->diceLabel_1->hide();
-        ui->diceLabel_2->hide();
-        ui->rollDiceButton->hide();
+        g.notifyUserInput(2 * d1);
+        ui->rollDiceButton->setDisabled(true);
+        d1 = d2 = d3 = 0;
+        ui->rollDiceButton->setText("Roll dice");
     }
 }
