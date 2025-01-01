@@ -30,6 +30,11 @@ private slots:
     void onTick();
 
     void on_rollDiceButton_clicked();
+    void rollDice();
+    void handleDiceEvent(game::gamePlay::GameInstance& g, game::gamePlay::GameInstance::eventType e, int result);
+    void rollDiceAgain(game::gamePlay::GameInstance& g, game::gamePlay::GameInstance::eventType e, const QStringList& numberList);
+    void rollDiceAgainAndAgain(game::gamePlay::GameInstance& g, const QStringList& numberList);
+
 
 private:
     Ui::gameMainWidget *ui;
