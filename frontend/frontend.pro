@@ -9,6 +9,7 @@ CONFIG += c++20
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    auctionwidget.cpp \
     gamemainwidget.cpp \
     main.cpp \
     ../backend/constant.cpp \
@@ -21,11 +22,13 @@ HEADERS += \
     ../backend/constant.h \
     ../backend/game.h \
     ../backend/utils.h \
+    auctionwidget.h \
     gamemainwidget.h \
     startwidget.h \
     widget.h
 
 FORMS += \
+    auctionwidget.ui \
     gamemainwidget.ui \
     startwidget.ui \
     widget.ui
