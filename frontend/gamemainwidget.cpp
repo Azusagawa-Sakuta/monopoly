@@ -11,7 +11,10 @@
 #include <variant>
 #include <QGuiApplication>
 #include <QTimer>
+#include <QMovie>
 #include "../backend/game.h"
+
+int d1, d2, d3;
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
@@ -31,6 +34,11 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     scenePlayer4->clear();
     int playerNum = loadImage();
     ui->mapView->setScene(scene);
+
+    ui->diceLabel_1->hide();
+    ui->diceLabel_2->hide();
+    ui->rollDiceButton->hide();
+
     ui->playerAvatarGraphics_1->setScene(scenePlayer1);
     ui->playerAvatarGraphics_2->setScene(scenePlayer2);
     ui->playerAvatarGraphics_3->setScene(scenePlayer3);
@@ -77,7 +85,10 @@ void gameMainWidget::onTick() {
         g.notifyUserInput(std::monostate());
         break;
     case game::gamePlay::GameInstance::eventType::Dice: {
-        g.notifyUserInput(QInputDialog::getInt(this, "Input dice value", "Input dice value of 2/3 dices together, and its negative if three the same", 9, 2, 18, 1, nullptr));
+        d1 = d2 = d3 = 0;
+        ui->diceLabel_1->show();
+        ui->diceLabel_2->show();
+        ui->rollDiceButton->show();
         break;
     }
     case game::gamePlay::GameInstance::eventType::Prisoned: {
@@ -91,8 +102,10 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::PrisonDice: {
-        QMessageBox::information(this, "Prison Dice Out", "You tried to throw three same dices for sure, but apparently you failed.");
-        g.notifyUserInput(0);
+        d1 = d2 = d3 = 0;
+        ui->diceLabel_1->show();
+        ui->diceLabel_2->show();
+        ui->rollDiceButton->show();
         break;
     }
     case game::gamePlay::GameInstance::eventType::Buy: {
@@ -352,3 +365,123 @@ int gameMainWidget::loadImage() {
     }
     return i;
 }
+
+void gameMainWidget::on_rollDiceButton_clicked()
+{
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    auto e = g.getActiveEvent();
+
+    QStringList numberList = { "1", "2", "3", "4", "5", "6" };
+    srand(time(nullptr));
+    if (ui->rollDiceButton->text() == "Roll dice") {
+        d1 = rand() % 6 + 1;
+        d2 = rand() % 6 + 1;
+        QString gifPath1 = ":/resources/dice" + numberList[d1 - 1] + ".gif";
+        QString gifPath2 = ":/resources/dice" + numberList[d2 - 2] + ".gif";
+        QMovie* movie1 = new QMovie(gifPath1);
+        QMovie* movie2 = new QMovie(gifPath2);
+        ui->diceLabel_1->setMovie(movie1);
+        ui->diceLabel_2->setMovie(movie2);
+        movie1->start();
+        movie2->start();
+        if(d1 != d2) {
+            if(e == game::gamePlay::GameInstance::eventType::Dice) {
+                QTimer::singleShot(1000, this, [&g, this](){
+                    g.notifyUserInput(d1 + d2);
+                    ui->diceLabel_1->hide();
+                    ui->diceLabel_2->hide();
+                    ui->rollDiceButton->hide();
+                });
+            }
+            else {
+                g.notifyUserInput(0);
+            }
+        }
+        else {
+            d1 = 2 * d2;
+            ui->rollDiceButton->setText("Roll dice again");
+        }
+    }
+    else if (ui->rollDiceButton->text() == "Roll dice again"){
+        using game::gamePlay::GameInstance;
+        auto e = g.getActiveEvent();
+        if(e == GameInstance::eventType::Dice) {
+            ui->diceLabel_2->hide();
+            d3 = rand() % 6 + 1;
+            QString gifPath3 = ":/resources/dice" + numberList[d3 - 1] + ".gif";
+            QMovie* movie3 = new QMovie(gifPath3);
+            ui->diceLabel_1->setMovie(movie3);
+            movie3->start();
+            if(d2 == d3) {
+                QTimer::singleShot(1000, this, [&g, this](){
+                    g.notifyUserInput(-3 * d3);
+                    ui->diceLabel_1->hide();
+                    ui->diceLabel_2->hide();
+                    ui->rollDiceButton->hide();
+                });
+            }
+            else {
+                QTimer::singleShot(1000, this, [&g, this](){
+                    g.notifyUserInput(d1 + d3);
+                    ui->diceLabel_1->hide();
+                    ui->diceLabel_2->hide();
+                    ui->rollDiceButton->hide();
+                });
+            }
+        }
+        else {
+            d2 = rand() % 6 + 1;
+            d3 = rand() % 6 + 1;
+            QString gifPath2 = ":/resources/dice" + numberList[d2 - 1] + ".gif";
+            QString gifPath3 = ":/resources/dice" + numberList[d3 - 2] + ".gif";
+            QMovie* movie2 = new QMovie(gifPath2);
+            QMovie* movie3 = new QMovie(gifPath3);
+            ui->diceLabel_1->setMovie(movie2);
+            ui->diceLabel_2->setMovie(movie3);
+            movie2->start();
+            movie3->start();
+            if(d3 != d2) {
+                QTimer::singleShot(1000, this, [&g, this](){
+                    g.notifyUserInput(0);
+                    ui->diceLabel_1->hide();
+                    ui->diceLabel_2->hide();
+                    ui->rollDiceButton->hide();
+                });
+            }
+            else {
+                d1 += 2 * d2;
+                ui->rollDiceButton->setText("Roll dice again and again");
+            }
+        }
+    }
+    else {
+        d2 = rand() % 6 + 1;
+        d3 = rand() % 6 + 1;
+        QString gifPath2 = ":/resources/dice" + numberList[d2 - 1] + ".gif";
+        QString gifPath3 = ":/resources/dice" + numberList[d3 - 2] + ".gif";
+        QMovie* movie2 = new QMovie(gifPath2);
+        QMovie* movie3 = new QMovie(gifPath3);
+        ui->diceLabel_1->setMovie(movie2);
+        ui->diceLabel_2->setMovie(movie3);
+        movie2->start();
+        movie3->start();
+        if(d3 != d2) {
+            QTimer::singleShot(1000, this, [&g, this](){
+                g.notifyUserInput(0);
+                ui->diceLabel_1->hide();
+                ui->diceLabel_2->hide();
+                ui->rollDiceButton->hide();
+            });
+        }
+        else {
+            d1 += 2 * d2;
+            QTimer::singleShot(1000, this, [&g, this](){
+                g.notifyUserInput(d1);
+                ui->diceLabel_1->hide();
+                ui->diceLabel_2->hide();
+                ui->rollDiceButton->hide();
+            });
+        }
+    }
+}
+
