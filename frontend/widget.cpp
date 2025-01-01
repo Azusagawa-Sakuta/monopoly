@@ -302,15 +302,15 @@ void Widget::on_addPlayer_1_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
+        if (!ui->playerProfilePhoto_1->isVisible()) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all candidates at the right first or choose one photo.");
+            return;
+        }
         if (selectedPlayers == 0) {
             ui->profilePhotoList->hide();
         }
         if (!ui->playerProfilePhoto_2->isVisible() && selectedPlayers == 1) {
             selectedPlayers--;
-        }
-        if (!ui->playerProfilePhoto_1->isVisible()) {
-            QMessageBox::critical(this, "Re-choose failed", "You should cancel all candidates at the right first.");
-            return;
         }
         ui->playerProfilePhoto_1->hide();
         ui->addComputer_1->setText(static_cast<QString>("Select Profile (double-click)"));
@@ -402,15 +402,15 @@ void Widget::on_addPlayer_2_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
+        if (!ui->playerProfilePhoto_2->isVisible()) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first or choose one photo.");
+            return;
+        }
         if (selectedPlayers == 1) {
             ui->profilePhotoList->hide();
         }
         if (!ui->playerProfilePhoto_3->isVisible() && selectedPlayers == 2) {
             selectedPlayers--;
-        }
-        if (!ui->playerProfilePhoto_2->isVisible()) {
-            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
-            return;
         }
         ui->playerProfilePhoto_2->hide();
         ui->commitButton->setEnabled(false);
@@ -499,15 +499,16 @@ void Widget::on_addPlayer_3_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
+
+        if (!ui->playerProfilePhoto_3->isVisible()) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first or choose one photo.");
+            return;
+        }
         if (selectedPlayers == 2) {
             ui->profilePhotoList->hide();
         }
         if (!ui->playerProfilePhoto_4->isVisible() && selectedPlayers == 3) {
             selectedPlayers--;
-        }
-        if (!ui->playerProfilePhoto_3->isVisible()) {
-            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
-            return;
         }
         ui->playerProfilePhoto_3->hide();
         ui->addComputer_3->setText(static_cast<QString>("Select Profile (double-click)"));
@@ -595,15 +596,15 @@ void Widget::on_addPlayer_4_clicked()
         // change the graphic view of the player into question mark
         // TODO
 
+        if (!ui->playerProfilePhoto_4->isVisible()) {
+            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first or choose one photo.");
+            return;
+        }
         if (selectedPlayers == 3) {
             ui->profilePhotoList->hide();
         }
         if (selectedPlayers == 4) {
             selectedPlayers--;
-        }
-        if (!ui->playerProfilePhoto_4->isVisible()) {
-            QMessageBox::critical(this, "Re-choose failed", "You should cancel all the candidates at the right first.");
-            return;
         }
         ui->playerProfilePhoto_4->hide();
         ui->addComputer_4->setText(static_cast<QString>("Select Profile (double-click)"));

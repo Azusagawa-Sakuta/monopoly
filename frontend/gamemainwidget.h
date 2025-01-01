@@ -3,11 +3,20 @@
 
 #include <QWidget>
 #include <QGraphicsScene>
+#include <QMovie>
+#include <QLabel>
 #include <../backend/game.h>
 
 namespace Ui {
 class gameMainWidget;
 }
+
+struct DicePart {
+    QMovie* diceMovie1;
+    QMovie* diceMovie2;
+    QLabel* diceLabel1;
+    QLabel* diceLabel2;
+};
 
 class gameMainWidget : public QWidget
 {
@@ -20,6 +29,8 @@ public:
 private slots:
     void onTick();
 
+    void on_rollDiceButton_clicked();
+
 private:
     Ui::gameMainWidget *ui;
     QGraphicsScene *scene; // Scene to show the map
@@ -27,12 +38,14 @@ private:
     QGraphicsScene *scenePlayer2;
     QGraphicsScene *scenePlayer3;
     QGraphicsScene *scenePlayer4;
+
     QTimer *timer;
 
     void initializeGameInstance();
 
     void paintMap(); // Paint the map
     int loadImage();
+    void loadDice(int d1, int d2);
     void update();
 
     void resizeEvent(QResizeEvent* event) override;
