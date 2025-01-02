@@ -192,12 +192,13 @@ void auctionWidget::nextPlayer() {
             }
         }
         i++;
+        delete grayscaleEffect;
     }
 
     if (currentBid + req.bidIncrement > game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
-        ui->bidInput->setMaximum(currentBid + req.bidIncrement);
+        ui->bidInput->setMaximum(minimum);
         ui->bidButton->setDisabled(true);
     }
     else {

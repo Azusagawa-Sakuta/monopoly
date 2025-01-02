@@ -164,6 +164,7 @@ void gameMainWidget::onTick() {
     case game::gamePlay::GameInstance::eventType::RandomEarn: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
+        g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::Sell: {
@@ -483,7 +484,7 @@ int gameMainWidget::loadImage() {
     }
     return i;
 }
-
+int firstDiceNumber;
 void gameMainWidget::on_rollDiceButton_clicked()
 {
     auto& g = game::gamePlay::GameInstance::getInstance();
@@ -494,24 +495,32 @@ void gameMainWidget::on_rollDiceButton_clicked()
 
     if(e == game::gamePlay::GameInstance::eventType::Dice) {
         int d1, d2, d3;
-        rollDice(d1, d2);
-        if (d1 != d2) {
-            g.notifyUserInput(d1 + d2);
-            ui->rollDiceButton->setDisabled(true);
-        } else {
+        if (ui->rollDiceButton->text() == "Roll dice") {
+            rollDice(d1, d2);
+            if (d1 != d2) {
+                g.notifyUserInput(d1 + d2);
+                ui->rollDiceButton->setDisabled(true);
+            } else {
+                firstDiceNumber = d1;
+                ui->rollDiceButton->setText("Roll dice again");
+            }
+        }
+        else {
             d3 = rand() % 6 + 1;
             QString gifPath3 = ":/resources/dice" + numberList[d3 - 1] + ".gif";
             QMovie* movie3 = new QMovie(gifPath3);
             ui->diceLabel_1->setMovie(movie3);
             movie3->start();
-            if (d2 == d3) {
+            if (firstDiceNumber == d3) {
                 g.notifyUserInput(-3 * d3);
                 ui->rollDiceButton->setDisabled(true);
                 ui->rollDiceButton->setText("Roll dice");
+                firstDiceNumber = 0;
             } else {
-                g.notifyUserInput(d1 + d2 + d3);
+                g.notifyUserInput(2 * firstDiceNumber + d3);
                 ui->rollDiceButton->setDisabled(true);
                 ui->rollDiceButton->setText("Roll dice");
+                firstDiceNumber = 0;
             }
         }
     }

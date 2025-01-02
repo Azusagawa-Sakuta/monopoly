@@ -48,14 +48,14 @@
    <item>
     <widget class="QCommandLinkButton" name="sellButton">
      <property name="text">
-      <string>弃车保帅</string>
+      <string>Sacrifice</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QCommandLinkButton" name="cancelButton">
      <property name="text">
-      <string>一了百了</string>
+      <string>All end</string>
      </property>
     </widget>
    </item>

@@ -150,7 +150,7 @@ bool Player::isBankrupted() const {
  * @param newBankrupted New status to set
  * @return None
  */
-bool Player::setBankrupted(bool newBankrupted) {
+void Player::setBankrupted(bool newBankrupted) {
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     bankrupted = newBankrupted;
 }
@@ -657,8 +657,8 @@ void GameInstance::tick() {
                 utils::Logger::getInstance().log("tick(): Player failed to get out of prison.");
                 currentPlayer->setPrisonTime(currentPlayer->getPrisonTime() + 1); // Increment prison time
                 nextPlayer(); // Advance to the next player
-                return;
             }
+            return;
         }
     }
 

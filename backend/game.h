@@ -40,7 +40,7 @@ namespace game {
             std::string getImagePath() const;
             void setImagePath(const std::string& newImagePath);
             bool isBankrupted() const;
-            bool setBankrupted(bool newBankrupted);
+            void setBankrupted(bool newBankrupted);
         };
 
         class ComputerPlayer : public Player {
