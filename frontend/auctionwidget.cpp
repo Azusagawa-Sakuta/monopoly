@@ -136,21 +136,21 @@ void auctionWidget::nextPlayer() {
         break;
     case 1:
         scenePlayer1->setBackgroundBrush(Qt::transparent);
-        scenePlayer2->setBackgroundBrush(Qt::red);
+        scenePlayer2->setBackgroundBrush(Qt::cyan);
         scenePlayer3->setBackgroundBrush(Qt::transparent);
         scenePlayer4->setBackgroundBrush(Qt::transparent);
         break;
     case 2:
         scenePlayer1->setBackgroundBrush(Qt::transparent);
         scenePlayer2->setBackgroundBrush(Qt::transparent);
-        scenePlayer3->setBackgroundBrush(Qt::red);
+        scenePlayer3->setBackgroundBrush(Qt::yellow);
         scenePlayer4->setBackgroundBrush(Qt::transparent);
         break;
     case 3:
         scenePlayer1->setBackgroundBrush(Qt::transparent);
         scenePlayer2->setBackgroundBrush(Qt::transparent);
         scenePlayer3->setBackgroundBrush(Qt::transparent);
-        scenePlayer4->setBackgroundBrush(Qt::red);
+        scenePlayer4->setBackgroundBrush(Qt::green);
         break;
     }
 
