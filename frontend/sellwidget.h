@@ -17,9 +17,18 @@ public:
     explicit sellWidget(QWidget *parent = nullptr);
     ~sellWidget();
 
+    void initialize();
+
 private:
     Ui::sellWidget *ui;
-    void initialize();
+
+    void update();
+
+private slots:
+    void moveToTreeView2(const QModelIndex &index);
+    void moveToTreeView1(const QModelIndex &index);
+    void on_sellButton_clicked();
+    void on_cancelButton_clicked();
 };
 
 #endif // SELLWIDGET_H
