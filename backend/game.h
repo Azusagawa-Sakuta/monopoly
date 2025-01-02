@@ -143,7 +143,7 @@ namespace game {
         class GameInstance {
         public:
             enum eventType {
-                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build, Earn
+                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build, RandomDestruction, RandomEarn
             };
 
         private:
@@ -219,7 +219,6 @@ namespace game {
             const int findTile(Tile* tile) const;
             void addTile(Tile* tile);
             void addPlayer(player::Player* player);
-            static int rollDice(int minimum = constant::diceMinimum, int maximum = constant::diceMaximum);
             player::Player* getCurrentPlayer() const;
             void tick();
         };

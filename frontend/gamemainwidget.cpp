@@ -158,6 +158,15 @@ void gameMainWidget::onTick() {
             g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
         break;
     }
+    case game::gamePlay::GameInstance::eventType::RandomDestruction {
+        game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
+        QMessageBox::information(this, "Random Destruction", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + "'s tile #" + std::to_string(g.findTile(tile)) + " was destroyed... sad :("));
+        g.notifyUserInput(std::monostate());
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::RandomEarn {
+        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
+        QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
     }
     } catch (std::exception& e) {
         qDebug() << "Exception: " << e.what();

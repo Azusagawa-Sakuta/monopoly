@@ -568,19 +568,6 @@ void GameInstance::addPlayer(Player* player) {
 }
 
 /**
- * @brief Roll dice
- * @param minimum Minimum value
- * @param maximum Maximum value
- * @return Random number between minimum and maximum
- */
-int GameInstance::rollDice(int minimum, int maximum) {
-    static std::random_device rd; // Random device for seeding
-    static std::mt19937 gen(rd()); // Mersenne Twister generator
-    std::uniform_int_distribution<int> dis(minimum, maximum); // Uniform distribution
-    return dis(gen); // Generate and return random number
-}
-
-/**
  * @brief Get current player
  * @param None
  * @return Pointer to current player
@@ -766,7 +753,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
             break;
         }
 
-        case Tile::random:
+        case Tile::random: {
             std::random_device rd; // Obtain a random number from hardware
             std::mt19937 gen(rd()); // Seed the generator
             std::uniform_int_distribution<> distr(0, 5); // Define the range
@@ -815,10 +802,27 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                 }
                 break;
             }
+            case 4: {
+                auto ownTiles = findOwnTiles(player);
+                if (!ownTiles.empty()) {
+                    int ran = std::uniform_int_distribution<>(0, ownTiles.size())(gen);
+                    Buildable* buildableTile = static_cast<Buildable*>(ownTiles[ran]);
+                    buildableTile->setOwner(nullptr); // What a pity...
+                    buildableTile->setStatus(Buildable::empty); // Poor player...
+                    waitForUserInput(RandomDestruction, buildableTile);
+                }
+                break;
+            }
+            case 5: {
+                cashType cur = player->getCash();
+                player->setCash(cur * 2);
+                waitForUserInput(RandomEarn, cur);
+            }
             }
             }
 
             break;
+        }
 
         case Tile::home:
             // Maybe some rewards?
