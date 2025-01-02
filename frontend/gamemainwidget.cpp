@@ -1,6 +1,7 @@
 #include "gamemainwidget.h"
 #include "ui_gamemainwidget.h"
 #include "auctionwidget.h"
+#include "sellwidget.h"
 #include <QGraphicsRectItem>
 #include <QMessageBox>
 #include <QInputDialog>
@@ -168,8 +169,18 @@ void gameMainWidget::onTick() {
     case game::gamePlay::GameInstance::eventType::Sell: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
-        std::vector<game::gamePlay::Buildable*> toSell;
-        g.notifyUserInput(toSell);
+        static sellWidget *m_sellWidget = new sellWidget(this);
+        if (!m_sellWidget) {
+            qDebug() << "Creating new sell widget..";
+            m_sellWidget = new sellWidget(this);
+        }
+        if (!m_sellWidget->isVisible()) {
+            auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
+            f &= ~Qt::WindowCloseButtonHint;
+            m_sellWidget->setWindowFlags(f);
+            m_sellWidget->show();
+            m_sellWidget->initialize();
+        }
         break;
     }
     }

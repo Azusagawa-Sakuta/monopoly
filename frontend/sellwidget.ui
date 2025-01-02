@@ -53,7 +53,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QCommandLinkButton" name="giveUpButton">
+    <widget class="QCommandLinkButton" name="cancelButton">
      <property name="text">
       <string>一了百了</string>
      </property>
