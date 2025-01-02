@@ -171,7 +171,7 @@ void gameMainWidget::onTick() {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
         std::vector<game::gamePlay::Buildable*> toSell;
-
+        g.notifyUserInput(toSell);
         break;
     }
     }
