@@ -732,8 +732,15 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                 buildableTile->getOwner()->addCash(buildableTile->getRent()); // Add rent to owner
                 waitForUserInput(RentPaid, rentRequest({ buildableTile->getRent(), buildableTile }));
             } else if (buildableTile->getOwner() == player) {
-                // Build
-                // TODO
+                if (buildableTile->getStatus() < Buildable::buildStatus::hotel && player->getCash() >= buildableTile->getHouseCost()) {
+                Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
+                    if (ret) {
+                        utils::Logger::getInstance().log("handleTileEvent(): Player built " + std::to_string(ret - buildableTile->getStatus()) + " houses on tile #" + std::to_string(findTile(buildableTile)) + ".");
+                        int num = ret - buildableTile->getStatus();
+                        player->addCash(- buildableTile->getHouseCost() * num);
+                        buildableTile->setStatus(ret);
+                    }
+                }
             }
             break;
         }

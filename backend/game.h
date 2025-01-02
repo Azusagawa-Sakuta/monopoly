@@ -143,7 +143,7 @@ namespace game {
         class GameInstance {
         public:
             enum eventType {
-                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction
+                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build
             };
 
         private:
@@ -204,7 +204,7 @@ namespace game {
                 cashType tax;
                 Tax* tile;
             };
-
+            
             eventType getActiveEvent() const;
             std::any getActiveEventParam() const;
             void endEvent();

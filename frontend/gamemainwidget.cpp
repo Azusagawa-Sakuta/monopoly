@@ -118,7 +118,7 @@ void gameMainWidget::onTick() {
     }
     case game::gamePlay::GameInstance::eventType::RentPaid: {
         game::gamePlay::GameInstance::rentRequest req = std::any_cast<game::gamePlay::GameInstance::rentRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Rent Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + "to player #" + std::to_string(g.findPlayerPos(req.tile->getOwner()))));
+        QMessageBox::information(this, "Rent Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + " to player #" + std::to_string(g.findPlayerPos(req.tile->getOwner()))));
         g.notifyUserInput(std::monostate());
         break;
     }
@@ -148,6 +148,14 @@ void gameMainWidget::onTick() {
             m_auctionWidget->show();
             m_auctionWidget->initialize();
         }
+        break;
+    }
+    case game::gamePlay::GameInstance::eventType::Build: {
+        game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
+        game::gamePlay::Buildable::buildStatus current = tile->getStatus();
+        int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
+        if (max) 
+            g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
         break;
     }
     }
@@ -274,6 +282,18 @@ QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
     return tileImage;
 }
 
+QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
+{
+    QPixmap tileImage;
+    const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
+    std::string colors[] = {":/resources/draft/house0.png", ":/resources/draft/house1.png", ":/resources/draft/house2.png", ":/resources/draft/house3.png", ":/resources/draft/house4.png", ":/resources/draft/house5.png", ":/resources/draft/house6.png"};
+    tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getStatus()]));
+    if (tileImage.isNull()) {
+        qDebug() << "Failed to load image";
+    }
+    return tileImage;
+}
+
 QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p)
 {
     QPixmap img;
@@ -285,7 +305,9 @@ QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p)
     return img;
 }
 
-void gameMainWidget::paintTile(int x, int y, int index, int depth, QPixmap tileImage) {
+void gameMainWidget::paintTile(int x, int y, int index, int depth, game::gamePlay::Tile* tile) {
+    auto tileImage = getTileImage(tile);
+    
     int offsetX = (- tileImage.width()) / 2;
     int offsetY = (- tileImage.height()) / 2;
 
@@ -293,10 +315,13 @@ void gameMainWidget::paintTile(int x, int y, int index, int depth, QPixmap tileI
 
     auto pixmapItem = scene->addPixmap(tileImage);
     pixmapItem->setPos(x + offsetX, y + offsetY);
-    pixmapItem->setZValue(depth--);
+    pixmapItem->setZValue(depth);
     if (paintTileIndex) 
         scene->addText(QString::number(index))->setPos(x, y);
-    
+
+    if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->Owned()) 
+        paintHouse(x, y, depth, getHouseImage(tile));
+
     int i = 0;
     auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
     for (auto& a : players) {
@@ -308,6 +333,15 @@ void gameMainWidget::paintTile(int x, int y, int index, int depth, QPixmap tileI
             i++;
         }
     }
+}
+
+void gameMainWidget::paintHouse(int x, int y, int depth, QPixmap tileImage) {
+    int offsetX = (- tileImage.width()) / 2;
+    int offsetY = (- tileImage.height()) / 2;
+
+    auto pixmapItem = scene->addPixmap(tileImage);
+    pixmapItem->setPos(x + offsetX, y + offsetY);
+    pixmapItem->setZValue(depth);
 }
 
 void gameMainWidget::paintMap() {
@@ -335,36 +369,36 @@ void gameMainWidget::paintMap() {
 
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
-        game::gamePlay::Tile* tile = tiles[index++];
+        game::gamePlay::Tile* tile = tiles[index];
         int x = horizontalSpacing * (- numRows + row + 1);
         int y = row * verticalSpacing;
-        paintTile(x, y, index, depth--, getTileImage(tile));
+        paintTile(x, y, index++, depth--, tile);
     }
 
     // Top row (left to right)
     for (int col = 1; col < numCols && index < numTiles; ++col) {
-        game::gamePlay::Tile* tile = tiles[index++];
+        game::gamePlay::Tile* tile = tiles[index];
         int x = horizontalSpacing * (- numRows + col + 1);
         int y = - col * verticalSpacing;
-        paintTile(x, y, index, depth--, getTileImage(tile));
+        paintTile(x, y, index++, depth--, tile);
     }
 
     depth += 2;
 
     // Right column (top to bottom)
     for (int row = 1; row < numRows && index < numTiles; ++row) {
-        game::gamePlay::Tile* tile = tiles[index++];
+        game::gamePlay::Tile* tile = tiles[index];
         int x = horizontalSpacing * row;
         int y = (- numRows + row + 1) * verticalSpacing;
-        paintTile(x, y, index, depth++, getTileImage(tile));
+        paintTile(x, y, index++, depth++, tile);
     }
 
     // Bottom row (right to left)
     for (int col = numCols - 2; col > 0 && index < numTiles; --col) {
-        game::gamePlay::Tile* tile = tiles[index++];
+        game::gamePlay::Tile* tile = tiles[index];
         int x = horizontalSpacing * col;
         int y = (numCols - col - 1) * verticalSpacing;
-        paintTile(x, y, index, depth++, getTileImage(tile));
+        paintTile(x, y, index++, depth++, tile);
     }
 }
 

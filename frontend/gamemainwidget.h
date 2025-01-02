@@ -56,8 +56,10 @@ private:
     void resizeEvent(QResizeEvent* event) override;
     void updatePlayerInfo();
     QPixmap getTileImage(game::gamePlay::Tile* tile);
+    QPixmap getHouseImage(game::gamePlay::Tile* tile);
     QPixmap getPlayerIndicator(game::player::Player* p);
-    void paintTile(int x, int y, int index, int depth, QPixmap tileImage);
+    void paintTile(int x, int y, int index, int depth, game::gamePlay::Tile* tile);
+    void paintHouse(int x, int y, int depth, QPixmap tileImage);
 };
 
 #endif // GAMEMAINWIDGET_H
