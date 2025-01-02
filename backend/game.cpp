@@ -751,12 +751,13 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                 }
             } else if (buildableTile->getOwner() != player) { // If the tile is owned by another player
                 cashType rent = buildableTile->getRent();
-                double rentBonused = rent;
+                double dRentBonused = rent;
                 for (auto& t : findOwnTiles(buildableTile->getOwner())) {
                     if (t->getType() == Tile::buildable && static_cast<Buildable*>(t)->getColor() == buildableTile->getColor()) {
-                        rentBonused *= constant::sameColorBonusMultiplier;
+                        dRentBonused *= constant::sameColorBonusMultiplier;
                     }
                 }
+                cashType rentBonused = static_cast<cashType>(dRentBonused / 100.0f) * 100;
                 if (player->getCash() < rentBonused) {
                     utils::Logger::getInstance().log("handleTileEvent(): Player does not have enough cash to pay rent.");
                     auto toSell = std::any_cast<std::vector<Buildable*>>(waitForUserInput(Sell, rentBonused));
