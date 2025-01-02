@@ -13,13 +13,12 @@ namespace game {
         extern cashType defaultHouseCost;
         extern cashType defaultBasicRent;
         extern std::array<cashType, 6> defaultHouseRent;
+        extern double sameColorBonusMultiplier;
         extern cashType initialCash;
         extern cashType homeReward;
         extern cashType auctionReservePrice;
         extern cashType auctionBidIncrement;
         extern std::array<cashType, 3> prisonReleasePrice;
-        extern int diceMinimum;
-        extern int diceMaximum;
     }
 }
 #endif // CONSTANT_H

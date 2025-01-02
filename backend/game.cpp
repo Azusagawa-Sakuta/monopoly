@@ -728,9 +728,16 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                     }
                 }
             } else if (buildableTile->getOwner() != player) { // If the tile is owned by another player
-                player->addCash(-buildableTile->getRent()); // Deduct rent from player
-                buildableTile->getOwner()->addCash(buildableTile->getRent()); // Add rent to owner
-                waitForUserInput(RentPaid, rentRequest({ buildableTile->getRent(), buildableTile }));
+                cashType rent = buildableTile->getRent();
+                double rentBonused = rent;
+                for (auto& t : findOwnTiles(buildableTile->getOwner())) {
+                    if (t->getType() == Tile::buildable && static_cast<Buildable*>(t)->getColor() == buildableTile->getColor()) {
+                        rentBonused *= constant::sameColorBonusMultiplier;
+                    }
+                }
+                player->addCash(- static_cast<cashType>(rentBonused)); // Deduct rent from player
+                buildableTile->getOwner()->addCash(static_cast<cashType>(rentBonused)); // Add rent to owner
+                waitForUserInput(RentPaid, rentRequest({ static_cast<cashType>(rentBonused), buildableTile }));
             } else if (buildableTile->getOwner() == player) {
                 if (buildableTile->getStatus() < Buildable::buildStatus::hotel && player->getCash() >= buildableTile->getHouseCost()) {
                 Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
