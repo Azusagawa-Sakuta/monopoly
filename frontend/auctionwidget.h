@@ -18,6 +18,7 @@ class auctionWidget : public QWidget
 public:
     explicit auctionWidget(QWidget *parent = nullptr);
     ~auctionWidget();
+    void initialize();
 
 private:
     Ui::auctionWidget *ui;

@@ -78,6 +78,7 @@ void gameMainWidget::onTick() {
     auto e = g.getActiveEvent();
     if (e != game::gamePlay::GameInstance::eventType::None)
         update();
+    try {
     switch (e) {
     case game::gamePlay::GameInstance::eventType::None:
         break;
@@ -145,9 +146,13 @@ void gameMainWidget::onTick() {
             f &= ~Qt::WindowCloseButtonHint;
             m_auctionWidget->setWindowFlags(f);
             m_auctionWidget->show();
+            m_auctionWidget->initialize();
         }
         break;
     }
+    }
+    } catch (std::exception& e) {
+        qDebug() << "Exception: " << e.what();
     }
 }
 

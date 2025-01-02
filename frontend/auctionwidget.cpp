@@ -12,7 +12,9 @@ auctionWidget::auctionWidget(QWidget *parent)
     scenePlayer4(new QGraphicsScene(this))
 {
     ui->setupUi(this);
+}
 
+void auctionWidget::initialize() {
     sceneTile->clear();
     scenePlayer1->clear();
     scenePlayer2->clear();
@@ -68,12 +70,12 @@ auctionWidget::auctionWidget(QWidget *parent)
     req = std::any_cast<game::gamePlay::GameInstance::auctionRequest>(g.getActiveEventParam());
 
     QPixmap pixmap(getTileImage(req.tile));
-    QPixmap scaledPixmap = pixmap.scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap scaledPixmap = pixmap.scaled(256, 256, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(scaledPixmap);
 
     sceneTile->addItem(item);
     item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
-    ui->tileGraphics->fitInView(sceneTile->sceneRect(), Qt::KeepAspectRatio);
+    ui->tileGraphics->fitInView(sceneTile->sceneRect(), Qt::KeepAspectRatioByExpanding);
     
     ui->tileLabel->setText(QString::fromStdString("Tile " + std::to_string(g.findTile(req.tile)) + " is being auctioned, with minimum $" + std::to_string(req.reservePrice) + " and increment $" + std::to_string(req.bidIncrement) + "."));
 
@@ -123,7 +125,6 @@ void auctionWidget::nextPlayer() {
         QMessageBox::information(this, "Auction Ended", QString::fromStdString("Player " + std::to_string(maxBidPlayerIndex + 1) + " won the auction for $" + std::to_string(currentBid) + "."));
         game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{currentBid, game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]});
         close();
-        delete this;
         return;
     }
 
