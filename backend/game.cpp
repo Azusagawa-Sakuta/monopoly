@@ -446,7 +446,7 @@ std::any GameInstance::waitForUserInput(eventType event, std::any param) {
     std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     activeEvent = event; // Set active event
     eventParam = param; // Set event parameter
-    utils::Logger::getInstance().log("waitForUserInput(): Waiting for frontend response.");
+    utils::Logger::getInstance().log("waitForUserInput(): Waiting for frontend response. Event type: " + std::to_string(static_cast<int>(event)));
     cv.wait(lock, [this] {
         utils::Logger::getInstance().log("waitForUserInput(): Checking predicate..."); // Log predicate check
         return userInputReady;

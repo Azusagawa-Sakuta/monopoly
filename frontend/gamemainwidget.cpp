@@ -1,5 +1,6 @@
 #include "gamemainwidget.h"
 #include "ui_gamemainwidget.h"
+#include "auctionwidget.h"
 #include <QGraphicsRectItem>
 #include <QMessageBox>
 #include <QInputDialog>
@@ -75,6 +76,8 @@ gameMainWidget::~gameMainWidget()
 void gameMainWidget::onTick() {
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto e = g.getActiveEvent();
+    if (e != game::gamePlay::GameInstance::eventType::None)
+        update();
     switch (e) {
     case game::gamePlay::GameInstance::eventType::None:
         break;
@@ -88,12 +91,12 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Prisoned: {
-        QMessageBox::information(this, "Prisoned", "You are prisoned for 3 same dice");
+        QMessageBox::information(this, "Prisoned", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " are prisoned."));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::PrisonPayOut: {
-        QMessageBox::information(this, "Prison Payout", "You can pay to get out but we didn't implement this feature.");
+        //QMessageBox::information(this, "Prison Payout", "You can pay to get out but we didn't implement this feature.");
         g.notifyUserInput(false);
         break;
     }
@@ -114,26 +117,35 @@ void gameMainWidget::onTick() {
     }
     case game::gamePlay::GameInstance::eventType::RentPaid: {
         game::gamePlay::GameInstance::rentRequest req = std::any_cast<game::gamePlay::GameInstance::rentRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Rent Paid", QString::fromStdString("You paid $" + std::to_string(req.rent) + " to the owner of tile #" + std::to_string(g.findTile(req.tile))));
+        QMessageBox::information(this, "Rent Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + "to player #" + std::to_string(g.findPlayerPos(req.tile->getOwner()))));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::Taxed: {
         game::gamePlay::GameInstance::taxRequest req = std::any_cast<game::gamePlay::GameInstance::taxRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Tax Paid", QString::fromStdString("You paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
+        QMessageBox::information(this, "Tax Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::HomeReward: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
-        QMessageBox::information(this, "Home Reward", QString::fromStdString("You received $" + std::to_string(req) + " for passing the start tile"));
+        QMessageBox::information(this, "Home Reward", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " received $" + std::to_string(req) + " for passing the start tile"));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::Auction: {
         game::gamePlay::GameInstance::auctionRequest req = std::any_cast<game::gamePlay::GameInstance::auctionRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Auction", QString::fromStdString("To be auctioned"));
-        g.notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
+        static auctionWidget *m_auctionWidget = new auctionWidget(this);
+        if (!m_auctionWidget) {
+            qDebug() << "Creating new auction widget..";
+            m_auctionWidget = new auctionWidget(this);
+        }
+        if (!m_auctionWidget->isVisible()) {
+            auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
+            f &= ~Qt::WindowCloseButtonHint;
+            m_auctionWidget->setWindowFlags(f);
+            m_auctionWidget->show();
+        }
         break;
     }
     }
@@ -175,6 +187,32 @@ void gameMainWidget::update() {
     scene->clear(); // Clear old items
     paintMap();
     updatePlayerInfo();
+    switch (game::gamePlay::GameInstance::getInstance().findPlayerPos(game::gamePlay::GameInstance::getInstance().getCurrentPlayer())) {
+    case 0:
+        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::red);
+        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
+        break;
+    case 1:
+        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::cyan);
+        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
+        break;
+    case 2:
+        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::yellow);
+        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
+        break;
+    case 3:
+        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
+        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::green);
+        break;
+    }
     qDebug() << "Updated";
 }
 
