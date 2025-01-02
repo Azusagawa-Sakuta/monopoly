@@ -133,7 +133,6 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Auction: {
-        game::gamePlay::GameInstance::auctionRequest req = std::any_cast<game::gamePlay::GameInstance::auctionRequest>(g.getActiveEventParam());
         static auctionWidget *m_auctionWidget = new auctionWidget(this);
         if (!m_auctionWidget) {
             qDebug() << "Creating new auction widget..";
@@ -165,9 +164,9 @@ void gameMainWidget::onTick() {
     case game::gamePlay::GameInstance::eventType::RandomEarn: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
+        break;
     }
     case game::gamePlay::GameInstance::eventType::Sell: {
-        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
         static sellWidget *m_sellWidget = new sellWidget(this);
         if (!m_sellWidget) {
