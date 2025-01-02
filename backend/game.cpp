@@ -15,7 +15,7 @@ using namespace gamePlay;
  * @param initialCash Initial cash amount for the player
  * @return None
  */
-Player::Player(cashType initialCash) : cash(initialCash), position(0), prisonTime(0) {}
+Player::Player(cashType initialCash) : cash(initialCash), position(0), prisonTime(0), bankrupted(false) {}
 
 /**
  * @brief Player destructor
@@ -133,6 +133,26 @@ std::string Player::getImagePath() const {
 void Player::setImagePath(const std::string& newImagePath) {
     std::unique_lock<std::shared_mutex> lock(mtx);
     imagePath = newImagePath;
+}
+
+/**
+ * @brief Check if player is bankrupted
+ * @param None
+ * @return True if bankrupted, false otherwise
+ */
+bool Player::isBankrupted() const {
+    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    return bankrupted;
+}
+
+/**
+ * @brief Set player's bankrupted status
+ * @param newBankrupted New status to set
+ * @return None
+ */
+bool Player::setBankrupted(bool newBankrupted) {
+    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
+    bankrupted = newBankrupted;
 }
 
 /**
@@ -296,6 +316,19 @@ int Buildable::getColor() const {
 void Buildable::setColor(int newColor) {
     std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
     color = newColor;
+}
+
+/**
+ * @brief Get property value
+ * @param None
+ * @return Property value
+ */
+cashType Buildable::getValue() const {
+    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
+    cashType value = plotCost;
+    if (status)
+        value += houseCost * status;
+    return value;
 }
 
 /**
@@ -652,7 +685,9 @@ void GameInstance::tick() {
  * @brief Advances the game to the next player.
  */
 void GameInstance::nextPlayer() {
-    currentPlayerIndex = (currentPlayerIndex + 1) % players.size(); // Move to the next player
+    do
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size(); // Move to the next player
+    while (players[currentPlayerIndex]->isBankrupted()); // Skip bankrupted players
     utils::Logger::getInstance().log("nextPlayer(): Next player.");
 }
 
@@ -722,6 +757,26 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                         rentBonused *= constant::sameColorBonusMultiplier;
                     }
                 }
+                if (player->getCash() < rentBonused) {
+                    utils::Logger::getInstance().log("handleTileEvent(): Player does not have enough cash to pay rent.");
+                    auto toSell = std::any_cast<std::vector<Buildable*>>(waitForUserInput(Sell, rentBonused));
+                    if (toSell.empty()) {
+                        utils::Logger::getInstance().log("handleTileEvent(): Player bankrupted.");
+                        cashType total = player->getCash();
+                        for (auto& t : findOwnTiles(player)) {
+                            if (t->getType() == Tile::buildable) {
+                                total += static_cast<Buildable*>(t)->getValue();
+                                static_cast<Buildable*>(t)->setOwner(nullptr);
+                                static_cast<Buildable*>(t)->setStatus(Buildable::empty);
+                            }
+                        }
+                        buildableTile->getOwner()->addCash(total); // Give all cash to owner
+                        player->setCash(0); // Set player cash to 0
+                        player->setBankrupted(true); // Set player as bankrupted
+                        return;
+                    }
+                }
+
                 player->addCash(- static_cast<cashType>(rentBonused)); // Deduct rent from player
                 buildableTile->getOwner()->addCash(static_cast<cashType>(rentBonused)); // Add rent to owner
                 waitForUserInput(RentPaid, rentRequest({ static_cast<cashType>(rentBonused), buildableTile }));
@@ -770,6 +825,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                     waitForUserInput(Prisoned, pri);
                 }
                 break;
+            }
             case 1: {
                 Tax* tax = static_cast<Tax*>(tiles[findNextTile(Tile::tax, player->getPosition())]);
                 if (tax != nullptr) {
@@ -817,7 +873,6 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                 cashType cur = player->getCash();
                 player->setCash(cur * 2);
                 waitForUserInput(RandomEarn, cur);
-            }
             }
             }
 

@@ -22,6 +22,7 @@ namespace game {
             mutable std::shared_mutex mtx;
             std::string nickname;
             std::string imagePath;
+            bool bankrupted;
 
         public:
             Player(cashType initialCash = constant::initialCash);
@@ -38,6 +39,8 @@ namespace game {
             void setNickname(const std::string& newNickname);
             std::string getImagePath() const;
             void setImagePath(const std::string& newImagePath);
+            bool isBankrupted() const;
+            bool setBankrupted(bool newBankrupted);
         };
 
         class ComputerPlayer : public Player {
@@ -98,6 +101,7 @@ namespace game {
             void setStatus(buildStatus newStatus);
             int getColor() const;
             void setColor(int newColor);
+            cashType getValue() const;
         };
 
         class Home : public Tile {
@@ -143,7 +147,7 @@ namespace game {
         class GameInstance {
         public:
             enum eventType {
-                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build, RandomDestruction, RandomEarn
+                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build, RandomDestruction, RandomEarn, Sell
             };
 
         private:

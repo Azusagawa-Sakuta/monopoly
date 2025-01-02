@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QMovie>
 #include <QLabel>
+#include <QGraphicsColorizeEffect>
 #include <../backend/game.h>
 
 namespace Ui {

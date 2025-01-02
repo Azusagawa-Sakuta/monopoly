@@ -78,7 +78,6 @@ void gameMainWidget::onTick() {
     auto e = g.getActiveEvent();
     if (e != game::gamePlay::GameInstance::eventType::None)
         update();
-    try {
     switch (e) {
     case game::gamePlay::GameInstance::eventType::None:
         break;
@@ -158,18 +157,23 @@ void gameMainWidget::onTick() {
             g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
         break;
     }
-    case game::gamePlay::GameInstance::eventType::RandomDestruction {
+    case game::gamePlay::GameInstance::eventType::RandomDestruction: {
         game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
         QMessageBox::information(this, "Random Destruction", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + "'s tile #" + std::to_string(g.findTile(tile)) + " was destroyed... sad :("));
         g.notifyUserInput(std::monostate());
         break;
     }
-    case game::gamePlay::GameInstance::eventType::RandomEarn {
+    case game::gamePlay::GameInstance::eventType::RandomEarn: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
         QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
     }
-    } catch (std::exception& e) {
-        qDebug() << "Exception: " << e.what();
+    case game::gamePlay::GameInstance::eventType::Sell: {
+        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
+        auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
+        std::vector<game::gamePlay::Buildable*> toSell;
+
+        break;
+    }
     }
 }
 
@@ -248,29 +252,56 @@ void gameMainWidget::updatePlayerInfo() {
         else {
             it->setNickname("Player" + std::to_string(++players));
         }
+
+        // Create a grayscale effect
+        QGraphicsColorizeEffect* grayscaleEffect = new QGraphicsColorizeEffect();
+        grayscaleEffect->setColor(Qt::gray);
+        grayscaleEffect->setStrength(1.0);
+
+        bool isBankrupt = it->getCash() <= 0;
         if (computers + players == 1) {
             ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_1_2->hide();
             ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
+            if (isBankrupt) {
+                ui->playerAvatarGraphics_1->setGraphicsEffect(grayscaleEffect);
+            } else {
+                ui->playerAvatarGraphics_1->setGraphicsEffect(nullptr);
+            }
         }
         else if (computers + players == 2) {
             ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_2_2->hide();
             ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Cyan"));
+            if (isBankrupt) {
+                ui->playerAvatarGraphics_2->setGraphicsEffect(grayscaleEffect);
+            } else {
+                ui->playerAvatarGraphics_2->setGraphicsEffect(nullptr);
+            }
         }
         else if (computers + players == 3) {
             ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_3_2->hide();
             ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Yellow"));
+            if (isBankrupt) {
+                ui->playerAvatarGraphics_3->setGraphicsEffect(grayscaleEffect);
+            } else {
+                ui->playerAvatarGraphics_3->setGraphicsEffect(nullptr);
+            }
         }
         else if (computers + players == 4) {
             ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_4_2->hide();
             ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
+            if (isBankrupt) {
+                ui->playerAvatarGraphics_4->setGraphicsEffect(grayscaleEffect);
+            } else {
+                ui->playerAvatarGraphics_4->setGraphicsEffect(nullptr);
+            }
         }
     }
 }
@@ -328,13 +359,13 @@ void gameMainWidget::paintTile(int x, int y, int index, int depth, game::gamePla
     if (paintTileIndex) 
         scene->addText(QString::number(index))->setPos(x, y);
 
-    if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->Owned()) 
+    if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->isOwned()) 
         paintHouse(x, y, depth, getHouseImage(tile));
 
     int i = 0;
     auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
     for (auto& a : players) {
-        if (a->getPosition() == index - 1) {
+        if (!a->isBankrupted() && a->getPosition() == index - 1) {
             QPixmap playerImage(getPlayerIndicator(a));
             auto item = scene->addPixmap(playerImage);
             item->setPos(x + offsetX, y + offsetY - i * 64);

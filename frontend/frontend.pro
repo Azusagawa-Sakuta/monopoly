@@ -15,6 +15,7 @@ SOURCES += \
     ../backend/constant.cpp \
     ../backend/game.cpp \
     ../backend/utils.cpp \
+    sellwidget.cpp \
     startwidget.cpp \
     widget.cpp
 
@@ -24,12 +25,14 @@ HEADERS += \
     ../backend/utils.h \
     auctionwidget.h \
     gamemainwidget.h \
+    sellwidget.h \
     startwidget.h \
     widget.h
 
 FORMS += \
     auctionwidget.ui \
     gamemainwidget.ui \
+    sellwidget.ui \
     startwidget.ui \
     widget.ui
 

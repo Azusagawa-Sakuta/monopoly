@@ -118,8 +118,11 @@ void auctionWidget::nextPlayer() {
         game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
         close();
     }
-
-    currentPlayerIndex = (currentPlayerIndex + 1) % game::gamePlay::GameInstance::getInstance().getPlayers().size();
+    do {
+        currentPlayerIndex = (currentPlayerIndex + 1) % game::gamePlay::GameInstance::getInstance().getPlayers().size();
+        round++;
+    }
+    while (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isBankrupted());
 
     if (maxBidPlayerIndex == currentPlayerIndex) {
         QMessageBox::information(this, "Auction Ended", QString::fromStdString("Player " + std::to_string(maxBidPlayerIndex + 1) + " won the auction for $" + std::to_string(currentBid) + "."));
