@@ -767,7 +767,57 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
         }
 
         case Tile::random:
-            // TODO
+            std::random_device rd; // Obtain a random number from hardware
+            std::mt19937 gen(rd()); // Seed the generator
+            std::uniform_int_distribution<> distr(0, 5); // Define the range
+
+            int randomValue = distr(gen); // Generate the random number
+            utils::Logger::getInstance().log("handleTileEvent(): Generated random value: " + std::to_string(randomValue) + ".");
+
+            switch (randomValue) {
+            case 0: {
+                Prison* pri = static_cast<Prison*>(tiles[findNextTile(Tile::prison, player->getPosition())]);
+                if (pri != nullptr) {
+                    player->setPosition(findTile(pri));
+                    player->setPrisonTime(0);
+                    waitForUserInput(Prisoned, pri);
+                }
+                break;
+            case 1: {
+                Tax* tax = static_cast<Tax*>(tiles[findNextTile(Tile::tax, player->getPosition())]);
+                if (tax != nullptr) {
+                    cashType taxToPay = static_cast<cashType>(player->getCash() * tax->getTaxRate() / 100.0f) * 100;
+                    player->addCash(-taxToPay);
+                    waitForUserInput(Taxed, taxRequest({ taxToPay, tax }));
+                }
+            }
+            case 2: {
+                Home* home = static_cast<Home*>(tiles[findNextTile(Tile::home, player->getPosition())]);
+                if (home != nullptr) {
+                    player->addCash(constant::homeReward);
+                    waitForUserInput(HomeReward, constant::homeReward);
+                }
+            }
+            case 3: {
+                auto ownTiles = findOwnTiles(player);
+                if (!ownTiles.empty()) {
+                    int ran = std::uniform_int_distribution<>(0, ownTiles.size())(gen);
+                    Buildable* buildableTile = static_cast<Buildable*>(ownTiles[ran]);
+                    if (buildableTile->getStatus() < Buildable::buildStatus::hotel && player->getCash() >= buildableTile->getHouseCost()) {
+                        Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
+                            if (ret) {
+                                utils::Logger::getInstance().log("handleTileEvent(): Player built " + std::to_string(ret - buildableTile->getStatus()) + " houses on tile #" + std::to_string(findTile(buildableTile)) + ".");
+                                int num = ret - buildableTile->getStatus();
+                                player->addCash(- buildableTile->getHouseCost() * num);
+                                buildableTile->setStatus(ret);
+                            }
+                    }
+                }
+                break;
+            }
+            }
+            }
+
             break;
 
         case Tile::home:
