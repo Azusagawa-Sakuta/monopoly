@@ -84,8 +84,15 @@ void sellWidget::on_sellButton_clicked() {
     QStandardItemModel *model2 = static_cast<QStandardItemModel*>(ui->treeView2->model());
     std::vector<game::gamePlay::Buildable*> toSell;
     for (int i = 0; i < model2->rowCount(); ++i) {
-        auto tile = ownTiles[std::stoi(model2->item(i, 0)->text().toStdString())];
-        toSell.push_back(static_cast<game::gamePlay::Buildable*>(tile));
+        int tileIndex = std::stoi(model2->item(i, 0)->text().toStdString());
+        auto it = std::find_if(ownTiles.begin(), ownTiles.end(), [&gameInstance, tileIndex](game::gamePlay::Tile* tile) {
+            return gameInstance.findTile(tile) == tileIndex;
+        });
+        if (it != ownTiles.end()) {
+            toSell.push_back(static_cast<game::gamePlay::Buildable*>(*it));
+        } else {
+            qDebug() << "Invalid tile index: " << tileIndex;
+        }
     }
 
     gameInstance.notifyUserInput(toSell);

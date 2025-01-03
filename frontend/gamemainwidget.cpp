@@ -37,6 +37,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     ui->mapView->setScene(scene);
 
     ui->rollDiceButton->setDisabled(true);
+    rollDiceBackdoor(1, 1);
 
     ui->playerAvatarGraphics_1->setScene(scenePlayer1);
     ui->playerAvatarGraphics_2->setScene(scenePlayer2);
@@ -567,3 +568,13 @@ void gameMainWidget::rollDice(int& d1, int& d2) {
     movie2->start();
 }
 
+void gameMainWidget::rollDiceBackdoor(int d1, int d2) {
+    QString gifPath1 = ":/resources/dice/dice" + QString::number(d1) + ".gif";
+    QString gifPath2 = ":/resources/dice/dice" + QString::number(d2) + ".gif";
+    QMovie* movie1 = new QMovie(gifPath1);
+    QMovie* movie2 = new QMovie(gifPath2);
+    ui->diceLabel_1->setMovie(movie1);
+    ui->diceLabel_2->setMovie(movie2);
+    movie1->start();
+    movie2->start();
+}

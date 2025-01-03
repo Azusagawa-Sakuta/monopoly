@@ -37,7 +37,6 @@ void startWidget::on_quickStartButton_clicked()
 
     auto& g = game::gamePlay::GameInstance::getInstance();
 
-    int i = 0;
     for (int i = 0; i < 4; i++) {
         g.addPlayer(new game::player::ComputerPlayer);
         // add profile photo through $(finalImagePaths) here

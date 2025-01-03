@@ -22,8 +22,6 @@ void auctionWidget::initialize() {
     scenePlayer3->clear();
     scenePlayer4->clear();
 
-    ui->bidInput->setDisplayIntegerBase(req.reservePrice);
-
     ui->tileGraphics->setScene(sceneTile);
 
     ui->playerAvatar_1->setScene(scenePlayer1);
@@ -91,6 +89,7 @@ void auctionWidget::initialize() {
     ui->bidInput->setMinimum(req.reservePrice);
     ui->bidInput->setSingleStep(req.bidIncrement);
     ui->bidInput->setMaximum(114514);
+    ui->bidInput->setDisplayIntegerBase(req.reservePrice);
 
     ui->currentBidLabel->setText(QString::fromStdString("Current bid: $" + std::to_string(req.reservePrice) + ", new bid: "));
 

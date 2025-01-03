@@ -32,6 +32,7 @@ private slots:
 
     void on_rollDiceButton_clicked();
     void rollDice(int& d1, int& d2);
+    void rollDiceBackdoor(int d1, int d2);
 
 private:
     Ui::gameMainWidget *ui;
