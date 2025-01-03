@@ -58,6 +58,7 @@
     <widget class="QLabel" name="auctionLabel">
      <property name="font">
       <font>
+       <family>Script MT</family>
        <pointsize>20</pointsize>
       </font>
      </property>

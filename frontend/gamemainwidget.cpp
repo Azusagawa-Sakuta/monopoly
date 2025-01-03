@@ -76,16 +76,28 @@ gameMainWidget::~gameMainWidget()
 void gameMainWidget::onTick() {
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto e = g.getActiveEvent();
+    int notBankruptPlayer = 0;
+    game::player::Player* winner;
+    for(const auto& it : g.getInstance().getPlayers()) {
+        if(!it->isBankrupted()) {
+            notBankruptPlayer++;
+            winner = it;
+        }
+    }
+    if (notBankruptPlayer == 1) {
+        QMessageBox::information(this, "Win", QString::fromStdString(winner->getNickname()) + " Won!!");
+        QApplication::quit();
+    }
     if (e != game::gamePlay::GameInstance::eventType::None)
         update();
     switch (e) {
     case game::gamePlay::GameInstance::eventType::None:
         break;
-    case game::gamePlay::GameInstance::eventType::Update:
-        qDebug() << "Update!!";
+    case game::gamePlay::GameInstance::eventType::Update: {
         update();
         g.notifyUserInput(std::monostate());
         break;
+    }
     case game::gamePlay::GameInstance::eventType::Dice: {
         ui->rollDiceButton->setDisabled(false);
         break;

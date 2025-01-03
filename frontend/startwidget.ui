@@ -82,6 +82,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="startButton">
+         <property name="font">
+          <font>
+           <family>Comic Sans MS</family>
+          </font>
+         </property>
          <property name="text">
           <string>Start!</string>
          </property>
@@ -119,6 +124,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="manualButton">
+         <property name="font">
+          <font>
+           <family>Comic Sans MS</family>
+          </font>
+         </property>
          <property name="text">
           <string>Manual</string>
          </property>
@@ -156,6 +166,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="closeButton">
+         <property name="font">
+          <font>
+           <family>Comic Sans MS</family>
+          </font>
+         </property>
          <property name="text">
           <string>Close</string>
          </property>
@@ -193,6 +208,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="aboutUsButton">
+         <property name="font">
+          <font>
+           <family>Comic Sans MS</family>
+          </font>
+         </property>
          <property name="text">
           <string>About us</string>
          </property>
@@ -230,6 +250,11 @@
        </item>
        <item>
         <widget class="QPushButton" name="quickStartButton">
+         <property name="font">
+          <font>
+           <family>Comic Sans MS</family>
+          </font>
+         </property>
          <property name="text">
           <string>Quickstart (Debug)</string>
          </property>

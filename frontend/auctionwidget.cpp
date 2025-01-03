@@ -170,13 +170,12 @@ void auctionWidget::nextPlayer() {
     }
 
 
-    int i = 0, playerBankruptNumber = 0;
+    int i = 0;
     for (const auto& it : game::gamePlay::GameInstance::getInstance().getPlayers()) {
         QGraphicsColorizeEffect* grayscaleEffect = new QGraphicsColorizeEffect();
         grayscaleEffect->setColor(Qt::gray);
         grayscaleEffect->setStrength(1.0);
         if (it->isBankrupted()) {
-            playerBankruptNumber++;
             switch(i) {
             case 0:
                 ui->playerAvatar_1->setGraphicsEffect(grayscaleEffect);
@@ -195,7 +194,7 @@ void auctionWidget::nextPlayer() {
         i++;
     }
 
-    if (round == game::gamePlay::GameInstance::getInstance().getPlayers().size() - playerBankruptNumber + 1 && maxBidPlayerIndex == -1) {
+    if (round == game::gamePlay::GameInstance::getInstance().getPlayers().size() + 1 && maxBidPlayerIndex == -1) {
         QMessageBox::information(this, "Auction Ended", QString::fromStdString("No one bid for tile " + std::to_string(game::gamePlay::GameInstance::getInstance().findTile(req.tile)) + "."));
         game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
         this->close();

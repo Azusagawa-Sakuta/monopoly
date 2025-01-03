@@ -47,6 +47,11 @@
    </item>
    <item>
     <widget class="QCommandLinkButton" name="sellButton">
+     <property name="font">
+      <font>
+       <family>Source Code Pro</family>
+      </font>
+     </property>
      <property name="text">
       <string>Sacrifice</string>
      </property>
@@ -54,6 +59,11 @@
    </item>
    <item>
     <widget class="QCommandLinkButton" name="cancelButton">
+     <property name="font">
+      <font>
+       <family>Source Code Pro</family>
+      </font>
+     </property>
      <property name="text">
       <string>All end</string>
      </property>

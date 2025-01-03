@@ -66,7 +66,7 @@
         <widget class="QLabel" name="gameTitle">
          <property name="font">
           <font>
-           <family>Academy Engraved LET</family>
+           <family>Bell MT</family>
            <pointsize>24</pointsize>
           </font>
          </property>
@@ -112,6 +112,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addComputer_1">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Computer</string>
            </property>
@@ -119,6 +125,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addPlayer_1">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Player</string>
            </property>
@@ -146,6 +158,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addComputer_2">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Computer</string>
            </property>
@@ -153,6 +171,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addPlayer_2">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Player</string>
            </property>
@@ -180,6 +204,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addComputer_3">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Computer</string>
            </property>
@@ -187,6 +217,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addPlayer_3">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Player</string>
            </property>
@@ -214,6 +250,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addComputer_4">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Computer</string>
            </property>
@@ -221,6 +263,12 @@
          </item>
          <item>
           <widget class="QPushButton" name="addPlayer_4">
+           <property name="font">
+            <font>
+             <family>Source Code Pro</family>
+             <pointsize>14</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>Add Player</string>
            </property>
