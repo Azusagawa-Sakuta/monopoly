@@ -40,7 +40,7 @@ Widget::Widget(QWidget *parent)
 
     ui->commitButton->setEnabled(false);
 
-    imagePaths = {":/resources/avatar1.jpg", ":/resources/avatar2.jpg", ":/resources/avatar3.jpg", ":/resources/avatar4.jpg"};
+    imagePaths = {":/resources/avatar/avatar1.jpg", ":/resources/avatar/avatar2.jpg", ":/resources/avatar/avatar3.jpg", ":/resources/avatar/avatar4.jpg"};
     finalImagePaths = imagePaths;
 
     connect(this, &Widget::playerSelected, [this](int count) {

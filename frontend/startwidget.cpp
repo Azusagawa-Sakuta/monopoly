@@ -30,7 +30,7 @@ void startWidget::on_startButton_clicked()
 
 void startWidget::on_quickStartButton_clicked()
 {
-    QStringList imagePaths = {":/resources/avatar1.jpg", ":/resources/avatar2.jpg", ":/resources/avatar3.jpg", ":/resources/avatar4.jpg"};
+    QStringList imagePaths = {":/resources/avatar/avatar1.jpg", ":/resources/avatar/avatar2.jpg", ":/resources/avatar/avatar3.jpg", ":/resources/avatar/avatar4.jpg"};
     QStringList finalImagePaths = imagePaths;
 
     int number = 10;

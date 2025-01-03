@@ -44,6 +44,8 @@ void sellWidget::initialize() {
     QStandardItemModel *model2 = new QStandardItemModel(this);
     model2->setHorizontalHeaderLabels({"Tile ID", "Value"});
     ui->treeView2->setModel(model2);
+
+    update();
 }
 
 void sellWidget::moveToTreeView2(const QModelIndex &index) {
@@ -87,13 +89,13 @@ void sellWidget::on_sellButton_clicked() {
     }
 
     gameInstance.notifyUserInput(toSell);
-    close();
+    this->close();
 }
 
 void sellWidget::on_cancelButton_clicked() {
     std::vector<game::gamePlay::Buildable*> toSell;
     game::gamePlay::GameInstance::getInstance().notifyUserInput(toSell);
-    close();
+    this->close();
 }
 
 void sellWidget::update() {
