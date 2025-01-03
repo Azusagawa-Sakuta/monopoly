@@ -776,6 +776,17 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                         player->setBankrupted(true); // Set player as bankrupted
                         return;
                     }
+                    else {
+                        utils::Logger::getInstance().log("handleTileEvent(): Player sold " + std::to_string(toSell.size()) + " tiles.");
+                        cashType totalSellValue = 0;
+                        for (auto& t : toSell) {
+                            totalSellValue += t->getValue() / 2 / 100 * 100;
+                            t->setOwner(nullptr);
+                            t->setStatus(Buildable::empty);
+                        }
+                        player->addCash(totalSellValue);
+                        utils::Logger::getInstance().log("handleTileEvent(): Player cash now is $" + std::to_string(player->getCash()));
+                    }
                 }
 
                 player->addCash(- static_cast<cashType>(rentBonused)); // Deduct rent from player
@@ -790,6 +801,9 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                         player->addCash(- buildableTile->getHouseCost() * num);
                         buildableTile->setStatus(ret);
                     }
+                }
+                else {
+                    utils::Logger::getInstance().log("handleTileEvent(): Player land on own tile but do not have enough money to build");
                 }
             }
             break;

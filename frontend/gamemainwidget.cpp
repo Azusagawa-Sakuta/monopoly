@@ -90,7 +90,7 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Prisoned: {
-        QMessageBox::information(this, "Prisoned", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " are prisoned."));
+        QMessageBox::information(this, "Prisoned", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + " are prisoned."));
         g.notifyUserInput(std::monostate());
         break;
     }
@@ -116,19 +116,19 @@ void gameMainWidget::onTick() {
     }
     case game::gamePlay::GameInstance::eventType::RentPaid: {
         game::gamePlay::GameInstance::rentRequest req = std::any_cast<game::gamePlay::GameInstance::rentRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Rent Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + " to player #" + std::to_string(g.findPlayerPos(req.tile->getOwner()))));
+        QMessageBox::information(this, "Rent Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + " to player #" + std::to_string(g.findPlayerPos(req.tile->getOwner()) + 1)));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::Taxed: {
         game::gamePlay::GameInstance::taxRequest req = std::any_cast<game::gamePlay::GameInstance::taxRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Tax Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
+        QMessageBox::information(this, "Tax Paid", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + " paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::HomeReward: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
-        QMessageBox::information(this, "Home Reward", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " received $" + std::to_string(req) + " for passing the start tile"));
+        QMessageBox::information(this, "Home Reward", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + " received $" + std::to_string(req) + " for passing the start tile"));
         g.notifyUserInput(std::monostate());
         break;
     }
@@ -153,17 +153,20 @@ void gameMainWidget::onTick() {
         int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
         if (max) 
             g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
+        else {
+            QMessageBox::information(this, "Build Fail", "You do not have enough money to build houses or hotel");
+        }
         break;
     }
     case game::gamePlay::GameInstance::eventType::RandomDestruction: {
         game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
-        QMessageBox::information(this, "Random Destruction", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + "'s tile #" + std::to_string(g.findTile(tile)) + " was destroyed... sad :("));
+        QMessageBox::information(this, "Random Destruction", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + "'s tile #" + std::to_string(g.findTile(tile)) + " was destroyed... sad :("));
         g.notifyUserInput(std::monostate());
         break;
     }
     case game::gamePlay::GameInstance::eventType::RandomEarn: {
         game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
-        QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer())) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
+        QMessageBox::information(this, "Random Earn", QString::fromStdString("Player #" + std::to_string(g.findPlayerPos(g.getCurrentPlayer()) + 1) + " earned $" + std::to_string(req) + " in random event! Congrats!"));
         g.notifyUserInput(std::monostate());
         break;
     }
@@ -267,7 +270,7 @@ void gameMainWidget::updatePlayerInfo() {
         grayscaleEffect->setColor(Qt::gray);
         grayscaleEffect->setStrength(1.0);
 
-        bool isBankrupt = it->getCash() < 0;
+        bool isBankrupt = it->getCash() == 0 && it->isBankrupted();
         if (computers + players == 1) {
             ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
@@ -320,10 +323,16 @@ QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
     QPixmap tileImage;
     if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
         const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-        std::string colors[] = {":/resources/draft/tileRed.png", ":/resources/draft/tileGreen.png", ":/resources/draft/tileBlue.png", ":/resources/draft/tileYellow.png"};
+        std::string colors[] = {":/resources/tile/red.png", ":/resources/tile/green.png", ":/resources/tile/blue.png", ":/resources/tile/yellow.png"};
         tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getColor()]));
-    } else {
-        tileImage = QPixmap(":/resources/draft/tileTemplate.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::home) {
+        tileImage = QPixmap(":/resources/tile/go.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::random) {
+        tileImage = QPixmap(":/resources/tile/casino.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::tax) {
+        tileImage = QPixmap(":/resources/tile/taxBureau.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::prison) {
+        tileImage = QPixmap(":/resources/tile/prison.png");
     }
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
@@ -335,7 +344,7 @@ QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
 {
     QPixmap tileImage;
     const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-    std::string colors[] = {":/resources/draft/house0.png", ":/resources/draft/house1.png", ":/resources/draft/house2.png", ":/resources/draft/house3.png", ":/resources/draft/house4.png", ":/resources/draft/house5.png", ":/resources/draft/house6.png"};
+    std::string colors[] = {":/resources/houses/house0.png", ":/resources/houses/house1.png", ":/resources/houses/house2.png", ":/resources/houses/house3.png", ":/resources/houses/house4.png", ":/resources/houses/house5.png", ":/resources/houses/house6.png"};
     tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getStatus()]));
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
@@ -346,7 +355,7 @@ QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
 QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p)
 {
     QPixmap img;
-    std::string imgs[] = {":/resources/draft/1P.png", ":/resources/draft/2P.png", ":/resources/draft/3P.png", ":/resources/draft/4P.png"};
+    std::string imgs[] = {":/resources/symbol/1P.png", ":/resources/symbol/2P.png", ":/resources/symbol/3P.png", ":/resources/symbol/4P.png"};
     img = QPixmap(QString::fromStdString(imgs[game::gamePlay::GameInstance::getInstance().findPlayerPos(p)]));
     if (img.isNull()) {
         qDebug() << "Failed to load image";
@@ -374,7 +383,7 @@ void gameMainWidget::paintTile(int x, int y, int index, int depth, game::gamePla
     int i = 0;
     auto& players = game::gamePlay::GameInstance::getInstance().getPlayers();
     for (auto& a : players) {
-        if (!a->isBankrupted() && a->getPosition() == index - 1) {
+        if (!a->isBankrupted() && a->getPosition() == index) {
             QPixmap playerImage(getPlayerIndicator(a));
             auto item = scene->addPixmap(playerImage);
             item->setPos(x + offsetX, y + offsetY - i * 64);
@@ -507,7 +516,7 @@ void gameMainWidget::on_rollDiceButton_clicked()
         }
         else {
             d3 = rand() % 6 + 1;
-            QString gifPath3 = ":/resources/dice" + numberList[d3 - 1] + ".gif";
+            QString gifPath3 = ":/resources/dice/dice" + numberList[d3 - 1] + ".gif";
             QMovie* movie3 = new QMovie(gifPath3);
             ui->diceLabel_1->setMovie(movie3);
             movie3->start();
@@ -548,8 +557,8 @@ void gameMainWidget::on_rollDiceButton_clicked()
 void gameMainWidget::rollDice(int& d1, int& d2) {
     d1 = rand() % 6 + 1;
     d2 = rand() % 6 + 1;
-    QString gifPath1 = ":/resources/dice" + QString::number(d1) + ".gif";
-    QString gifPath2 = ":/resources/dice" + QString::number(d2) + ".gif";
+    QString gifPath1 = ":/resources/dice/dice" + QString::number(d1) + ".gif";
+    QString gifPath2 = ":/resources/dice/dice" + QString::number(d2) + ".gif";
     QMovie* movie1 = new QMovie(gifPath1);
     QMovie* movie2 = new QMovie(gifPath2);
     ui->diceLabel_1->setMovie(movie1);

@@ -21,6 +21,9 @@ void auctionWidget::initialize() {
     scenePlayer2->clear();
     scenePlayer3->clear();
     scenePlayer4->clear();
+
+    ui->bidInput->setDisplayIntegerBase(req.reservePrice);
+
     ui->tileGraphics->setScene(sceneTile);
 
     ui->playerAvatar_1->setScene(scenePlayer1);
@@ -88,6 +91,9 @@ void auctionWidget::initialize() {
     ui->bidInput->setMinimum(req.reservePrice);
     ui->bidInput->setSingleStep(req.bidIncrement);
     ui->bidInput->setMaximum(114514);
+
+    ui->currentBidLabel->setText(QString::fromStdString("Current bid: $" + std::to_string(req.reservePrice) + ", new bid: "));
+
     nextPlayer();
 }
 
@@ -101,10 +107,16 @@ QPixmap auctionWidget::getTileImage(game::gamePlay::Tile* tile)
     QPixmap tileImage;
     if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
         const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-        std::string colors[] = {":/resources/draft/tileRed.png", ":/resources/draft/tileGreen.png", ":/resources/draft/tileBlue.png", ":/resources/draft/tileYellow.png"};
+        std::string colors[] = {":/resources/tile/red.png", ":/resources/tile/green.png", ":/resources/tile/blue.png", ":/resources/tile/yellow.png"};
         tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getColor()]));
-    } else {
-        tileImage = QPixmap(":/resources/draft/tileTemplate.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::home) {
+        tileImage = QPixmap(":/resources/tile/go.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::random) {
+        tileImage = QPixmap(":/resources/tile/casino.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::tax) {
+        tileImage = QPixmap(":/resources/tile/taxBureau.png");
+    } else if (tile->getType() == game::gamePlay::Tile::TileType::prison) {
+        tileImage = QPixmap(":/resources/tile/prison.png");
     }
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
@@ -118,23 +130,11 @@ void auctionWidget::nextPlayer() {
         round++;
     }
     while (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isBankrupted());
-    if (round == game::gamePlay::GameInstance::getInstance().getPlayers().size() + 1 && maxBidPlayerIndex == -1) {
-        QMessageBox::information(this, "Auction Ended", QString::fromStdString("No one bid for tile " + std::to_string(game::gamePlay::GameInstance::getInstance().findTile(req.tile)) + "."));
-        game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
-        close();
-    }
-
-    if (maxBidPlayerIndex == currentPlayerIndex) {
-        QMessageBox::information(this, "Auction Ended", QString::fromStdString("Player " + std::to_string(maxBidPlayerIndex + 1) + " won the auction for $" + std::to_string(currentBid) + "."));
-        game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{currentBid, game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]});
-        close();
-        return;
-    }
 
     switch (currentPlayerIndex) {
     case 0:
         if(game::gamePlay::GameInstance::getInstance().getPlayers()[0]->isBankrupted()) {
-            return;
+            nextPlayer();
         }
         scenePlayer1->setBackgroundBrush(Qt::red);
         scenePlayer2->setBackgroundBrush(Qt::transparent);
@@ -143,7 +143,7 @@ void auctionWidget::nextPlayer() {
         break;
     case 1:
         if(game::gamePlay::GameInstance::getInstance().getPlayers()[1]->isBankrupted()) {
-            return;
+            nextPlayer();
         }
         scenePlayer1->setBackgroundBrush(Qt::transparent);
         scenePlayer2->setBackgroundBrush(Qt::cyan);
@@ -152,7 +152,7 @@ void auctionWidget::nextPlayer() {
         break;
     case 2:
         if(game::gamePlay::GameInstance::getInstance().getPlayers()[2]->isBankrupted()) {
-            return;
+            nextPlayer();
         }
         scenePlayer1->setBackgroundBrush(Qt::transparent);
         scenePlayer2->setBackgroundBrush(Qt::transparent);
@@ -161,7 +161,7 @@ void auctionWidget::nextPlayer() {
         break;
     case 3:
         if(game::gamePlay::GameInstance::getInstance().getPlayers()[3]->isBankrupted()) {
-            return;
+            nextPlayer();
         }
         scenePlayer1->setBackgroundBrush(Qt::transparent);
         scenePlayer2->setBackgroundBrush(Qt::transparent);
@@ -170,12 +170,14 @@ void auctionWidget::nextPlayer() {
         break;
     }
 
-    int i = 0;
-    for (auto& it : game::gamePlay::GameInstance::getInstance().getPlayers()) {
+
+    int i = 0, playerBankruptNumber = 0;
+    for (const auto& it : game::gamePlay::GameInstance::getInstance().getPlayers()) {
         QGraphicsColorizeEffect* grayscaleEffect = new QGraphicsColorizeEffect();
         grayscaleEffect->setColor(Qt::gray);
         grayscaleEffect->setStrength(1.0);
         if (it->isBankrupted()) {
+            playerBankruptNumber++;
             switch(i) {
             case 0:
                 ui->playerAvatar_1->setGraphicsEffect(grayscaleEffect);
@@ -192,7 +194,20 @@ void auctionWidget::nextPlayer() {
             }
         }
         i++;
-        delete grayscaleEffect;
+    }
+
+    if (round == game::gamePlay::GameInstance::getInstance().getPlayers().size() - playerBankruptNumber + 1 && maxBidPlayerIndex == -1) {
+        QMessageBox::information(this, "Auction Ended", QString::fromStdString("No one bid for tile " + std::to_string(game::gamePlay::GameInstance::getInstance().findTile(req.tile)) + "."));
+        game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
+        this->close();
+        return;
+    }
+
+    if (maxBidPlayerIndex == currentPlayerIndex) {
+        QMessageBox::information(this, "Auction Ended", QString::fromStdString("Player " + std::to_string(maxBidPlayerIndex + 1) + " won the auction for $" + std::to_string(currentBid) + "."));
+        game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{currentBid, game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]});
+        this->close();
+        return;
     }
 
     if (currentBid + req.bidIncrement > game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) {
@@ -206,7 +221,7 @@ void auctionWidget::nextPlayer() {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
         ui->bidInput->setDisplayIntegerBase(minimum);
-        ui->bidInput->setMaximum(game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash());
+        ui->bidInput->setMaximum((game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) / 500 * 500);
         ui->bidButton->setDisabled(false);
     }
 }
