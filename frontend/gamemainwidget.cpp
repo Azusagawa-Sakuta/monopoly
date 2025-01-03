@@ -343,7 +343,7 @@ QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
     } else if (tile->getType() == game::gamePlay::Tile::TileType::random) {
         tileImage = QPixmap(":/resources/tile/casino.png");
     } else if (tile->getType() == game::gamePlay::Tile::TileType::tax) {
-        tileImage = QPixmap(":/resources/tile/taxBureau.png");
+        tileImage = QPixmap(":/resources/tile/ccf.png"); // Cash Collecting Federation
     } else if (tile->getType() == game::gamePlay::Tile::TileType::prison) {
         tileImage = QPixmap(":/resources/tile/prison.png");
     }
@@ -358,7 +358,7 @@ QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
     QPixmap tileImage;
     const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
     std::string colors[] = {":/resources/houses/house0.png", ":/resources/houses/house1.png", ":/resources/houses/house2.png", ":/resources/houses/house3.png", ":/resources/houses/house4.png", ":/resources/houses/house5.png", ":/resources/houses/house6.png"};
-    tileImage = QPixmap(QString::fromStdString(colors[buildableTile->getStatus()]));
+    tileImage = QPixmap(QString(":/resources/houses/p%1house%2.png").arg(buildableTile->getColor()).arg(buildableTile->getStatus()));
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
     }

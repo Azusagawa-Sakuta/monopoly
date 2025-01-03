@@ -10,13 +10,34 @@
         <file>dice/dice4.gif</file>
         <file>dice/dice5.gif</file>
         <file>dice/dice6.gif</file>
-        <file>houses/house0.png</file>
-        <file>houses/house1.png</file>
-        <file>houses/house2.png</file>
-        <file>houses/house3.png</file>
-        <file>houses/house4.png</file>
-        <file>houses/house5.png</file>
-        <file>houses/house6.png</file>
+        <file>houses/p1house0.png</file>
+        <file>houses/p1house1.png</file>
+        <file>houses/p1house2.png</file>
+        <file>houses/p1house3.png</file>
+        <file>houses/p1house4.png</file>
+        <file>houses/p1house5.png</file>
+        <file>houses/p1house6.png</file>
+        <file>houses/p2house0.png</file>
+        <file>houses/p2house1.png</file>
+        <file>houses/p2house2.png</file>
+        <file>houses/p2house3.png</file>
+        <file>houses/p2house4.png</file>
+        <file>houses/p2house5.png</file>
+        <file>houses/p2house6.png</file>
+        <file>houses/p3house0.png</file>
+        <file>houses/p3house1.png</file>
+        <file>houses/p3house2.png</file>
+        <file>houses/p3house3.png</file>
+        <file>houses/p3house4.png</file>
+        <file>houses/p3house5.png</file>
+        <file>houses/p3house6.png</file>
+        <file>houses/p4house0.png</file>
+        <file>houses/p4house1.png</file>
+        <file>houses/p4house2.png</file>
+        <file>houses/p4house3.png</file>
+        <file>houses/p4house4.png</file>
+        <file>houses/p4house5.png</file>
+        <file>houses/p4house6.png</file>
         <file>symbol/1P.png</file>
         <file>symbol/2P.png</file>
         <file>symbol/3P.png</file>
@@ -29,5 +50,6 @@
         <file>tile/red.png</file>
         <file>tile/taxBureau.png</file>
         <file>tile/yellow.png</file>
+        <file>tile/ccf.png</file>
     </qresource>
 </RCC>
