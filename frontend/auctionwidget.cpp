@@ -82,7 +82,7 @@ void auctionWidget::initialize() {
 
     maxBidPlayerIndex = -1;
     currentPlayerIndex = -1;
-    currentBid = 0;
+    currentBid = 500;
     round = 0;
 
     ui->bidInput->setMinimum(req.reservePrice);
@@ -198,12 +198,14 @@ void auctionWidget::nextPlayer() {
     if (currentBid + req.bidIncrement > game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
+        ui->bidInput->setDisplayIntegerBase(minimum);
         ui->bidInput->setMaximum(minimum);
         ui->bidButton->setDisabled(true);
     }
     else {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
+        ui->bidInput->setDisplayIntegerBase(minimum);
         ui->bidInput->setMaximum(game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash());
         ui->bidButton->setDisabled(false);
     }
