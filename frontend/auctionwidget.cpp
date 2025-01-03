@@ -89,7 +89,7 @@ void auctionWidget::initialize() {
     ui->bidInput->setMinimum(req.reservePrice);
     ui->bidInput->setSingleStep(req.bidIncrement);
     ui->bidInput->setMaximum(114514);
-    ui->bidInput->setDisplayIntegerBase(req.reservePrice);
+    ui->bidInput->setValue(req.reservePrice);
 
     ui->currentBidLabel->setText(QString::fromStdString("Current bid: $" + std::to_string(req.reservePrice) + ", new bid: "));
 
@@ -113,7 +113,7 @@ QPixmap auctionWidget::getTileImage(game::gamePlay::Tile* tile)
     } else if (tile->getType() == game::gamePlay::Tile::TileType::random) {
         tileImage = QPixmap(":/resources/tile/casino.png");
     } else if (tile->getType() == game::gamePlay::Tile::TileType::tax) {
-        tileImage = QPixmap(":/resources/tile/taxBureau.png");
+        tileImage = QPixmap(":/resources/tile/ccf.png");
     } else if (tile->getType() == game::gamePlay::Tile::TileType::prison) {
         tileImage = QPixmap(":/resources/tile/prison.png");
     }
@@ -129,6 +129,10 @@ void auctionWidget::nextPlayer() {
         round++;
     }
     while (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isBankrupted());
+
+    //if (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isComputer()) 
+    //    nextPlayer();
+    // I dunno why but this code is not working :(
 
     switch (currentPlayerIndex) {
     case 0:
@@ -211,14 +215,14 @@ void auctionWidget::nextPlayer() {
     if (currentBid + req.bidIncrement > game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
-        ui->bidInput->setDisplayIntegerBase(minimum);
+        ui->bidInput->setValue(minimum);
         ui->bidInput->setMaximum(minimum);
         ui->bidButton->setDisabled(true);
     }
     else {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);
         ui->bidInput->setMinimum(minimum);
-        ui->bidInput->setDisplayIntegerBase(minimum);
+        ui->bidInput->setValue(minimum);
         ui->bidInput->setMaximum((game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) / 500 * 500);
         ui->bidButton->setDisabled(false);
     }

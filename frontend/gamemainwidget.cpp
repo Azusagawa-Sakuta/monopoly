@@ -11,6 +11,7 @@
 #include <cmath>
 #include <vector>
 #include <variant>
+#include <random>
 #include <QGuiApplication>
 #include <QTimer>
 #include <QMovie>
@@ -99,7 +100,15 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Dice: {
-        ui->rollDiceButton->setDisabled(false);
+        if (g.getCurrentPlayer()->isComputer()) {
+            std::random_device rd; // obtain a random number from hardware
+            std::mt19937 gen(rd()); // seed the generator
+            std::uniform_int_distribution<> distr(2, 17); // define the range
+
+            g.notifyUserInput(distr(gen));
+        }
+        else 
+            ui->rollDiceButton->setDisabled(false);
         break;
     }
     case game::gamePlay::GameInstance::eventType::Prisoned: {
@@ -113,17 +122,24 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::PrisonDice: {
-        ui->rollDiceButton->setDisabled(false);
+        if (g.getCurrentPlayer()->isComputer()) 
+            g.notifyUserInput(0);
+        else
+            ui->rollDiceButton->setDisabled(false);
         break;
     }
     case game::gamePlay::GameInstance::eventType::Buy: {
-        game::gamePlay::GameInstance::buyRequest req = std::any_cast<game::gamePlay::GameInstance::buyRequest>(g.getActiveEventParam());
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, "Buy Property", QString::fromStdString("Do you want to buy tile #" + std::to_string(g.findTile(req.tile)) + " for $" + std::to_string(req.price)), QMessageBox::Ok | QMessageBox::Cancel);
-        if (reply == QMessageBox::Ok) {
+        if (g.getCurrentPlayer()->isComputer()) {
             g.notifyUserInput(true);
         } else {
-            g.notifyUserInput(false);
+            game::gamePlay::GameInstance::buyRequest req = std::any_cast<game::gamePlay::GameInstance::buyRequest>(g.getActiveEventParam());
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "Buy Property", QString::fromStdString("Do you want to buy tile #" + std::to_string(g.findTile(req.tile)) + " for $" + std::to_string(req.price)), QMessageBox::Ok | QMessageBox::Cancel);
+            if (reply == QMessageBox::Ok) {
+                g.notifyUserInput(true);
+            } else {
+                g.notifyUserInput(false);
+            }
         }
         break;
     }
@@ -161,13 +177,23 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Build: {
-        game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
-        game::gamePlay::Buildable::buildStatus current = tile->getStatus();
-        int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
-        if (max) 
-            g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
+        if (g.getCurrentPlayer()->isComputer()) {
+            game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
+            game::gamePlay::Buildable::buildStatus current = tile->getStatus();
+            int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(std::uniform_int_distribution<>(0, max)(gen)));
+        }
         else {
-            QMessageBox::information(this, "Build Fail", "You do not have enough money to build houses or hotel");
+            game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
+            game::gamePlay::Buildable::buildStatus current = tile->getStatus();
+            int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
+            if (max) 
+                g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
+            else {
+                QMessageBox::information(this, "Build Fail", "You do not have enough money to build houses or hotel"); // Who wrote this? If no enough money this event won't be called
+            }
         }
         break;
     }
@@ -184,18 +210,42 @@ void gameMainWidget::onTick() {
         break;
     }
     case game::gamePlay::GameInstance::eventType::Sell: {
-        auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
-        static sellWidget *m_sellWidget = new sellWidget(this);
-        if (!m_sellWidget) {
-            qDebug() << "Creating new sell widget..";
-            m_sellWidget = new sellWidget(this);
+        if (g.getCurrentPlayer()->isComputer()) {
+            auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
+            game::cashType cash = g.getCurrentPlayer()->getCash();
+            game::cashType rent = std::any_cast<game::cashType>(g.getActiveEventParam());
+            game::cashType remaining = rent - cash;
+            std::vector<game::gamePlay::Buildable*> toSell;
+            for (const auto& tile : ownTiles) {
+                if (remaining <= 0) 
+                    break;
+                auto buildable = static_cast<game::gamePlay::Buildable*>(tile);
+                if (buildable->getValue() <= remaining) {
+                    toSell.push_back(buildable);
+                    remaining -= buildable->getValue();
+                }
+            }
+            if (remaining > 0) {
+                g.notifyUserInput(std::vector<game::gamePlay::Buildable*>());
+            }
+            else {
+                g.notifyUserInput(toSell);
+            }
         }
-        if (!m_sellWidget->isVisible()) {
-            auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
-            f &= ~Qt::WindowCloseButtonHint;
-            m_sellWidget->setWindowFlags(f);
-            m_sellWidget->show();
-            m_sellWidget->initialize();
+        else {
+            auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
+            static sellWidget *m_sellWidget = new sellWidget(this);
+            if (!m_sellWidget) {
+                qDebug() << "Creating new sell widget..";
+                m_sellWidget = new sellWidget(this);
+            }
+            if (!m_sellWidget->isVisible()) {
+                auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
+                f &= ~Qt::WindowCloseButtonHint;
+                m_sellWidget->setWindowFlags(f);
+                m_sellWidget->show();
+                m_sellWidget->initialize();
+            }
         }
         break;
     }

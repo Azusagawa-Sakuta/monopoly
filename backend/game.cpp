@@ -156,6 +156,15 @@ void Player::setBankrupted(bool newBankrupted) {
 }
 
 /**
+ * @brief Check if player is computer
+ * @param None
+ * @return False for human player, true for computer player
+ */
+bool Player::isComputer() const {
+    return false;
+}
+
+/**
  * @brief ComputerPlayer constructor
  * @param initialCash Initial cash amount for computer player
  * @return None
@@ -168,6 +177,15 @@ ComputerPlayer::ComputerPlayer(cashType initialCash) : Player(initialCash) {}
  * @return None
  */
 ComputerPlayer::~ComputerPlayer() {}
+
+/**
+ * @brief Check if player is computer
+ * @param None
+ * @return True for computer player, false otherwise
+ */
+bool ComputerPlayer::isComputer() const {
+    return true;
+}
 
 /**
  * @brief Tile constructor

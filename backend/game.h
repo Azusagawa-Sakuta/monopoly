@@ -41,6 +41,7 @@ namespace game {
             void setImagePath(const std::string& newImagePath);
             bool isBankrupted() const;
             void setBankrupted(bool newBankrupted);
+            virtual bool isComputer() const;
         };
 
         class ComputerPlayer : public Player {
@@ -50,6 +51,7 @@ namespace game {
         public:
             ComputerPlayer(cashType initialCash = constant::initialCash);
             ~ComputerPlayer() override;
+            bool isComputer() const override;
         };
     }
 
