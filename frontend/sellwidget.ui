@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -49,7 +49,7 @@
     <widget class="QCommandLinkButton" name="sellButton">
      <property name="font">
       <font>
-       <family>Source Code Pro</family>
+       <family>Segoe UI</family>
       </font>
      </property>
      <property name="text">
@@ -61,7 +61,7 @@
     <widget class="QCommandLinkButton" name="cancelButton">
      <property name="font">
       <font>
-       <family>Source Code Pro</family>
+       <family>Segoe UI</family>
       </font>
      </property>
      <property name="text">

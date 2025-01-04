@@ -542,7 +542,7 @@ const std::vector<Player*>& GameInstance::getPlayers() const {
  * @param p Player pointer to find
  * @return Index of player or -1 if not found
  */
-const int GameInstance::findPlayerPos(Player* p) const {
+const int GameInstance::findPlayerIndex(Player* p) const {
     std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     auto it = std::find(players.begin(), players.end(), p); // Find player in vector
     if (it != players.end())

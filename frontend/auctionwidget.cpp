@@ -130,10 +130,6 @@ void auctionWidget::nextPlayer() {
     }
     while (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isBankrupted());
 
-    //if (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isComputer()) 
-    //    nextPlayer();
-    // I dunno why but this code is not working :(
-
     switch (currentPlayerIndex) {
     case 0:
         if(game::gamePlay::GameInstance::getInstance().getPlayers()[0]->isBankrupted()) {
@@ -206,11 +202,14 @@ void auctionWidget::nextPlayer() {
     }
 
     if (maxBidPlayerIndex == currentPlayerIndex) {
-        QMessageBox::information(this, "Auction Ended", QString::fromStdString("Player " + std::to_string(maxBidPlayerIndex + 1) + " won the auction for $" + std::to_string(currentBid) + "."));
+        QMessageBox::information(this, "Auction Ended", QString::fromStdString(game::gamePlay::GameInstance::getInstance().getPlayers()[maxBidPlayerIndex]->getNickname() + " won the auction for $" + std::to_string(currentBid) + "."));
         game::gamePlay::GameInstance::getInstance().notifyUserInput(game::gamePlay::GameInstance::auctionResult{currentBid, game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]});
         this->close();
         return;
     }
+
+    if (game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->isComputer())
+        nextPlayer();
 
     if (currentBid + req.bidIncrement > game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]->getCash()) {
         int minimum = std::max(currentBid + req.bidIncrement, req.reservePrice);

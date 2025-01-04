@@ -219,7 +219,7 @@ namespace game {
             static GameInstance& getInstance();
             const std::vector<Tile*>& getTiles() const;
             const std::vector<player::Player*>& getPlayers() const;
-            const int findPlayerPos(player::Player* p) const;
+            const int findPlayerIndex(player::Player* p) const;
             const std::vector<Tile*> findOwnTiles(player::Player* p) const;
             const int findNextTile(Tile::TileType type, int pos) const;
             const int findTile(Tile* tile) const;

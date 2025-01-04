@@ -23,7 +23,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Widget</string>
+   <string>Select Player</string>
   </property>
   <property name="windowOpacity">
    <double>1.000000000000000</double>
@@ -45,7 +45,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Manual</string>
+          <string>Hint</string>
          </property>
         </widget>
        </item>
@@ -71,7 +71,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Please select the Property and Profile Photo</string>
+          <string>Please select the Role and Profile Photo</string>
          </property>
         </widget>
        </item>

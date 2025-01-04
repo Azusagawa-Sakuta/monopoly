@@ -102,41 +102,34 @@ Widget::~Widget()
 }
 
 void Widget::loadPhotos() {
-    // 加载图片缩略图到场景
     // TODO (try parameters)
     // ---FINISHED---
-    int x = 0; // 起始 x 坐标
-    int y = 0; // 起始 y 坐标
-    const int spacing = 50; // 缩略图间距
-    QRectF totalBoundingRect; // 用于计算总的边界矩形
+    int x = 0;
+    int y = 0;
+    const int spacing = 50;
+    QRectF totalBoundingRect;
     int index = 0;
 
     for (const QString &path : imagePaths) {
         QPixmap pixmap(path);
 
-        // 缩略图大小
         QPixmap thumbnail = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-        // 创建图形项并添加到场景
         ClickablePixmapItem *item = new ClickablePixmapItem(thumbnail, index++);
-        item->setPos(x, y); // 设置位置
+        item->setPos(x, y);
         scene->addItem(item);
 
-        // 更新总边界矩形
         QRectF itemRect(item->pos(), QSizeF(thumbnail.width(), thumbnail.height()));
         totalBoundingRect = totalBoundingRect.united(itemRect);
 
-        // 更新下一个图片的 x 坐标
         x += thumbnail.width() + spacing;
 
-        item->setFlag(QGraphicsItem::ItemIsSelectable);  // 允许选择项
-        item->setFlag(QGraphicsItem::ItemIsFocusable);    // 允许焦点
+        item->setFlag(QGraphicsItem::ItemIsSelectable);
+        item->setFlag(QGraphicsItem::ItemIsFocusable);
     }
 
-    // 调整场景范围为总的边界矩形
     scene->setSceneRect(totalBoundingRect);
 
-    // 将 QGraphicsView 居中显示
     ui->profilePhotoList->centerOn(totalBoundingRect.center());
 
     ui->profilePhotoList->hide();
@@ -194,14 +187,15 @@ void ClickablePixmapItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 
 void Widget::on_manualButton_clicked()
 {
-    QString pdfFilePath = ":/manual.pdf";
-
-    QUrl pdfUrl = QUrl::fromLocalFile(pdfFilePath);
-
-    if(!QDesktopServices::openUrl(pdfUrl)) {
-        QMessageBox::critical(this, "Failed to open", "Failed to open manual page, please check if you are in latest version.");
-        qDebug() << "Failed to open manual.";
-    }
+    QMessageBox::information(this, "Select Players manual", "Here, you need to select both your role and profile photo.\n"
+                                                            "Only until all players on the left are ready, you can not select the players"
+                                                            " on the right.\n"
+                                                            "When you are selecting profile photos, please select the "
+                                                            "\"Select Profile (double-click)\" button, "
+                                                            "and move your cursor onto your favorite button, "
+                                                            "click it twice, then you can see your profile photo "
+                                                            "on the big screen.\nDon't forget to press the ready "
+                                                            "button after you have finished the selection!\nENJOY IT!");
 }
 
 
