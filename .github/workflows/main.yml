@@ -95,7 +95,7 @@ jobs:
       shell: cmd
       run: |
         cd build\release
-        windeployqt frontend.exe --release --no-compiler-runtime
+        windeployqt monopoly.exe --release --no-compiler-runtime
 
     - name: Clean up build directory
       shell: cmd
