@@ -28,14 +28,12 @@ HEADERS += \
     gamemainwidget.h \
     sellwidget.h \
     startwidget.h \
-    widget.h
-
-FORMS += \
-    auctionwidget.ui \
-    gamemainwidget.ui \
-    sellwidget.ui \
-    startwidget.ui \
-    widget.ui
+    widget.h \
+    ui_auctionwidget.h \
+    ui_gamemainwidget.h \
+    ui_sellwidget.h \
+    ui_startwidget.h \
+    ui_widget.h
 
 RESOURCES += resources/resources.qrc
 

@@ -24,8 +24,6 @@ private slots:
 
     void on_aboutUsButton_clicked();
 
-    void on_quickStartButton_clicked();
-
 private:
     Ui::startWidget *ui;
 };

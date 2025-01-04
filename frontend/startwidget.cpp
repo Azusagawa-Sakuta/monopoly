@@ -3,6 +3,7 @@
 #include "ui_startwidget.h"
 #include <QMessageBox>
 #include <QDialog>
+#include <QDir>
 #include <QDesktopServices>
 #include "widget.h"
 
@@ -27,7 +28,7 @@ void startWidget::on_startButton_clicked()
     w->show();
     this->close();
 }
-
+/*
 void startWidget::on_quickStartButton_clicked()
 {
     QStringList imagePaths = {":/resources/avatar/avatar1.jpg", ":/resources/avatar/avatar2.jpg", ":/resources/avatar/avatar3.jpg", ":/resources/avatar/avatar4.jpg"};
@@ -61,22 +62,18 @@ void startWidget::on_quickStartButton_clicked()
 
     w->show(); // Show the game main widget
     this->close(); // Close the current start widget
-}
+}*/
 
 
 void startWidget::on_manualButton_clicked()
 {
     // find manual.pdf here
-    QString pdfFilePath = ":/manual.pdf";
-
-    QUrl pdfUrl = QUrl::fromLocalFile(pdfFilePath);
-
+    QUrl pdfUrl("Manual.pdf");
     if(!QDesktopServices::openUrl(pdfUrl)) {
-        QMessageBox::critical(this, "Failed to open", "Failed to open manual page, please check if you are in latest version.");
+        QMessageBox::critical(this, "Open Manually", "You can find the manual file in your directory.");
         qDebug() << "Failed to open manual.";
     }
 }
-
 
 void startWidget::on_closeButton_clicked()
 {
@@ -90,7 +87,7 @@ void startWidget::on_closeButton_clicked()
 void startWidget::on_aboutUsButton_clicked()
 {
     QMessageBox::information(this, "About us", "Code: IcaS66, Azusagawa-Sakuta\n"
-                                               "UI Design: IcaS66, Azusagawa-Sakuta\n"
+                                               "UI Design: IcaS66, Azusagawa-Sakut, Octopusa\n"
                                                "Test: IcaS66, 155TuT, Eleina, Azusagawa-Sakuta");
 }
 

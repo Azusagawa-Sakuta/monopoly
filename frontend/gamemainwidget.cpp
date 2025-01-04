@@ -365,7 +365,7 @@ void gameMainWidget::updatePlayerInfo() {
             ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_2_2->hide();
-            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Cyan"));
+            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Yellow"));
             if (isBankrupt) {
                 ui->playerAvatarGraphics_2->setGraphicsEffect(grayscaleEffect);
             } else {
@@ -376,7 +376,7 @@ void gameMainWidget::updatePlayerInfo() {
             ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_3_2->hide();
-            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Yellow"));
+            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Blue"));
             if (isBankrupt) {
                 ui->playerAvatarGraphics_3->setGraphicsEffect(grayscaleEffect);
             } else {
@@ -423,7 +423,6 @@ QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
 {
     QPixmap tileImage;
     const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-    std::string colors[] = {":/resources/houses/house0.png", ":/resources/houses/house1.png", ":/resources/houses/house2.png", ":/resources/houses/house3.png", ":/resources/houses/house4.png", ":/resources/houses/house5.png", ":/resources/houses/house6.png"};
     tileImage = QPixmap(QString(":/resources/houses/p%1house%2.png").arg(game::gamePlay::GameInstance::getInstance().findPlayerIndex(buildableTile->getOwner()) + 1).arg(buildableTile->getStatus()));
     if (tileImage.isNull()) {
         qDebug() << "Failed to load image";
