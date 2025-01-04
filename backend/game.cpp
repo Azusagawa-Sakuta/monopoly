@@ -815,9 +815,9 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                 Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
                     if (ret) {
                         utils::Logger::getInstance().log("handleTileEvent(): Player built " + std::to_string(ret - buildableTile->getStatus()) + " houses on tile #" + std::to_string(findTile(buildableTile)) + ".");
-                        int num = ret - buildableTile->getStatus();
-                        player->addCash(- buildableTile->getHouseCost() * num);
-                        buildableTile->setStatus(ret);
+                        Buildable::buildStatus num = static_cast<Buildable::buildStatus>(ret + buildableTile->getStatus());
+                        player->addCash(- buildableTile->getHouseCost() * static_cast<int>(ret));
+                        buildableTile->setStatus(num);
                     }
                 }
                 else {
