@@ -2,7 +2,6 @@
 #ifndef CONSTANT_H
 #define CONSTANT_H
 
-#include <string>
 #include <array>
 
 namespace game {

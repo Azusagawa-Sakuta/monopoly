@@ -80,6 +80,10 @@ void gameMainWidget::onTick() {
     int notBankruptPlayer = 0;
     game::player::Player* winner;
     for(const auto& it : g.getInstance().getPlayers()) {
+        if(it->getCash() > 500000) {
+            QMessageBox::information(this, "Win", QString::fromStdString(it->getNickname()) + " Won!!");
+            QApplication::quit();
+        }
         if(!it->isBankrupted()) {
             notBankruptPlayer++;
             winner = it;

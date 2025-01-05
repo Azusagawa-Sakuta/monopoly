@@ -11,7 +11,7 @@ protected:
     void run() override {
         game::constant::homeReward = 2500;
         game::constant::defaultTaxRate = 0.1f;
-        game::constant::initialCash = 10000;
+        game::constant::initialCash = 100000;
         game::gamePlay::GameInstance &g = game::gamePlay::GameInstance::getInstance();
 
         utils::Logger::getInstance().log("main(): Waiting for the game to start...");

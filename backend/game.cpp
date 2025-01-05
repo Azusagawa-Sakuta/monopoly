@@ -3,8 +3,6 @@
 #include "constant.h"
 #include <random>
 #include <algorithm>
-#include <tuple>
-#include <variant>
 
 using namespace game;
 using namespace player;
@@ -542,7 +540,7 @@ const std::vector<Player*>& GameInstance::getPlayers() const {
  * @param p Player pointer to find
  * @return Index of player or -1 if not found
  */
-const int GameInstance::findPlayerIndex(Player* p) const {
+int GameInstance::findPlayerIndex(Player* p) const {
     std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     auto it = std::find(players.begin(), players.end(), p); // Find player in vector
     if (it != players.end())
@@ -573,10 +571,10 @@ const std::vector<Tile*> GameInstance::findOwnTiles(Player* p) const {
  * @param pos Starting position
  * @return Position of next matching tile or -1 if not found
  */
-const int GameInstance::findNextTile(Tile::TileType type, int pos) const {
+int GameInstance::findNextTile(Tile::TileType type, int pos) const {
     std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     auto it = tiles.begin() + pos; // Start from the given position
-    for (int i = 0; i < tiles.size(); i++) {
+    for (size_t i = 0; i < tiles.size(); i++) {
         if (++it == tiles.end())
             it = tiles.begin(); // Wrap around if at the end
         if ((*it)->getType() == type)
@@ -590,7 +588,7 @@ const int GameInstance::findNextTile(Tile::TileType type, int pos) const {
  * @param tile Tile pointer to find
  * @return Position of tile or -1 if not found
  */
-const int GameInstance::findTile(Tile* tile) const {
+int GameInstance::findTile(Tile* tile) const {
     std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     auto it = std::find(tiles.begin(), tiles.end(), tile); // Find tile in vector
     if (it != tiles.end())
@@ -866,6 +864,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                     player->addCash(-taxToPay);
                     waitForUserInput(Taxed, taxRequest({ taxToPay, tax }));
                 }
+                break;
             }
             case 2: {
                 Home* home = static_cast<Home*>(tiles[findNextTile(Tile::home, player->getPosition())]);
@@ -873,6 +872,7 @@ void GameInstance::handleTileEvent(Player* player, Tile* tile) {
                     player->addCash(constant::homeReward);
                     waitForUserInput(HomeReward, constant::homeReward);
                 }
+                break;
             }
             case 3: {
                 auto ownTiles = findOwnTiles(player);
