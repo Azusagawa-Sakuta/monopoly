@@ -17,10 +17,11 @@ public:
     explicit sellWidget(QWidget *parent = nullptr);
     ~sellWidget();
 
-    void initialize();
+    void initialize(game::cashType amountNeeded);
 
 private:
     Ui::sellWidget *ui;
+    game::cashType rentAmount;
 
     void update();
 

@@ -28,31 +28,50 @@ public:
     ~gameMainWidget();
 
 private slots:
-    void onTick();
-
+    // Dice button (still user-driven)
     void on_rollDiceButton_clicked();
-    void rollDice(int& d1, int& d2);
-    void rollDiceBackdoor(int d1, int d2);
+
+    // Signal handlers from GameInstance
+    void onTurnStarted(game::player::Player* player);
+    void onGameEnded(game::player::Player* winner);
+    void onDiceRolled(game::player::Player* player, int dice1, int dice2);
+    void onPlayerMoved(game::player::Player* player, int fromPos, int toPos);
+    void onPlayerPassedGo(game::player::Player* player, game::cashType reward);
+    void onBuyDecisionNeeded(game::player::Player* player, game::gamePlay::Buildable* tile, game::cashType cost);
+    void onAuctionNeeded(game::gamePlay::Buildable* tile, game::cashType reservePrice, game::cashType bidIncrement);
+    void onBuildDecisionNeeded(game::player::Player* player, game::gamePlay::Buildable* tile, game::cashType houseCost, int maxLevels);
+    void onSellDecisionNeeded(game::player::Player* player, game::cashType amountNeeded);
+    void onRentPaid(game::player::Player* payer, game::player::Player* owner, game::gamePlay::Buildable* tile, game::cashType amount);
+    void onTaxPaid(game::player::Player* player, game::gamePlay::Tax* tile, game::cashType amount);
+    void onHomeRewardCollected(game::player::Player* player, game::cashType amount);
+    void onPlayerPrisoned(game::player::Player* player, game::gamePlay::Prison* tile);
+    void onPrisonDiceNeeded(game::player::Player* player);
+    void onPrisonPayOutNeeded(game::player::Player* player, game::cashType cost);
+    void onRandomEventTriggered(game::gamePlay::Tile* tile, const QString& description);
+    void onPlayerUpdated(game::player::Player* player);
+    void onPlayerBankrupted(game::player::Player* player);
+    void onPropertyChanged(game::gamePlay::Buildable* tile);
+    void onBoardUpdateNeeded();
 
 private:
     Ui::gameMainWidget *ui;
-    QGraphicsScene *scene; // Scene to show the map
+    QGraphicsScene *scene;
     QGraphicsScene *scenePlayer1;
     QGraphicsScene *scenePlayer2;
     QGraphicsScene *scenePlayer3;
     QGraphicsScene *scenePlayer4;
 
-    QTimer *timer;
+    int firstDiceNumber;
+    bool isPrisonDiceMode;
 
-    void initializeGameInstance();
-
-    void paintMap(); // Paint the map
+    void connectGameSignals();
+    void paintMap();
     int loadImage();
     void loadDice(int d1, int d2);
     void update();
+    void updatePlayerInfo();
 
     void resizeEvent(QResizeEvent* event) override;
-    void updatePlayerInfo();
     QPixmap getTileImage(game::gamePlay::Tile* tile);
     QPixmap getHouseImage(game::gamePlay::Tile* tile);
     QPixmap getPlayerIndicator(game::player::Player* p);

@@ -10,12 +10,9 @@
 #include <QResizeEvent>
 #include <cmath>
 #include <vector>
-#include <variant>
 #include <random>
 #include <QGuiApplication>
-#include <QTimer>
 #include <QMovie>
-#include <QThread>
 #include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
@@ -26,10 +23,11 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     scenePlayer2(new QGraphicsScene(this)),
     scenePlayer3(new QGraphicsScene(this)),
     scenePlayer4(new QGraphicsScene(this)),
-    timer(new QTimer(this)) {
+    firstDiceNumber(0),
+    isPrisonDiceMode(false) {
     ui->setupUi(this);
     showMaximized();
-    //initializeGameInstance();
+
     scenePlayer1->clear();
     scenePlayer2->clear();
     scenePlayer3->clear();
@@ -59,255 +57,349 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
         ui->playerInfo_4_3->hide();
         ui->playerNickname_4->hide();
     }
-    auto& g = game::gamePlay::GameInstance::getInstance();
-    // Connect the timer's timeout signal to the onTick slot
-    connect(timer, &QTimer::timeout, this, &gameMainWidget::onTick);
 
-    qDebug() << "1";
-    timer->start(100);
+    // Connect backend signals to UI slots
+    connectGameSignals();
+
     update();
-    g.notifyUserInput(std::monostate());
+    updatePlayerInfo();
+
+    // Start the game loop
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    g.advance();
 }
 
-gameMainWidget::~gameMainWidget()
-{
+gameMainWidget::~gameMainWidget() {
     delete ui;
 }
 
-void gameMainWidget::onTick() {
+void gameMainWidget::connectGameSignals() {
     auto& g = game::gamePlay::GameInstance::getInstance();
-    auto e = g.getActiveEvent();
-    int notBankruptPlayer = 0;
-    game::player::Player* winner;
-    for(const auto& it : g.getInstance().getPlayers()) {
-        if(it->getCash() > 500000) {
-            QMessageBox::information(this, "Win", QString::fromStdString(it->getNickname()) + " Won!!");
-            QApplication::quit();
-        }
-        if(!it->isBankrupted()) {
-            notBankruptPlayer++;
-            winner = it;
-        }
+
+    connect(&g, &game::gamePlay::GameInstance::turnStarted, this, &gameMainWidget::onTurnStarted);
+    connect(&g, &game::gamePlay::GameInstance::gameEnded, this, &gameMainWidget::onGameEnded);
+    connect(&g, &game::gamePlay::GameInstance::diceRolled, this, &gameMainWidget::onDiceRolled);
+    connect(&g, &game::gamePlay::GameInstance::playerMoved, this, &gameMainWidget::onPlayerMoved);
+    connect(&g, &game::gamePlay::GameInstance::playerPassedGo, this, &gameMainWidget::onPlayerPassedGo);
+    connect(&g, &game::gamePlay::GameInstance::buyDecisionNeeded, this, &gameMainWidget::onBuyDecisionNeeded);
+    connect(&g, &game::gamePlay::GameInstance::auctionNeeded, this, &gameMainWidget::onAuctionNeeded);
+    connect(&g, &game::gamePlay::GameInstance::buildDecisionNeeded, this, &gameMainWidget::onBuildDecisionNeeded);
+    connect(&g, &game::gamePlay::GameInstance::sellDecisionNeeded, this, &gameMainWidget::onSellDecisionNeeded);
+    connect(&g, &game::gamePlay::GameInstance::rentPaid, this, &gameMainWidget::onRentPaid);
+    connect(&g, &game::gamePlay::GameInstance::taxPaid, this, &gameMainWidget::onTaxPaid);
+    connect(&g, &game::gamePlay::GameInstance::homeRewardCollected, this, &gameMainWidget::onHomeRewardCollected);
+    connect(&g, &game::gamePlay::GameInstance::playerPrisoned, this, &gameMainWidget::onPlayerPrisoned);
+    connect(&g, &game::gamePlay::GameInstance::prisonDiceNeeded, this, &gameMainWidget::onPrisonDiceNeeded);
+    connect(&g, &game::gamePlay::GameInstance::prisonPayOutNeeded, this, &gameMainWidget::onPrisonPayOutNeeded);
+    connect(&g, &game::gamePlay::GameInstance::randomEventTriggered, this, &gameMainWidget::onRandomEventTriggered);
+    connect(&g, &game::gamePlay::GameInstance::playerUpdated, this, &gameMainWidget::onPlayerUpdated);
+    connect(&g, &game::gamePlay::GameInstance::playerBankrupted, this, &gameMainWidget::onPlayerBankrupted);
+    connect(&g, &game::gamePlay::GameInstance::propertyChanged, this, &gameMainWidget::onPropertyChanged);
+    connect(&g, &game::gamePlay::GameInstance::boardUpdateNeeded, this, &gameMainWidget::onBoardUpdateNeeded);
+}
+
+// ─── Signal Handlers ──────────────────────────────────────────────────────────
+
+void gameMainWidget::onTurnStarted(game::player::Player* player) {
+    Q_UNUSED(player);
+    update();
+}
+
+void gameMainWidget::onGameEnded(game::player::Player* winner) {
+    QMessageBox::information(this, "Game Over", QString::fromStdString(winner->getNickname()) + " Won!!");
+    QApplication::quit();
+}
+
+void gameMainWidget::onDiceRolled(game::player::Player* player, int dice1, int dice2) {
+    Q_UNUSED(dice1);
+    Q_UNUSED(dice2);
+    isPrisonDiceMode = false;
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (player->isComputer()) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(2, 17);
+        int sum = distr(gen);
+        QMessageBox::information(this, "Computer Roll Dice",
+            QString::fromStdString(player->getNickname()) + " rolled dice and moves to another tile.");
+        g.provideInput(sum);
+    } else {
+        ui->rollDiceButton->setDisabled(false);
     }
-    if (notBankruptPlayer == 1) {
-        QMessageBox::information(this, "Win", QString::fromStdString(winner->getNickname()) + " Won!!");
-        QApplication::quit();
+}
+
+void gameMainWidget::onPlayerMoved(game::player::Player* player, int fromPos, int toPos) {
+    Q_UNUSED(player);
+    Q_UNUSED(fromPos);
+    Q_UNUSED(toPos);
+    update();
+}
+
+void gameMainWidget::onPlayerPassedGo(game::player::Player* player, game::cashType reward) {
+    QMessageBox::information(this, "Home Reward",
+        QString::fromStdString(player->getNickname() + " received $" + std::to_string(reward) + " for passing the start tile."));
+}
+
+void gameMainWidget::onBuyDecisionNeeded(game::player::Player* player, game::gamePlay::Buildable* tile, game::cashType cost) {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (player->isComputer()) {
+        QMessageBox::information(this, "Computer Buy",
+            QString::fromStdString(player->getNickname()) + " chose to buy this tile.");
+        g.provideInput(true);
+    } else {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Buy Property",
+            QString::fromStdString("Do you want to buy tile #" + std::to_string(g.findTile(tile)) + " for $" + std::to_string(cost)),
+            QMessageBox::Ok | QMessageBox::Cancel);
+        g.provideInput(reply == QMessageBox::Ok);
     }
-    if (e != game::gamePlay::GameInstance::eventType::None)
-        update();
-    switch (e) {
-    case game::gamePlay::GameInstance::eventType::None:
-        break;
-    case game::gamePlay::GameInstance::eventType::Update: {
-        update();
-        g.notifyUserInput(std::monostate());
-        break;
+}
+
+void gameMainWidget::onAuctionNeeded(game::gamePlay::Buildable* tile, game::cashType reservePrice, game::cashType bidIncrement) {
+    static auctionWidget *m_auctionWidget = new auctionWidget(this);
+    if (!m_auctionWidget->isVisible()) {
+        auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
+        f &= ~Qt::WindowCloseButtonHint;
+        m_auctionWidget->setWindowFlags(f);
+        m_auctionWidget->show();
+        m_auctionWidget->initialize(tile, reservePrice, bidIncrement);
     }
-    case game::gamePlay::GameInstance::eventType::Dice: {
-        if (g.getCurrentPlayer()->isComputer()) {
-            std::random_device rd; // obtain a random number from hardware
-            std::mt19937 gen(rd()); // seed the generator
-            std::uniform_int_distribution<> distr(2, 17); // define the range
-            QMessageBox::information(this, "Computer Roll Dice", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " rolled dice and move to another tile");
-            g.notifyUserInput(distr(gen));
-        }
-        else 
-            ui->rollDiceButton->setDisabled(false);
-        break;
+}
+
+void gameMainWidget::onBuildDecisionNeeded(game::player::Player* player, game::gamePlay::Buildable* tile, game::cashType houseCost, int maxLevels) {
+    Q_UNUSED(houseCost);
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (player->isComputer()) {
+        game::gamePlay::Buildable::buildStatus current = tile->getStatus();
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        int build = std::uniform_int_distribution<>(static_cast<int>(current), maxLevels)(gen);
+        QMessageBox::information(this, "Computer Building",
+            QString::fromStdString(player->getNickname()) + " decided to build " + QString::number(build) + " more level(s).");
+        g.provideInput(static_cast<game::gamePlay::Buildable::buildStatus>(build));
+    } else {
+        int level = QInputDialog::getInt(this, "Build House",
+            QString::fromStdString("How many levels to build on tile #" + std::to_string(g.findTile(tile)) + "?"),
+            0, 0, maxLevels);
+        g.provideInput(static_cast<game::gamePlay::Buildable::buildStatus>(level + tile->getStatus()));
     }
-    case game::gamePlay::GameInstance::eventType::Prisoned: {
-        QMessageBox::information(this, "Prisoned", QString::fromStdString(g.getCurrentPlayer()->getNickname() + " was prisoned."));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::PrisonPayOut: {
-        //QMessageBox::information(this, "Prison Payout", "You can pay to get out but we didn't implement this feature.");
-        g.notifyUserInput(false);
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::PrisonDice: {
-        if (g.getCurrentPlayer()->isComputer()) {
-            std::random_device rd; // obtain a random number from hardware
-            std::mt19937 gen(rd()); // seed the generator
-            std::uniform_int_distribution<> distr(1, 6); // define the range
-            if (distr(gen) != 1) {
-                QMessageBox::information(this, "Computer Roll Dice In Prison", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " rolled three pairs of dices but failed to get out from prison.");
-                g.notifyUserInput(0);
-            } else {
-                QMessageBox::information(this, "Computer Roll Dice In Prison", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " rolled dices in prison and successfully be freed.");
-                g.notifyUserInput(distr(gen) * 2);
+}
+
+void gameMainWidget::onSellDecisionNeeded(game::player::Player* player, game::cashType amountNeeded) {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (player->isComputer()) {
+        auto ownTiles = g.findOwnTiles(player);
+        game::cashType cash = player->getCash();
+        game::cashType remaining = amountNeeded - cash;
+        std::vector<game::gamePlay::Buildable*> toSell;
+        for (const auto& tile : ownTiles) {
+            if (remaining <= 0) break;
+            auto buildable = static_cast<game::gamePlay::Buildable*>(tile);
+            if (buildable->getValue() <= remaining) {
+                toSell.push_back(buildable);
+                remaining -= buildable->getValue();
             }
         }
-        else
-            ui->rollDiceButton->setDisabled(false);
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::Buy: {
-        if (g.getCurrentPlayer()->isComputer()) {
-            QMessageBox::information(this, "Computer Buy", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " chose to buy this tile.");
-            g.notifyUserInput(true);
+        if (remaining > 0) {
+            QMessageBox::information(this, "Computer Sell Properties",
+                QString::fromStdString(player->getNickname()) + " couldn't afford the payment and went bankrupt.");
+            g.provideInput(std::vector<game::gamePlay::Buildable*>());
         } else {
-            game::gamePlay::GameInstance::buyRequest req = std::any_cast<game::gamePlay::GameInstance::buyRequest>(g.getActiveEventParam());
-            QMessageBox::StandardButton reply;
-            reply = QMessageBox::question(this, "Buy Property", QString::fromStdString("Do you want to buy tile #" + std::to_string(g.findTile(req.tile)) + " for $" + std::to_string(req.price)), QMessageBox::Ok | QMessageBox::Cancel);
-            if (reply == QMessageBox::Ok) {
-                g.notifyUserInput(true);
-            } else {
-                g.notifyUserInput(false);
-            }
+            QMessageBox::information(this, "Computer Sell Properties",
+                QString::fromStdString(player->getNickname()) + " sold properties to afford the payment.");
+            g.provideInput(toSell);
         }
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::RentPaid: {
-        game::gamePlay::GameInstance::rentRequest req = std::any_cast<game::gamePlay::GameInstance::rentRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Rent Paid", QString::fromStdString(g.getCurrentPlayer()->getNickname() + " paid $" + std::to_string(req.rent) + " on tile #" + std::to_string(g.findTile(req.tile)) + " to " + req.tile->getOwner()->getNickname()));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::Taxed: {
-        game::gamePlay::GameInstance::taxRequest req = std::any_cast<game::gamePlay::GameInstance::taxRequest>(g.getActiveEventParam());
-        QMessageBox::information(this, "Tax Paid", QString::fromStdString(g.getCurrentPlayer()->getNickname() + " paid $" + std::to_string(req.tax) + " for tax on tile #" + std::to_string(g.findTile(req.tile))));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::HomeReward: {
-        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
-        QMessageBox::information(this, "Home Reward", QString::fromStdString(g.getCurrentPlayer()->getNickname() + " received $" + std::to_string(req) + " for passing the start tile"));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::Auction: {
-        static auctionWidget *m_auctionWidget = new auctionWidget(this);
-        if (!m_auctionWidget) {
-            qDebug() << "Creating new auction widget..";
-            m_auctionWidget = new auctionWidget(this);
-        }
-        if (!m_auctionWidget->isVisible()) {
+    } else {
+        static sellWidget *m_sellWidget = new sellWidget(this);
+        if (!m_sellWidget->isVisible()) {
             auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
             f &= ~Qt::WindowCloseButtonHint;
-            m_auctionWidget->setWindowFlags(f);
-            m_auctionWidget->show();
-            m_auctionWidget->initialize();
+            m_sellWidget->setWindowFlags(f);
+            m_sellWidget->show();
+            m_sellWidget->initialize(amountNeeded);
         }
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::Build: {
-        if (g.getCurrentPlayer()->isComputer()) {
-            game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
-            game::gamePlay::Buildable::buildStatus current = tile->getStatus();
-            int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            int build = std::uniform_int_distribution<>(current, max)(gen);
-            QMessageBox::information(this, "Computer Building", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " decided to build a more " + QString::fromStdString(std::to_string(build)) + " level house/hotel here");
-            g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(build));
-        }
-        else {
-            game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
-            game::gamePlay::Buildable::buildStatus current = tile->getStatus();
-            int max = std::min(static_cast<long long>(game::gamePlay::Buildable::buildStatus::hotel - current), g.getCurrentPlayer()->getCash() / tile->getHouseCost());
-            if (max) 
-                g.notifyUserInput(static_cast<game::gamePlay::Buildable::buildStatus>(QInputDialog::getInt(this, "Build House", QString::fromStdString("How many houses do you want to build on tile #" + std::to_string(g.findTile(tile)) + "?"), 0, 0, max)));
-            else {
-                QMessageBox::information(this, "Build Fail", "You do not have enough money to build houses or hotel"); // Who wrote this? If no enough money this event won't be called
-            }
-        }
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::RandomDestruction: {
-        game::gamePlay::Buildable* tile = std::any_cast<game::gamePlay::Buildable*>(g.getActiveEventParam());
-        QMessageBox::information(this, "Random Destruction", QString::fromStdString(g.getCurrentPlayer()->getNickname() + "'s tile #" + std::to_string(g.findTile(tile)) + " was destroyed... sad :("));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::RandomEarn: {
-        game::cashType req = std::any_cast<game::cashType>(g.getActiveEventParam());
-        QMessageBox::information(this, "Random Earn", QString::fromStdString(g.getCurrentPlayer()->getNickname() + " earned $" + std::to_string(req) + " in random event! Congrats!"));
-        g.notifyUserInput(std::monostate());
-        break;
-    }
-    case game::gamePlay::GameInstance::eventType::Sell: {
-        if (g.getCurrentPlayer()->isComputer()) {
-            auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
-            game::cashType cash = g.getCurrentPlayer()->getCash();
-            game::cashType rent = std::any_cast<game::cashType>(g.getActiveEventParam());
-            game::cashType remaining = rent - cash;
-            std::vector<game::gamePlay::Buildable*> toSell;
-            for (const auto& tile : ownTiles) {
-                if (remaining <= 0) 
-                    break;
-                auto buildable = static_cast<game::gamePlay::Buildable*>(tile);
-                if (buildable->getValue() <= remaining) {
-                    toSell.push_back(buildable);
-                    remaining -= buildable->getValue();
-                }
-            }
-            if (remaining > 0) {
-                QMessageBox::information(this, "Computer Sell Properties", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " sold their properties to afford the payment.");
-                g.notifyUserInput(std::vector<game::gamePlay::Buildable*>());
-            }
-            else {
-                QMessageBox::information(this, "Computer Sell Properties Failed", QString::fromStdString(g.getCurrentPlayer()->getNickname()) + " tried to sell their properties to afford the payment but failed.");
-                g.notifyUserInput(toSell);
-            }
-        }
-        else {
-            auto ownTiles = g.findOwnTiles(g.getCurrentPlayer());
-            static sellWidget *m_sellWidget = new sellWidget(this);
-            if (!m_sellWidget) {
-                qDebug() << "Creating new sell widget..";
-                m_sellWidget = new sellWidget(this);
-            }
-            if (!m_sellWidget->isVisible()) {
-                auto f = Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint;
-                f &= ~Qt::WindowCloseButtonHint;
-                m_sellWidget->setWindowFlags(f);
-                m_sellWidget->show();
-                m_sellWidget->initialize();
-            }
-        }
-        break;
-    }
     }
 }
 
-void gameMainWidget::initializeGameInstance() {
+void gameMainWidget::onRentPaid(game::player::Player* payer, game::player::Player* owner, game::gamePlay::Buildable* tile, game::cashType amount) {
     auto& g = game::gamePlay::GameInstance::getInstance();
-    g.callbackPlayerUpdate = [this](game::player::Player* p) {
-        if (p->getPosition() == 0) {
-            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
-        }
-        else if (p->getPosition() == 1) {
-            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
-        }
-        else if (p->getPosition() == 2) {
-            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
-        }
-        else if (p->getPosition() == 3) {
-            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(p->getCash())));
-        }
-        update();
-    };
-    g.callbackDice = [this](game::player::Player* p, int d1, int d2) {
-        QMessageBox::information(this, "Dice Roll", QString::fromStdString(p->getNickname() + " rolled " + std::to_string(d1) + " and " + std::to_string(d2)));
-    };
+    QMessageBox::information(this, "Rent Paid",
+        QString::fromStdString(payer->getNickname() + " paid $" + std::to_string(amount) +
+            " on tile #" + std::to_string(g.findTile(tile)) + " to " + owner->getNickname()));
 }
 
-void gameMainWidget::resizeEvent(QResizeEvent* event)
-{
+void gameMainWidget::onTaxPaid(game::player::Player* player, game::gamePlay::Tax* tile, game::cashType amount) {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    QMessageBox::information(this, "Tax Paid",
+        QString::fromStdString(player->getNickname() + " paid $" + std::to_string(amount) +
+            " for tax on tile #" + std::to_string(g.findTile(tile))));
+}
+
+void gameMainWidget::onHomeRewardCollected(game::player::Player* player, game::cashType amount) {
+    QMessageBox::information(this, "Home Reward",
+        QString::fromStdString(player->getNickname() + " received $" + std::to_string(amount) + " for passing the start tile."));
+}
+
+void gameMainWidget::onPlayerPrisoned(game::player::Player* player, game::gamePlay::Prison* tile) {
+    Q_UNUSED(tile);
+    QMessageBox::information(this, "Prisoned",
+        QString::fromStdString(player->getNickname() + " was sent to prison."));
+}
+
+void gameMainWidget::onPrisonDiceNeeded(game::player::Player* player) {
+    isPrisonDiceMode = true;
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (player->isComputer()) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(1, 6);
+        std::uniform_int_distribution<> distr2(1, 6);
+        if (distr(gen) == distr2(gen)) {
+            int value = distr(gen) * 2;
+            QMessageBox::information(this, "Computer Roll Dice In Prison",
+                QString::fromStdString(player->getNickname()) + " rolled doubles and escaped prison!");
+            g.provideInput(value);
+        } else {
+            QMessageBox::information(this, "Computer Roll Dice In Prison",
+                QString::fromStdString(player->getNickname()) + " failed to roll doubles.");
+            g.provideInput(0);
+        }
+    } else {
+        ui->rollDiceButton->setDisabled(false);
+    }
+}
+
+void gameMainWidget::onPrisonPayOutNeeded(game::player::Player* player, game::cashType cost) {
+    Q_UNUSED(cost);
+    // UI doesn't support prison payout — always decline
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    g.provideInput(false);
+}
+
+void gameMainWidget::onRandomEventTriggered(game::gamePlay::Tile* tile, const QString& description) {
+    Q_UNUSED(tile);
+    QMessageBox::information(this, "Random Event", description);
+}
+
+void gameMainWidget::onPlayerUpdated(game::player::Player* player) {
+    Q_UNUSED(player);
+    updatePlayerInfo();
+    update();
+}
+
+void gameMainWidget::onPlayerBankrupted(game::player::Player* player) {
+    QMessageBox::information(this, "Bankrupt",
+        QString::fromStdString(player->getNickname() + " went bankrupt!"));
+    update();
+}
+
+void gameMainWidget::onPropertyChanged(game::gamePlay::Buildable* tile) {
+    Q_UNUSED(tile);
+    update();
+}
+
+void gameMainWidget::onBoardUpdateNeeded() {
+    update();
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    g.provideInput(std::monostate());
+}
+
+// ─── Dice Rolling ─────────────────────────────────────────────────────────────
+
+void gameMainWidget::on_rollDiceButton_clicked() {
+    auto& g = game::gamePlay::GameInstance::getInstance();
+
+    if (ui->rollDiceButton->text() == "Roll dice") {
+        // First roll: two dice
+        int d1, d2;
+        rollDice(d1, d2);
+        if (d1 != d2) {
+            // Not doubles
+            if (isPrisonDiceMode) {
+                // Prison mode: non-doubles = fail
+                g.provideInput(0);
+            } else {
+                // Normal mode: sum of dice
+                g.provideInput(d1 + d2);
+            }
+            ui->rollDiceButton->setDisabled(true);
+            ui->rollDiceButton->setText("Roll dice");
+        } else {
+            // Doubles
+            if (isPrisonDiceMode) {
+                // Prison mode: doubles = success!
+                g.provideInput(d1 + d2);
+                ui->rollDiceButton->setDisabled(true);
+                ui->rollDiceButton->setText("Roll dice");
+            } else {
+                // Normal mode: doubles → roll 3rd die
+                firstDiceNumber = d1;
+                ui->rollDiceButton->setText("Roll dice again");
+            }
+        }
+    } else {
+        // Second roll: 3rd die
+        int d3 = rand() % 6 + 1;
+        QStringList numberList = {"1", "2", "3", "4", "5", "6"};
+        QString gifPath3 = ":/resources/dice/dice" + numberList[d3 - 1] + ".gif";
+        QMovie* movie3 = new QMovie(gifPath3);
+        ui->diceLabel_1->setMovie(movie3);
+        movie3->start();
+
+        if (firstDiceNumber == d3) {
+            // Three same dice → prison!
+            g.provideInput(-3 * d3);
+        } else {
+            g.provideInput(2 * firstDiceNumber + d3);
+        }
+        ui->rollDiceButton->setDisabled(true);
+        ui->rollDiceButton->setText("Roll dice");
+        firstDiceNumber = 0;
+    }
+}
+
+void gameMainWidget::rollDice(int& d1, int& d2) {
+    d1 = rand() % 6 + 1;
+    d2 = rand() % 6 + 1;
+    loadDice(d1, d2);
+}
+
+void gameMainWidget::loadDice(int d1, int d2) {
+    QString gifPath1 = ":/resources/dice/dice" + QString::number(d1) + ".gif";
+    QString gifPath2 = ":/resources/dice/dice" + QString::number(d2) + ".gif";
+    QMovie* movie1 = new QMovie(gifPath1);
+    QMovie* movie2 = new QMovie(gifPath2);
+    ui->diceLabel_1->setMovie(movie1);
+    ui->diceLabel_2->setMovie(movie2);
+    movie1->start();
+    movie2->start();
+}
+
+void gameMainWidget::rollDiceBackdoor(int d1, int d2) {
+    loadDice(d1, d2);
+}
+
+// ─── Board Rendering ──────────────────────────────────────────────────────────
+
+void gameMainWidget::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     QSize newSize = event->size();
-    // 更新 QGraphicsView 的大小以填充窗口
     ui->mapView->setGeometry(0, 0, newSize.width(), newSize.height());
     ui->mainLayout->setGeometry(this->rect());
-    //update();
 }
 
 void gameMainWidget::update() {
-    scene->clear(); // Clear old items
+    scene->clear();
     paintMap();
     updatePlayerInfo();
-    switch (game::gamePlay::GameInstance::getInstance().findPlayerIndex(game::gamePlay::GameInstance::getInstance().getCurrentPlayer())) {
+
+    auto& g = game::gamePlay::GameInstance::getInstance();
+    switch (g.findPlayerIndex(g.getCurrentPlayer())) {
     case 0:
         ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::red);
         ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
@@ -333,7 +425,6 @@ void gameMainWidget::update() {
         ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::green);
         break;
     }
-    qDebug() << "Updated";
 }
 
 void gameMainWidget::updatePlayerInfo() {
@@ -343,12 +434,10 @@ void gameMainWidget::updatePlayerInfo() {
     for (const auto& it : playerList) {
         if (typeid(*it) == typeid(game::player::ComputerPlayer)) {
             it->setNickname("Computer " + std::to_string(++computers));
-        }
-        else {
+        } else {
             it->setNickname("Player" + std::to_string(++players));
         }
 
-        // Create a grayscale effect
         QGraphicsColorizeEffect* grayscaleEffect = new QGraphicsColorizeEffect();
         grayscaleEffect->setColor(Qt::gray);
         grayscaleEffect->setStrength(1.0);
@@ -358,51 +447,43 @@ void gameMainWidget::updatePlayerInfo() {
             ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_1_2->hide();
-            ui->playerInfo_1_3->setText(QString::fromStdString("Color: " "Red"));
-            if (isBankrupt) {
+            ui->playerInfo_1_3->setText(QString("Color: Red"));
+            if (isBankrupt)
                 ui->playerAvatarGraphics_1->setGraphicsEffect(grayscaleEffect);
-            } else {
+            else
                 ui->playerAvatarGraphics_1->setGraphicsEffect(nullptr);
-            }
-        }
-        else if (computers + players == 2) {
+        } else if (computers + players == 2) {
             ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_2_2->hide();
-            ui->playerInfo_2_3->setText(QString::fromStdString("Color: " "Yellow"));
-            if (isBankrupt) {
+            ui->playerInfo_2_3->setText(QString("Color: Yellow"));
+            if (isBankrupt)
                 ui->playerAvatarGraphics_2->setGraphicsEffect(grayscaleEffect);
-            } else {
+            else
                 ui->playerAvatarGraphics_2->setGraphicsEffect(nullptr);
-            }
-        }
-        else if (computers + players == 3) {
+        } else if (computers + players == 3) {
             ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_3_2->hide();
-            ui->playerInfo_3_3->setText(QString::fromStdString("Color: " "Blue"));
-            if (isBankrupt) {
+            ui->playerInfo_3_3->setText(QString("Color: Blue"));
+            if (isBankrupt)
                 ui->playerAvatarGraphics_3->setGraphicsEffect(grayscaleEffect);
-            } else {
+            else
                 ui->playerAvatarGraphics_3->setGraphicsEffect(nullptr);
-            }
-        }
-        else if (computers + players == 4) {
+        } else if (computers + players == 4) {
             ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
             ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
             ui->playerInfo_4_2->hide();
-            ui->playerInfo_4_3->setText(QString::fromStdString("Color: " "Green"));
-            if (isBankrupt) {
+            ui->playerInfo_4_3->setText(QString("Color: Green"));
+            if (isBankrupt)
                 ui->playerAvatarGraphics_4->setGraphicsEffect(grayscaleEffect);
-            } else {
+            else
                 ui->playerAvatarGraphics_4->setGraphicsEffect(nullptr);
-            }
         }
     }
 }
 
-QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
-{
+QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile) {
     QPixmap tileImage;
     if (tile->getType() == game::gamePlay::Tile::TileType::buildable) {
         const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
@@ -413,53 +494,38 @@ QPixmap gameMainWidget::getTileImage(game::gamePlay::Tile* tile)
     } else if (tile->getType() == game::gamePlay::Tile::TileType::random) {
         tileImage = QPixmap(":/resources/tile/casino.png");
     } else if (tile->getType() == game::gamePlay::Tile::TileType::tax) {
-        tileImage = QPixmap(":/resources/tile/ccf.png"); // Cash Collecting Federation
+        tileImage = QPixmap(":/resources/tile/ccf.png");
     } else if (tile->getType() == game::gamePlay::Tile::TileType::prison) {
         tileImage = QPixmap(":/resources/tile/prison.png");
     }
-    if (tileImage.isNull()) {
-        qDebug() << "Failed to load image";
-    }
     return tileImage;
 }
 
-QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile)
-{
-    QPixmap tileImage;
+QPixmap gameMainWidget::getHouseImage(game::gamePlay::Tile* tile) {
     const game::gamePlay::Buildable* buildableTile = static_cast<const game::gamePlay::Buildable*>(tile);
-    tileImage = QPixmap(QString(":/resources/houses/p%1house%2.png").arg(game::gamePlay::GameInstance::getInstance().findPlayerIndex(buildableTile->getOwner()) + 1).arg(buildableTile->getStatus()));
-    if (tileImage.isNull()) {
-        qDebug() << "Failed to load image";
-    }
+    QPixmap tileImage = QPixmap(QString(":/resources/houses/p%1house%2.png")
+        .arg(game::gamePlay::GameInstance::getInstance().findPlayerIndex(buildableTile->getOwner()) + 1)
+        .arg(buildableTile->getStatus()));
     return tileImage;
 }
 
-QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p)
-{
-    QPixmap img;
+QPixmap gameMainWidget::getPlayerIndicator(game::player::Player* p) {
     std::string imgs[] = {":/resources/symbol/1P.png", ":/resources/symbol/2P.png", ":/resources/symbol/3P.png", ":/resources/symbol/4P.png"};
-    img = QPixmap(QString::fromStdString(imgs[game::gamePlay::GameInstance::getInstance().findPlayerIndex(p)]));
-    if (img.isNull()) {
-        qDebug() << "Failed to load image";
-    }
-    return img;
+    return QPixmap(QString::fromStdString(imgs[game::gamePlay::GameInstance::getInstance().findPlayerIndex(p)]));
 }
 
 void gameMainWidget::paintTile(int x, int y, int index, int depth, game::gamePlay::Tile* tile) {
     auto tileImage = getTileImage(tile);
-    
-    int offsetX = (- tileImage.width()) / 2;
-    int offsetY = (- tileImage.height()) / 2;
 
-    bool paintTileIndex = true;
+    int offsetX = (-tileImage.width()) / 2;
+    int offsetY = (-tileImage.height()) / 2;
 
     auto pixmapItem = scene->addPixmap(tileImage);
     pixmapItem->setPos(x + offsetX, y + offsetY);
     pixmapItem->setZValue(depth);
-    if (paintTileIndex) 
-        scene->addText(QString::number(index))->setPos(x, y);
+    scene->addText(QString::number(index))->setPos(x, y);
 
-    if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->isOwned()) 
+    if (tile->getType() == game::gamePlay::Tile::TileType::buildable && static_cast<game::gamePlay::Buildable*>(tile)->isOwned())
         paintHouse(x, y, depth, getHouseImage(tile));
 
     int i = 0;
@@ -476,8 +542,8 @@ void gameMainWidget::paintTile(int x, int y, int index, int depth, game::gamePla
 }
 
 void gameMainWidget::paintHouse(int x, int y, int depth, QPixmap tileImage) {
-    int offsetX = (- tileImage.width()) / 2;
-    int offsetY = (- tileImage.height()) / 2;
+    int offsetX = (-tileImage.width()) / 2;
+    int offsetY = (-tileImage.height()) / 2;
 
     auto pixmapItem = scene->addPixmap(tileImage);
     pixmapItem->setPos(x + offsetX, y + offsetY);
@@ -485,32 +551,23 @@ void gameMainWidget::paintHouse(int x, int y, int depth, QPixmap tileImage) {
 }
 
 void gameMainWidget::paintMap() {
-    
     int spacing = 5;
     int horizontalSpacing = 64 + spacing * 2;
     int verticalSpacing = 32 + spacing;
 
-    // Retrieve tiles from GameInstance
     const std::vector<game::gamePlay::Tile*>& tiles = game::gamePlay::GameInstance::getInstance().getTiles();
 
-    // Define colors for the tiles
-    //QColor colors[] = { Qt::red, Qt::green, Qt::blue, Qt::yellow };
-
-    // Calculate the number of rows and columns to form a diamond shape
     int numTiles = tiles.size();
     int numCols = static_cast<int>(std::ceil(numTiles / 4.0f)) + 1;
     int numRows = static_cast<int>(std::ceil(numTiles / 2.0f)) - numCols + 2;
 
     int index = 0;
-
     int depth = 0;
-
-    //scene->addRect(- tileW / 2.0f, - tileH / 2.0f, tileW, tileH, QPen(Qt::black), QBrush(Qt::blue));
 
     // Left column (bottom to top)
     for (int row = numRows - 1; row >= 0 && index < numTiles; --row) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = horizontalSpacing * (- numRows + row + 1);
+        int x = horizontalSpacing * (-numRows + row + 1);
         int y = row * verticalSpacing;
         paintTile(x, y, index++, depth--, tile);
     }
@@ -518,8 +575,8 @@ void gameMainWidget::paintMap() {
     // Top row (left to right)
     for (int col = 1; col < numCols && index < numTiles; ++col) {
         game::gamePlay::Tile* tile = tiles[index];
-        int x = horizontalSpacing * (- numRows + col + 1);
-        int y = - col * verticalSpacing;
+        int x = horizontalSpacing * (-numRows + col + 1);
+        int y = -col * verticalSpacing;
         paintTile(x, y, index++, depth--, tile);
     }
 
@@ -529,7 +586,7 @@ void gameMainWidget::paintMap() {
     for (int row = 1; row < numRows && index < numTiles; ++row) {
         game::gamePlay::Tile* tile = tiles[index];
         int x = horizontalSpacing * row;
-        int y = (- numRows + row + 1) * verticalSpacing;
+        int y = (-numRows + row + 1) * verticalSpacing;
         paintTile(x, y, index++, depth++, tile);
     }
 
@@ -574,79 +631,4 @@ int gameMainWidget::loadImage() {
         }
     }
     return i;
-}
-int firstDiceNumber;
-void gameMainWidget::on_rollDiceButton_clicked()
-{
-    auto& g = game::gamePlay::GameInstance::getInstance();
-    auto e = g.getActiveEvent();
-
-    QStringList numberList = { "1", "2", "3", "4", "5", "6" };
-    srand(time(nullptr));
-
-    if(e == game::gamePlay::GameInstance::eventType::Dice) {
-        int d1, d2, d3;
-        if (ui->rollDiceButton->text() == "Roll dice") {
-            rollDice(d1, d2);
-            if (d1 != d2) {
-                g.notifyUserInput(d1 + d2);
-                ui->rollDiceButton->setDisabled(true);
-            } else {
-                firstDiceNumber = d1;
-                ui->rollDiceButton->setText("Roll dice again");
-            }
-        }
-        else {
-            d3 = rand() % 6 + 1;
-            QString gifPath3 = ":/resources/dice/dice" + numberList[d3 - 1] + ".gif";
-            QMovie* movie3 = new QMovie(gifPath3);
-            ui->diceLabel_1->setMovie(movie3);
-            movie3->start();
-            if (firstDiceNumber == d3) {
-                g.notifyUserInput(-3 * d3);
-                ui->rollDiceButton->setDisabled(true);
-                ui->rollDiceButton->setText("Roll dice");
-                firstDiceNumber = 0;
-            } else {
-                g.notifyUserInput(2 * firstDiceNumber + d3);
-                ui->rollDiceButton->setDisabled(true);
-                ui->rollDiceButton->setText("Roll dice");
-                firstDiceNumber = 0;
-            }
-        }
-    }
-    else {
-        int d1, d2;
-        rollDice(d1, d2);
-        if (d1 != d2) {
-            g.notifyUserInput(0);
-        } else {
-            g.notifyUserInput(d1 + d2);
-        }
-    }
-}
-
-void gameMainWidget::rollDice(int& d1, int& d2) {
-    srand(time(nullptr));
-    d1 = rand() % 6 + 1;
-    d2 = rand() % 6 + 1;
-    QString gifPath1 = ":/resources/dice/dice" + QString::number(d1) + ".gif";
-    QString gifPath2 = ":/resources/dice/dice" + QString::number(d2) + ".gif";
-    QMovie* movie1 = new QMovie(gifPath1);
-    QMovie* movie2 = new QMovie(gifPath2);
-    ui->diceLabel_1->setMovie(movie1);
-    ui->diceLabel_2->setMovie(movie2);
-    movie1->start();
-    movie2->start();
-}
-
-void gameMainWidget::rollDiceBackdoor(int d1, int d2) {
-    QString gifPath1 = ":/resources/dice/dice" + QString::number(d1) + ".gif";
-    QString gifPath2 = ":/resources/dice/dice" + QString::number(d2) + ".gif";
-    QMovie* movie1 = new QMovie(gifPath1);
-    QMovie* movie2 = new QMovie(gifPath2);
-    ui->diceLabel_1->setMovie(movie1);
-    ui->diceLabel_2->setMovie(movie2);
-    movie1->start();
-    movie2->start();
 }

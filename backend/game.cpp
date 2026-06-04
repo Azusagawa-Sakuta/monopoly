@@ -3,920 +3,766 @@
 #include "constant.h"
 #include <random>
 #include <algorithm>
+#include <QString>
 
 using namespace game;
 using namespace player;
 using namespace gamePlay;
 
-/**
- * @brief Player constructor
- * @param initialCash Initial cash amount for the player
- * @return None
- */
+// ─── Player ───────────────────────────────────────────────────────────────────
+
 Player::Player(cashType initialCash) : cash(initialCash), position(0), prisonTime(0), bankrupted(false) {}
 
-/**
- * @brief Player destructor
- * @param None
- * @return None
- */
 Player::~Player() {}
 
-/**
- * @brief Get player's current cash amount
- * @param None
- * @return Current cash amount
- */
-cashType Player::getCash() {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return cash;
-}
+cashType Player::getCash() { return cash; }
 
-/**
- * @brief Set player's cash amount
- * @param newCash New cash amount to set
- * @return None
- */
-void Player::setCash(cashType newCash) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    cash = newCash;
-}
+void Player::setCash(cashType newCash) { cash = newCash; }
 
-/**
- * @brief Add cash to player's current amount
- * @param delta Amount to add (can be negative)
- * @return New total cash amount
- */
 cashType Player::addCash(cashType delta) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     cash += delta;
     return cash;
 }
 
-/**
- * @brief Get player's current position
- * @param None
- * @return Current position on board
- */
-int Player::getPosition() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return position;
-}
+int Player::getPosition() const { return position; }
 
-/**
- * @brief Set player's position
- * @param pos New position to set
- * @return None
- */
-void Player::setPosition(int pos) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    position = pos;
-}
+void Player::setPosition(int pos) { position = pos; }
 
-/**
- * @brief Get player's prison time
- * @param None
- * @return Current prison time
- */
-int Player::getPrisonTime() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return prisonTime;
-}
+int Player::getPrisonTime() const { return prisonTime; }
 
-/**
- * @brief Set player's prison time
- * @param time New prison time to set
- * @return None
- */
-void Player::setPrisonTime(int time) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    prisonTime = time;
-}
+void Player::setPrisonTime(int time) { prisonTime = time; }
 
-/**
- * @brief Get player's nickname
- * @param None
- * @return Player's nickname
- */
-std::string Player::getNickname() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return nickname;
-}
+std::string Player::getNickname() const { return nickname; }
 
-/**
- * @brief Set player's nickname
- * @param newNickname New nickname to set
- * @return None
- */
-void Player::setNickname(const std::string& newNickname) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    nickname = newNickname;
-}
+void Player::setNickname(const std::string& newNickname) { nickname = newNickname; }
 
-/**
- * @brief Get player's profile photo path
- * @param None
- * @return Player's imagePath
- */
-std::string Player::getImagePath() const {
-    std::shared_lock<std::shared_mutex> lock(mtx);
-    return imagePath;
-}
+std::string Player::getImagePath() const { return imagePath; }
 
-/**
- * @brief Set player's profile photo path
- * @param newImagePath New path to set
- * @return None
- */
-void Player::setImagePath(const std::string& newImagePath) {
-    std::unique_lock<std::shared_mutex> lock(mtx);
-    imagePath = newImagePath;
-}
+void Player::setImagePath(const std::string& newImagePath) { imagePath = newImagePath; }
 
-/**
- * @brief Check if player is bankrupted
- * @param None
- * @return True if bankrupted, false otherwise
- */
-bool Player::isBankrupted() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return bankrupted;
-}
+bool Player::isBankrupted() const { return bankrupted; }
 
-/**
- * @brief Set player's bankrupted status
- * @param newBankrupted New status to set
- * @return None
- */
-void Player::setBankrupted(bool newBankrupted) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    bankrupted = newBankrupted;
-}
+void Player::setBankrupted(bool newBankrupted) { bankrupted = newBankrupted; }
 
-/**
- * @brief Check if player is computer
- * @param None
- * @return False for human player, true for computer player
- */
-bool Player::isComputer() const {
-    return false;
-}
+bool Player::isComputer() const { return false; }
 
-/**
- * @brief ComputerPlayer constructor
- * @param initialCash Initial cash amount for computer player
- * @return None
- */
+// ─── ComputerPlayer ───────────────────────────────────────────────────────────
+
 ComputerPlayer::ComputerPlayer(cashType initialCash) : Player(initialCash) {}
 
-/**
- * @brief ComputerPlayer destructor
- * @param None
- * @return None
- */
 ComputerPlayer::~ComputerPlayer() {}
 
-/**
- * @brief Check if player is computer
- * @param None
- * @return True for computer player, false otherwise
- */
-bool ComputerPlayer::isComputer() const {
-    return true;
-}
+bool ComputerPlayer::isComputer() const { return true; }
 
-/**
- * @brief Tile constructor
- * @param _type Type of tile
- * @return None
- */
+// ─── Tile ─────────────────────────────────────────────────────────────────────
+
 Tile::Tile(TileType _type) : type(_type) {}
 
-/**
- * @brief Tile destructor
- * @param None
- * @return None
- */
 Tile::~Tile() {}
 
-/**
- * @brief Get tile type
- * @param None
- * @return Type of tile
- */
-Tile::TileType Tile::getType() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return type;
-}
+Tile::TileType Tile::getType() const { return type; }
 
-/**
- * @brief Buildable constructor
- * @param _plotCost Cost of plot
- * @param _houseCost Cost of house
- * @param _basicRent Basic rent amount
- * @param _houseRent Array of rent amounts for different house levels
- * @return None
- */
+// ─── Buildable ────────────────────────────────────────────────────────────────
+
 Buildable::Buildable(cashType _plotCost, cashType _houseCost, cashType _basicRent, std::array<cashType, 6>& _houseRent)
     : Tile(buildable), plotCost(_plotCost), houseCost(_houseCost), basicRent(_basicRent), houseRent(_houseRent), owner(nullptr), status(empty) {
-        static int colorCounter = 0;
-        color = colorCounter++;
-        colorCounter %= 4;
-    }
+    static int colorCounter = 0;
+    color = colorCounter++;
+    colorCounter %= 4;
+}
 
-/**
- * @brief Buildable destructor
- * @param None
- * @return None
- */
 Buildable::~Buildable() {}
 
-/**
- * @brief Check if property is owned
- * @param None
- * @return True if owned, false otherwise
- */
-bool Buildable::isOwned() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return owner != nullptr;
-}
+bool Buildable::isOwned() const { return owner != nullptr; }
 
-/**
- * @brief Get property owner
- * @param None
- * @return Pointer to owner player
- */
-Player* Buildable::getOwner() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return owner;
-}
+Player* Buildable::getOwner() const { return owner; }
 
-/**
- * @brief Set property owner
- * @param newOwner Pointer to new owner player
- * @return None
- */
-void Buildable::setOwner(Player* newOwner) {
-    std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    owner = newOwner;
-}
+void Buildable::setOwner(Player* newOwner) { owner = newOwner; }
 
-/**
- * @brief Get plot cost
- * @param None
- * @return Cost of plot
- */
-cashType Buildable::getPlotCost() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return plotCost;
-}
+cashType Buildable::getPlotCost() const { return plotCost; }
 
-/**
- * @brief Get house cost
- * @param None
- * @return Cost of house
- */
-cashType Buildable::getHouseCost() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return houseCost;
-}
+cashType Buildable::getHouseCost() const { return houseCost; }
 
-/**
- * @brief Get current rent amount
- * @param None
- * @return Current rent amount based on development status
- */
 cashType Buildable::getRent() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
     cashType rent = basicRent;
     if (status)
         rent += houseRent[status - 1];
     return rent;
 }
 
-/**
- * @brief Get build status
- * @param None
- * @return Current build status
- */
-Buildable::buildStatus Buildable::getStatus() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return status;
-}
+Buildable::buildStatus Buildable::getStatus() const { return status; }
 
-/**
- * @brief Set build status
- * @param newStatus New build status to set
- * @return None
- */
-void Buildable::setStatus(buildStatus newStatus) {
-    std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    status = newStatus;
-}
+void Buildable::setStatus(buildStatus newStatus) { status = newStatus; }
 
-/**
- * @brief Get color
- * @param None
- * @return Color
- */
-int Buildable::getColor() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    return color;
-}
+int Buildable::getColor() const { return color; }
 
-/**
- * @brief Set color
- * @param newColor New color to set
- * @return None
- */
-void Buildable::setColor(int newColor) {
-    std::unique_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
-    color = newColor;
-}
+void Buildable::setColor(int newColor) { color = newColor; }
 
-/**
- * @brief Get property value
- * @param None
- * @return Property value
- */
 cashType Buildable::getValue() const {
-    std::shared_lock<std::shared_mutex> lock(mtxBuildable); // Lock for thread-safe access
     cashType value = plotCost;
     if (status)
         value += houseCost * status;
     return value;
 }
 
-/**
- * @brief Home constructor
- * @param None
- * @return None
- */
-Home::Home() : Tile(home) {}
+// ─── Home / Prison / Tax / Random ─────────────────────────────────────────────
 
-/**
- * @brief Home destructor
- * @param None
- * @return None
- */
+Home::Home() : Tile(home) {}
 Home::~Home() {}
 
-/**
- * @brief Prison constructor
- * @param None
- * @return None
- */
 Prison::Prison() : Tile(prison) {}
-
-/**
- * @brief Prison destructor
- * @param None
- * @return None
- */
 Prison::~Prison() {}
 
-/**
- * @brief Tax constructor
- * @param _rate Tax rate
- * @return None
- */
 Tax::Tax(double _rate) : Tile(tax), taxRate(_rate) {}
-
-/**
- * @brief Tax destructor
- * @param None
- * @return None
- */
 Tax::~Tax() {}
 
-/**
- * @brief Get tax rate
- * @param None
- * @return Current tax rate
- */
-double Tax::getTaxRate() const {
-    std::shared_lock<std::shared_mutex> lock(mtxTax); // Lock for thread-safe access
-    return taxRate;
-}
+double Tax::getTaxRate() const { return taxRate; }
 
-/**
- * @brief Set tax rate
- * @param newRate New tax rate to set
- * @return None
- */
-void Tax::setTaxRate(double newRate) {
-    std::unique_lock<std::shared_mutex> lock(mtxTax); // Lock for thread-safe access
-    taxRate = newRate; // Set the new tax rate
-}
+void Tax::setTaxRate(double newRate) { taxRate = newRate; }
 
-/**
- * @brief Random constructor
- * @param None
- * @return None
- */
 Random::Random() : Tile(random) {}
-
-/**
- * @brief Random destructor
- * @param None
- * @return None
- */
 Random::~Random() {}
 
-/**
- * @brief GameInstance constructor
- * @param None
- * @return None
- */
-GameInstance::GameInstance() : currentPlayerIndex(0), activeEvent(None) {
-    utils::Logger::getInstance(); // Initialize logger
+// ─── GameInstance ─────────────────────────────────────────────────────────────
+
+GameInstance::GameInstance()
+    : currentPlayerIndex(0), currentStep(GameStep::Idle),
+      savedPlayer(nullptr), savedTile(nullptr), savedAmount(0),
+      returnStep(GameStep::Idle) {
+    utils::Logger::getInstance();
 }
 
-/**
- * @brief GameInstance destructor
- * @param None
- * @return None
- */
 GameInstance::~GameInstance() {
-    for (auto& t : tiles) 
-        if (t != nullptr) 
-            delete t; // Delete all tiles
-    for (auto& p : players) 
-        if (p != nullptr) 
-            delete p; // Delete all players
+    for (auto& t : tiles)
+        if (t != nullptr)
+            delete t;
+    for (auto& p : players)
+        if (p != nullptr)
+            delete p;
 }
 
-/**
- * @brief Get active event
- * @param None
- * @return Active event type
- */
-GameInstance::eventType GameInstance::getActiveEvent() const {
-    return activeEvent;
-}
-
-/**
- * @brief Get active event parameter
- * @param None
- * @return Active event parameter
- */
-std::any GameInstance::getActiveEventParam() const {
-    return eventParam;
-}
-/**
- * @brief End current active event
- * @param None
- * @return None
- */
-void GameInstance::endEvent() {
-    activeEvent = None;
-}
-
-/**
- * @brief Notifies the game instance that user input is ready
- * @param User input value
- * @return None 
- */
-void GameInstance::notifyUserInput(const std::any result) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    userInputResult = result; // Set user input result
-    userInputReady = true; // Set user input ready flag
-    activeEvent = None; // Reset active eventa
-    utils::Logger::getInstance().log("notifyUserInput(): Notifying backend.");
-    cv.notify_one(); // Notify waiting thread
-}
-
-/**
- * @brief Called by the game instance to wait for user input
- * @param None
- * @return User input value
- */
-std::any GameInstance::waitForUserInput(eventType event, std::any param) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    activeEvent = event; // Set active event
-    eventParam = param; // Set event parameter
-    utils::Logger::getInstance().log("waitForUserInput(): Waiting for frontend response. Event type: " + std::to_string(static_cast<int>(event)));
-    cv.wait(lock, [this] {
-        utils::Logger::getInstance().log("waitForUserInput(): Checking predicate..."); // Log predicate check
-        return userInputReady;
-    }); // Wait for user input
-    utils::Logger::getInstance().log("waitForUserInput(): Continuing.");
-    userInputReady = false; // Reset user input ready flag
-    return userInputResult; // Return user input result
-}
-
-/**
- * @brief Get singleton instance
- * @param None
- * @return Reference to GameInstance singleton
- */
 GameInstance& GameInstance::getInstance() {
-    static GameInstance instance; // Singleton instance
+    static GameInstance instance;
     return instance;
 }
 
-/**
- * @brief Get tiles vector
- * @param None
- * @return Const reference to tiles vector
- */
-const std::vector<Tile*>& GameInstance::getTiles() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return tiles; // Return tiles vector
-}
+const std::vector<Tile*>& GameInstance::getTiles() const { return tiles; }
 
-/**
- * @brief Get players vector
- * @param None
- * @return Const reference to players vector
- */
-const std::vector<Player*>& GameInstance::getPlayers() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return players; // Return players vector
-}
+const std::vector<Player*>& GameInstance::getPlayers() const { return players; }
 
-/**
- * @brief Find player position in players vector
- * @param p Player pointer to find
- * @return Index of player or -1 if not found
- */
 int GameInstance::findPlayerIndex(Player* p) const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    auto it = std::find(players.begin(), players.end(), p); // Find player in vector
+    auto it = std::find(players.begin(), players.end(), p);
     if (it != players.end())
-        return it - players.begin(); // Return index if found
-    return -1; // Return -1 if not found
+        return it - players.begin();
+    return -1;
 }
 
-/**
- * @brief Find tiles owned by player
- * @param p Player pointer
- * @return Vector of tiles owned by player
- */
 const std::vector<Tile*> GameInstance::findOwnTiles(Player* p) const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
     std::vector<Tile*> ownTiles;
     std::copy_if(tiles.begin(), tiles.end(), std::back_inserter(ownTiles), [p](Tile* t) {
         if (t->getType() == Tile::buildable) {
-            return static_cast<Buildable*>(t)->getOwner() == p; // Check if tile is owned by player
+            return static_cast<Buildable*>(t)->getOwner() == p;
         }
         return false;
     });
-    return ownTiles; // Return vector of owned tiles
+    return ownTiles;
 }
 
-/**
- * @brief Find next tile of specified type
- * @param type Type of tile to find
- * @param pos Starting position
- * @return Position of next matching tile or -1 if not found
- */
 int GameInstance::findNextTile(Tile::TileType type, int pos) const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    auto it = tiles.begin() + pos; // Start from the given position
+    auto it = tiles.begin() + pos;
     for (size_t i = 0; i < tiles.size(); i++) {
         if (++it == tiles.end())
-            it = tiles.begin(); // Wrap around if at the end
+            it = tiles.begin();
         if ((*it)->getType() == type)
-            return it - tiles.begin(); // Return position if type matches
+            return it - tiles.begin();
     }
-    return -1; // Return -1 if not found
+    return -1;
 }
 
-/**
- * @brief Find position of specific tile
- * @param tile Tile pointer to find
- * @return Position of tile or -1 if not found
- */
 int GameInstance::findTile(Tile* tile) const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    auto it = std::find(tiles.begin(), tiles.end(), tile); // Find tile in vector
+    auto it = std::find(tiles.begin(), tiles.end(), tile);
     if (it != tiles.end())
-        return it - tiles.begin(); // Return position if found
-    return -1; // Return -1 if not found
+        return it - tiles.begin();
+    return -1;
 }
 
-/**
- * @brief Add tile to board
- * @param tile Tile pointer to add
- * @return None
- */
-void GameInstance::addTile(Tile* tile) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    tiles.push_back(tile); // Add tile to vector
-}
+void GameInstance::addTile(Tile* tile) { tiles.push_back(tile); }
 
-/**
- * @brief Add player to game
- * @param player Player pointer to add
- * @return None
- */
-void GameInstance::addPlayer(Player* player) {
-    std::unique_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    players.push_back(player); // Add player to vector
-}
+void GameInstance::addPlayer(Player* player) { players.push_back(player); }
 
-/**
- * @brief Get current player
- * @param None
- * @return Pointer to current player
- */
-Player* GameInstance::getCurrentPlayer() const {
-    std::shared_lock<std::shared_mutex> lock(mtx); // Lock for thread-safe access
-    return players[currentPlayerIndex]; // Return current player
-}
+Player* GameInstance::getCurrentPlayer() const { return players[currentPlayerIndex]; }
 
-/**
- * @brief Process game tick
- * @param None
- * @return None
- */
-void GameInstance::tick() {
-    utils::Logger::getInstance().log("tick(): Trying to acquire lock...");
+// ─── State Machine ────────────────────────────────────────────────────────────
+// Internal sub-step counter for loops (prison dice attempts)
+static int prisonAttempt;
 
-    Player* currentPlayer;
-    int currentPosition;
-    Tile::TileType currentTileType;
+void GameInstance::advance() {
+    utils::Logger::getInstance().log("advance(): step=" + std::to_string(static_cast<int>(currentStep)));
 
-    {
-        std::shared_lock<std::shared_mutex> lock(mtx); // Acquire shared lock for thread-safe access
-        currentPlayer = getCurrentPlayer(); // Get the current player
-        currentPosition = currentPlayer->getPosition(); // Get the current position of the player
-        currentTileType = tiles[currentPosition]->getType(); // Get the type of the current tile
+    switch (currentStep) {
+
+    // ── Idle: start a new turn ─────────────────────────────────────────
+    case GameStep::Idle: {
+        // Check win conditions
+        int notBankrupt = 0;
+        Player* winner = nullptr;
+        for (const auto& p : players) {
+            if (p->getCash() > 500000) {
+                emit gameEnded(p);
+                currentStep = GameStep::GameOver;
+                return;
+            }
+            if (!p->isBankrupted()) {
+                notBankrupt++;
+                winner = p;
+            }
+        }
+        if (notBankrupt == 1) {
+            emit gameEnded(winner);
+            currentStep = GameStep::GameOver;
+            return;
+        }
+
+        Player* cp = getCurrentPlayer();
+        emit turnStarted(cp);
+        emit boardUpdateNeeded();
+
+        // Check if current player is in prison
+        if (tiles[cp->getPosition()]->getType() == Tile::prison && cp->getPrisonTime() < 3) {
+            prisonAttempt = 0;
+            currentStep = GameStep::WaitingPrisonDice;
+            emit prisonDiceNeeded(cp);
+            return;
+        }
+
+        // Auto-release after 3 turns in prison
+        if (tiles[cp->getPosition()]->getType() == Tile::prison && cp->getPrisonTime() >= 3) {
+            cp->setPrisonTime(0);
+            utils::Logger::getInstance().log("advance(): Auto-released from prison after 3 turns.");
+        }
+
+        currentStep = GameStep::AnimatingDice;
+        emit diceRolled(cp, 0, 0);  // UI handles dice animation + provides sum
+        return;
     }
 
-    utils::Logger::getInstance().log("tick(): Lock released.");
-    utils::Logger::getInstance().log("tick(): Tick start. Player: " + std::to_string(currentPlayerIndex) + ", Position: " + std::to_string(currentPosition) + ".");
+    // ── WaitingPrisonDice: resume with dice result from UI ─────────────
+    // Handled entirely in provideInput()
 
-    if (currentTileType == Tile::TileType::prison) { // Check if the player is in prison
-        utils::Logger::getInstance().log("tick(): Player is in prison.");
+    // ── WaitingPrisonPayOut: resume with pay decision ──────────────────
+    // Handled entirely in provideInput()
 
-        if (currentPlayer->getPrisonTime() < 3) { // Check if the player has been in prison for less than 3 turns
-            for (int i = 0; i < 3; i++) {
-                utils::Logger::getInstance().log("tick(): Rolling dice for prison, try: " + std::to_string(i) + ".");
-                int ret = std::any_cast<int>(waitForUserInput(PrisonDice));
-                if (ret) {
-                    utils::Logger::getInstance().log("tick(): Player successfully got out of prison.");
-                    movePlayer(currentPlayer, ret); // Move the player
-                    nextPlayer(); // Advance to the next player
-                    return;
-                }
+    // ── AnimatingDice → after dice input, move player ──────────────────
+    // Handled in provideInput() which sets currentStep back to here
+    // The continuation after dice roll is handled inline in provideInput
+
+    // ── Moving player (called from provideInput after dice) ────────────
+    // This is handled inline in provideInput's dice continuation
+
+    // ── InTileEvent → handle tile effect ───────────────────────────────
+    case GameStep::HandlingTile: {
+        handleTileEvent(savedPlayer, savedTile);
+        break;
+    }
+
+    // ── Waiting states: do nothing, waiting for provideInput ───────────
+    case GameStep::WaitingBuyDecision:
+    case GameStep::WaitingAuction:
+    case GameStep::WaitingBuild:
+    case GameStep::WaitingSell:
+    case GameStep::WaitingUpdate:
+    case GameStep::AnimatingDice:
+    case GameStep::WaitingPrisonDice:
+    case GameStep::WaitingPrisonPayOut:
+        // Waiting for UI input — nothing to do
+        break;
+
+    // ── TurnEnd → next player and loop ─────────────────────────────────
+    case GameStep::TurnEnd:
+        nextPlayer();
+        currentStep = GameStep::Idle;
+        advance();
+        break;
+
+    // ── GameOver → stop ────────────────────────────────────────────────
+    case GameStep::GameOver:
+        break;
+
+    // ── MovingPlayer → continue after UI update ────────────────────────
+    case GameStep::MovingPlayer:
+        // movePlayer has finished, now handle the tile
+        currentStep = GameStep::HandlingTile;
+        handleTileEvent(getCurrentPlayer(), tiles[getCurrentPlayer()->getPosition()]);
+        break;
+    }
+}
+
+void GameInstance::provideInput(const std::any& result) {
+    utils::Logger::getInstance().log("provideInput(): step=" + std::to_string(static_cast<int>(currentStep)));
+
+    switch (currentStep) {
+
+    // ── Prison dice result ─────────────────────────────────────────────
+    case GameStep::WaitingPrisonDice: {
+        int diceValue = std::any_cast<int>(result);
+        Player* cp = getCurrentPlayer();
+
+        if (diceValue != 0) {
+            // Successfully rolled out of prison
+            utils::Logger::getInstance().log("provideInput(): Player escaped prison with dice.");
+            movePlayer(cp, diceValue);
+            // movePlayer now emits signals and doesn't block
+            // It sets currentStep appropriately
+            if (currentStep == GameStep::WaitingUpdate || currentStep == GameStep::WaitingHomeReward) {
+                return; // movePlayer is waiting for UI
             }
+            nextPlayer();
+            currentStep = GameStep::Idle;
+            advance();
+            return;
+        }
 
-            if (currentPlayer->getCash() >= constant::prisonReleasePrice[currentPlayer->getPrisonTime()]) {
-                if (std::any_cast<bool>(waitForUserInput(PrisonPayOut, constant::prisonReleasePrice[currentPlayer->getPrisonTime()]))) {
-                    utils::Logger::getInstance().log("tick(): Player paid to get out of prison.");
-                    currentPlayer->addCash(-constant::prisonReleasePrice[currentPlayer->getPrisonTime()]); // Deduct prison release price from player
-                    currentPlayer->setPrisonTime(0); // Reset prison time
-                }
+        // Failed this attempt
+        prisonAttempt++;
+        if (prisonAttempt < 3) {
+            currentStep = GameStep::WaitingPrisonDice;
+            emit prisonDiceNeeded(cp);
+            return;
+        }
+
+        // All 3 attempts failed — offer to pay
+        if (cp->getCash() >= constant::prisonReleasePrice[cp->getPrisonTime()]) {
+            currentStep = GameStep::WaitingPrisonPayOut;
+            savedAmount = constant::prisonReleasePrice[cp->getPrisonTime()];
+            emit prisonPayOutNeeded(cp, savedAmount);
+            return;
+        }
+
+        // Can't pay — stay in prison
+        utils::Logger::getInstance().log("provideInput(): Player cannot afford prison release.");
+        cp->setPrisonTime(cp->getPrisonTime() + 1);
+        nextPlayer();
+        currentStep = GameStep::Idle;
+        advance();
+        break;
+    }
+
+    // ── Prison pay decision ────────────────────────────────────────────
+    case GameStep::WaitingPrisonPayOut: {
+        bool pay = std::any_cast<bool>(result);
+        Player* cp = getCurrentPlayer();
+
+        if (pay) {
+            utils::Logger::getInstance().log("provideInput(): Player paid to leave prison.");
+            cp->addCash(-constant::prisonReleasePrice[cp->getPrisonTime()]);
+            cp->setPrisonTime(0);
+        } else {
+            utils::Logger::getInstance().log("provideInput(): Player chose not to pay.");
+            cp->setPrisonTime(cp->getPrisonTime() + 1);
+            nextPlayer();
+            currentStep = GameStep::Idle;
+            advance();
+        }
+        break;
+    }
+
+    // ── Dice roll result ───────────────────────────────────────────────
+    case GameStep::AnimatingDice: {
+        int diceValue = std::any_cast<int>(result);
+        utils::Logger::getInstance().log("provideInput(): Dice result=" + std::to_string(diceValue));
+
+        Player* cp = getCurrentPlayer();
+
+        if (diceValue < 0) {
+            // Three same dice → go to prison
+            int prisonPos = findNextTile(Tile::prison, cp->getPosition());
+            if (prisonPos != -1) {
+                cp->setPosition(prisonPos);
+                cp->setPrisonTime(0);
+                utils::Logger::getInstance().log("provideInput(): Player sent to prison for 3 same dice.");
+                Prison* pri = static_cast<Prison*>(tiles[prisonPos]);
+                currentStep = GameStep::TurnEnd;
+                emit playerPrisoned(cp, pri);
+                emit boardUpdateNeeded();
+                advance();
             } else {
-                utils::Logger::getInstance().log("tick(): Player failed to get out of prison.");
-                currentPlayer->setPrisonTime(currentPlayer->getPrisonTime() + 1); // Increment prison time
-                nextPlayer(); // Advance to the next player
+                utils::Logger::getInstance().log("provideInput(): No prison found on board.");
+                nextPlayer();
+                currentStep = GameStep::Idle;
+                advance();
             }
             return;
         }
-    }
 
-    int diceValue = std::any_cast<int>(waitForUserInput(Dice));
-    utils::Logger::getInstance().log("tick(): Player rolled dice " + std::to_string(diceValue) + ".");
-    if (diceValue < 0) { // Check if the third dice matches the first two
-        int prisonPos = findNextTile(Tile::TileType::prison, currentPosition); // Find the next prison tile
-
-        if (prisonPos != -1) {
-            currentPlayer->setPosition(prisonPos); // Move the player to the prison tile
-            currentPlayer->setPrisonTime(0); // Reset prison time
-            utils::Logger::getInstance().log("tick(): Player prisoned for 3 same dice.");
-            waitForUserInput(Prisoned, static_cast<Prison*>(tiles[prisonPos]));
-        } else {
-            utils::Logger::getInstance().log("tick(): No prison found.");
+        movePlayer(cp, std::abs(diceValue));
+        // movePlayer handles its own waiting states
+        if (currentStep == GameStep::WaitingUpdate || currentStep == GameStep::WaitingHomeReward) {
+            return; // Waiting for UI
         }
-    } else {
-        movePlayer(currentPlayer, abs(diceValue)); // Move the player
+        // If movePlayer completed synchronously (no home pass, no update needed)
+        nextPlayer();
+        currentStep = GameStep::Idle;
+        advance();
+        break;
     }
 
-    nextPlayer(); // Advance to the next player
+    // ── Home reward displayed ──────────────────────────────────────────
+    case GameStep::WaitingHomeReward: {
+        // UI acknowledged the reward display; continue movement
+        // The movement continues in the inline movePlayer logic
+        // This is handled by the movement loop in movePlayer
+        // For now, continue to the update step
+        currentStep = GameStep::WaitingUpdate;
+        emit boardUpdateNeeded();
+        // UI will call provideInput again after updating
+        break;
+    }
+
+    // ── UI updated after movement ──────────────────────────────────────
+    case GameStep::WaitingUpdate: {
+        // UI has updated the board; now handle the tile event
+        currentStep = GameStep::HandlingTile;
+        handleTileEvent(getCurrentPlayer(), tiles[getCurrentPlayer()->getPosition()]);
+        break;
+    }
+
+    // ── Buy decision ───────────────────────────────────────────────────
+    case GameStep::WaitingBuyDecision: {
+        bool buy = std::any_cast<bool>(result);
+        Buildable* buildableTile = static_cast<Buildable*>(savedTile);
+        Player* cp = getCurrentPlayer();
+
+        if (buy) {
+            cp->setCash(cp->getCash() - buildableTile->getPlotCost());
+            buildableTile->setOwner(cp);
+            emit propertyChanged(buildableTile);
+            emit playerUpdated(cp);
+            currentStep = GameStep::TurnEnd;
+            advance();
+        } else {
+            // Start auction
+            currentStep = GameStep::WaitingAuction;
+            savedTile = buildableTile;
+            emit auctionNeeded(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+        }
+        break;
+    }
+
+    // ── Auction result ─────────────────────────────────────────────────
+    case GameStep::WaitingAuction: {
+        auctionResult ar = std::any_cast<auctionResult>(result);
+        Buildable* buildableTile = static_cast<Buildable*>(savedTile);
+
+        if (ar.price >= constant::auctionReservePrice && ar.player != nullptr) {
+            ar.player->addCash(-ar.price);
+            buildableTile->setOwner(ar.player);
+            emit propertyChanged(buildableTile);
+            emit playerUpdated(ar.player);
+        }
+        currentStep = GameStep::TurnEnd;
+        advance();
+        break;
+    }
+
+    // ── Build decision ─────────────────────────────────────────────────
+    case GameStep::WaitingBuild: {
+        Buildable::buildStatus newStatus = std::any_cast<Buildable::buildStatus>(result);
+        Buildable* buildableTile = static_cast<Buildable*>(savedTile);
+        Player* cp = getCurrentPlayer();
+
+        if (newStatus > buildableTile->getStatus()) {
+            int levels = newStatus - buildableTile->getStatus();
+            cp->addCash(-buildableTile->getHouseCost() * levels);
+            buildableTile->setStatus(newStatus);
+            emit propertyChanged(buildableTile);
+            emit playerUpdated(cp);
+        }
+        currentStep = GameStep::TurnEnd;
+        advance();
+        break;
+    }
+
+    // ── Sell decision ──────────────────────────────────────────────────
+    case GameStep::WaitingSell: {
+        auto toSell = std::any_cast<std::vector<Buildable*>>(result);
+        Player* cp = getCurrentPlayer();
+        Buildable* creditorTile = static_cast<Buildable*>(savedTile);
+        cashType rentOwed = savedAmount;
+
+        if (toSell.empty()) {
+            // Player goes bankrupt
+            utils::Logger::getInstance().log("provideInput(): Player bankrupted.");
+            cashType total = cp->getCash();
+            for (auto& t : findOwnTiles(cp)) {
+                if (t->getType() == Tile::buildable) {
+                    total += static_cast<Buildable*>(t)->getValue();
+                    static_cast<Buildable*>(t)->setOwner(nullptr);
+                    static_cast<Buildable*>(t)->setStatus(Buildable::empty);
+                    emit propertyChanged(static_cast<Buildable*>(t));
+                }
+            }
+            creditorTile->getOwner()->addCash(total);
+            cp->setCash(0);
+            cp->setBankrupted(true);
+            emit playerBankrupted(cp);
+            emit playerUpdated(creditorTile->getOwner());
+            emit boardUpdateNeeded();
+        } else {
+            utils::Logger::getInstance().log("provideInput(): Player sold " + std::to_string(toSell.size()) + " tiles.");
+            cashType totalSellValue = 0;
+            for (auto& t : toSell) {
+                totalSellValue += t->getValue() / 2 / 100 * 100;
+                t->setOwner(nullptr);
+                t->setStatus(Buildable::empty);
+                emit propertyChanged(t);
+            }
+            cp->addCash(totalSellValue);
+
+            // Now pay the rent
+            cp->addCash(-rentOwed);
+            creditorTile->getOwner()->addCash(rentOwed);
+            emit playerUpdated(cp);
+            emit playerUpdated(creditorTile->getOwner());
+            emit rentPaid(cp, creditorTile->getOwner(), creditorTile, rentOwed);
+            emit boardUpdateNeeded();
+        }
+        currentStep = GameStep::TurnEnd;
+        advance();
+        break;
+    }
+
+    default:
+        utils::Logger::getInstance().log("provideInput(): Unhandled step " + std::to_string(static_cast<int>(currentStep)));
+        break;
+    }
 }
-/**
- * @brief Advances the game to the next player.
- */
+
+// ─── Game Logic ───────────────────────────────────────────────────────────────
+
 void GameInstance::nextPlayer() {
     do
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size(); // Move to the next player
-    while (players[currentPlayerIndex]->isBankrupted()); // Skip bankrupted players
-    utils::Logger::getInstance().log("nextPlayer(): Next player.");
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    while (players[currentPlayerIndex]->isBankrupted());
+    utils::Logger::getInstance().log("nextPlayer(): Next player index=" + std::to_string(currentPlayerIndex));
 }
 
-/**
- * @brief Moves a player a specified number of steps on the game board.
- * @param player The player to move.
- * @param steps The number of steps to move the player.
- * @return None
- */
 void GameInstance::movePlayer(Player* player, int steps) {
-    int origPosition = player->getPosition(); // Get the original position of the player
-    int overPosition = (origPosition + steps); // Calculate the new position before wrapping around
-    int newPosition = overPosition % tiles.size(); // Wrap around the board if necessary
+    int origPosition = player->getPosition();
+    int overPosition = origPosition + steps;
+    int newPosition = overPosition % tiles.size();
 
     utils::Logger::getInstance().log("movePlayer(): Player moving from " + std::to_string(origPosition) + " to " + std::to_string(newPosition) + ".");
 
-    player->setPosition(newPosition); // Set the new position of the player
+    player->setPosition(newPosition);
+    emit playerMoved(player, origPosition, newPosition);
 
-    int i = steps - 1;
-    auto it = tiles.begin() + origPosition; // Iterator to the original position
+    // Check for passing home along the way
+    int remaining = steps;
+    auto it = tiles.begin() + origPosition;
     if (it == tiles.end())
-        it = tiles.begin(); // Wrap around if at the end
-    while (i--) {
-        if (++it == tiles.end())
-            it = tiles.begin(); // Wrap around if at the end
+        it = tiles.begin();
 
-        if ((*it)->getType() == Tile::TileType::home) { // Check if the tile is a home tile
-            player->addCash(constant::homeReward); // Reward the player for passing home
-            utils::Logger::getInstance().log("movePlayer(): Rewarding player " + std::to_string(constant::homeReward) + " for passing home.");
-            waitForUserInput(HomeReward, constant::homeReward);
+    while (remaining > 0) {
+        remaining--;
+        if (++it == tiles.end())
+            it = tiles.begin();
+
+        if ((*it)->getType() == Tile::home) {
+            player->addCash(constant::homeReward);
+            utils::Logger::getInstance().log("movePlayer(): Passed home, rewarding " + std::to_string(constant::homeReward));
+            emit playerPassedGo(player, constant::homeReward);
+            emit playerUpdated(player);
         }
     }
 
-
-    utils::Logger::getInstance().log("movePlayer(): Waiting for the UI to update.");
-    waitForUserInput(Update); // Wait for the UI to update
-    utils::Logger::getInstance().log("movePlayer(): Handling tile event.");
-    handleTileEvent(player, tiles[newPosition]); // Handle the event for the new tile
+    // Request UI update before handling tile
+    savedPlayer = player;
+    savedTile = tiles[newPosition];
+    currentStep = GameStep::WaitingUpdate;
+    emit boardUpdateNeeded();
 }
 
-/**
- * @brief Handles the event that occurs when a player lands on a specific tile.
- * @param player The player who landed on the tile.
- * @param tile The tile the player landed on.
- */
 void GameInstance::handleTileEvent(Player* player, Tile* tile) {
-    switch (tile->getType()) {
-        case Tile::buildable: {
-            Buildable* buildableTile = static_cast<Buildable*>(tile);
+    utils::Logger::getInstance().log("handleTileEvent(): Player=" + std::to_string(findPlayerIndex(player)) + " tile=" + std::to_string(findTile(tile)));
 
-            if (!buildableTile->isOwned()) { // If the tile is not owned
-                if (player->getCash() >= buildableTile->getPlotCost() && std::any_cast<bool>(waitForUserInput(Buy, buyRequest({ buildableTile->getPlotCost(), buildableTile })))) {
-                    player->setCash(player->getCash() - buildableTile->getPlotCost()); // Deduct plot cost from player
-                    buildableTile->setOwner(player); // Set player as owner
-                } else {
-                    auctionResult result = std::any_cast<auctionResult>(waitForUserInput(Auction, auctionRequest({ constant::auctionReservePrice, constant::auctionBidIncrement, buildableTile })));
-                    if (result.price >= constant::auctionReservePrice) {
-                        result.player->addCash(-result.price); // Deduct auction price from winner
-                        buildableTile->setOwner(result.player); // Set auction winner as owner
-                    }
+    emit tileLanded(player, tile);
+
+    switch (tile->getType()) {
+
+    case Tile::buildable: {
+        Buildable* buildableTile = static_cast<Buildable*>(tile);
+
+        if (!buildableTile->isOwned()) {
+            // Unowned — offer to buy
+            if (player->getCash() >= buildableTile->getPlotCost()) {
+                savedTile = buildableTile;
+                currentStep = GameStep::WaitingBuyDecision;
+                emit buyDecisionNeeded(player, buildableTile, buildableTile->getPlotCost());
+                return;
+            }
+            // Can't afford — go to auction
+            savedTile = buildableTile;
+            currentStep = GameStep::WaitingAuction;
+            emit auctionNeeded(buildableTile, constant::auctionReservePrice, constant::auctionBidIncrement);
+            return;
+        }
+
+        if (buildableTile->getOwner() != player) {
+            // Pay rent to owner
+            cashType rent = buildableTile->getRent();
+            double dRentBonused = rent;
+            for (auto& t : findOwnTiles(buildableTile->getOwner())) {
+                if (t->getType() == Tile::buildable && static_cast<Buildable*>(t)->getColor() == buildableTile->getColor()) {
+                    dRentBonused *= constant::sameColorBonusMultiplier;
                 }
-            } else if (buildableTile->getOwner() != player) { // If the tile is owned by another player
-                cashType rent = buildableTile->getRent();
-                double dRentBonused = rent;
-                for (auto& t : findOwnTiles(buildableTile->getOwner())) {
-                    if (t->getType() == Tile::buildable && static_cast<Buildable*>(t)->getColor() == buildableTile->getColor()) {
-                        dRentBonused *= constant::sameColorBonusMultiplier;
-                    }
+            }
+            cashType rentBonused = static_cast<cashType>(dRentBonused / 100.0f) * 100;
+
+            if (player->getCash() < rentBonused) {
+                utils::Logger::getInstance().log("handleTileEvent(): Player cannot afford rent, needs to sell.");
+                savedTile = buildableTile;
+                savedAmount = rentBonused;
+                currentStep = GameStep::WaitingSell;
+                emit sellDecisionNeeded(player, rentBonused);
+                return;
+            }
+
+            // Can afford rent
+            player->addCash(-rentBonused);
+            buildableTile->getOwner()->addCash(rentBonused);
+            emit playerUpdated(player);
+            emit playerUpdated(buildableTile->getOwner());
+            emit rentPaid(player, buildableTile->getOwner(), buildableTile, rentBonused);
+            emit boardUpdateNeeded();
+        } else {
+            // Own tile — offer to build
+            if (buildableTile->getStatus() < Buildable::hotel && player->getCash() >= buildableTile->getHouseCost()) {
+                int maxLevels = std::min(
+                    static_cast<int>(Buildable::hotel - buildableTile->getStatus()),
+                    static_cast<int>(player->getCash() / buildableTile->getHouseCost()));
+                if (maxLevels > 0) {
+                    savedTile = buildableTile;
+                    currentStep = GameStep::WaitingBuild;
+                    emit buildDecisionNeeded(player, buildableTile, buildableTile->getHouseCost(), maxLevels);
+                    return;
                 }
-                cashType rentBonused = static_cast<cashType>(dRentBonused / 100.0f) * 100;
-                if (player->getCash() < rentBonused) {
-                    utils::Logger::getInstance().log("handleTileEvent(): Player does not have enough cash to pay rent.");
-                    auto toSell = std::any_cast<std::vector<Buildable*>>(waitForUserInput(Sell, rentBonused));
-                    if (toSell.empty()) {
-                        utils::Logger::getInstance().log("handleTileEvent(): Player bankrupted.");
-                        cashType total = player->getCash();
-                        for (auto& t : findOwnTiles(player)) {
-                            if (t->getType() == Tile::buildable) {
-                                total += static_cast<Buildable*>(t)->getValue();
-                                static_cast<Buildable*>(t)->setOwner(nullptr);
-                                static_cast<Buildable*>(t)->setStatus(Buildable::empty);
-                            }
-                        }
-                        buildableTile->getOwner()->addCash(total); // Give all cash to owner
-                        player->setCash(0); // Set player cash to 0
-                        player->setBankrupted(true); // Set player as bankrupted
+            }
+        }
+        break;
+    }
+
+    case Tile::prison:
+        player->setPrisonTime(0);
+        emit playerPrisoned(player, static_cast<Prison*>(tile));
+        emit boardUpdateNeeded();
+        break;
+
+    case Tile::tax: {
+        Tax* taxTile = static_cast<Tax*>(tile);
+        cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate() / 100.0f) * 100;
+        utils::Logger::getInstance().log("handleTileEvent(): Tax paid " + std::to_string(taxToPay));
+        player->addCash(-taxToPay);
+        emit playerUpdated(player);
+        emit taxPaid(player, taxTile, taxToPay);
+        emit boardUpdateNeeded();
+        break;
+    }
+
+    case Tile::random: {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(0, 5);
+        int randomValue = distr(gen);
+        utils::Logger::getInstance().log("handleTileEvent(): Random value=" + std::to_string(randomValue));
+
+        switch (randomValue) {
+        case 0: {
+            Prison* pri = static_cast<Prison*>(tiles[findNextTile(Tile::prison, player->getPosition())]);
+            if (pri != nullptr) {
+                player->setPosition(findTile(pri));
+                player->setPrisonTime(0);
+                emit playerPrisoned(player, pri);
+            }
+            break;
+        }
+        case 1: {
+            Tax* tax = static_cast<Tax*>(tiles[findNextTile(Tile::tax, player->getPosition())]);
+            if (tax != nullptr) {
+                cashType taxToPay = static_cast<cashType>(player->getCash() * tax->getTaxRate() / 100.0f) * 100;
+                player->addCash(-taxToPay);
+                emit playerUpdated(player);
+                emit taxPaid(player, tax, taxToPay);
+            }
+            break;
+        }
+        case 2: {
+            Home* home = static_cast<Home*>(tiles[findNextTile(Tile::home, player->getPosition())]);
+            if (home != nullptr) {
+                player->addCash(constant::homeReward);
+                emit playerUpdated(player);
+                emit homeRewardCollected(player, constant::homeReward);
+            }
+            break;
+        }
+        case 3: {
+            auto ownTiles = findOwnTiles(player);
+            if (!ownTiles.empty()) {
+                int ran = std::uniform_int_distribution<>(0, ownTiles.size() - 1)(gen);
+                Buildable* bt = static_cast<Buildable*>(ownTiles[ran]);
+                if (bt->getStatus() < Buildable::hotel && player->getCash() >= bt->getHouseCost()) {
+                    int maxLevels = std::min(
+                        static_cast<int>(Buildable::hotel - bt->getStatus()),
+                        static_cast<int>(player->getCash() / bt->getHouseCost()));
+                    if (maxLevels > 0) {
+                        savedTile = bt;
+                        currentStep = GameStep::WaitingBuild;
+                        emit buildDecisionNeeded(player, bt, bt->getHouseCost(), maxLevels);
                         return;
                     }
-                    else {
-                        utils::Logger::getInstance().log("handleTileEvent(): Player sold " + std::to_string(toSell.size()) + " tiles.");
-                        cashType totalSellValue = 0;
-                        for (auto& t : toSell) {
-                            totalSellValue += t->getValue() / 2 / 100 * 100;
-                            t->setOwner(nullptr);
-                            t->setStatus(Buildable::empty);
-                        }
-                        player->addCash(totalSellValue);
-                        utils::Logger::getInstance().log("handleTileEvent(): Player cash now is $" + std::to_string(player->getCash()));
-                    }
-                }
-
-                player->addCash(- static_cast<cashType>(rentBonused)); // Deduct rent from player
-                buildableTile->getOwner()->addCash(static_cast<cashType>(rentBonused)); // Add rent to owner
-                waitForUserInput(RentPaid, rentRequest({ static_cast<cashType>(rentBonused), buildableTile }));
-            } else if (buildableTile->getOwner() == player) {
-                if (buildableTile->getStatus() < Buildable::buildStatus::hotel && player->getCash() >= buildableTile->getHouseCost()) {
-                Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
-                    if (ret) {
-                        utils::Logger::getInstance().log("handleTileEvent(): Player built " + std::to_string(ret - buildableTile->getStatus()) + " houses on tile #" + std::to_string(findTile(buildableTile)) + ".");
-                        Buildable::buildStatus num = static_cast<Buildable::buildStatus>(ret + buildableTile->getStatus());
-                        player->addCash(- buildableTile->getHouseCost() * static_cast<int>(ret));
-                        buildableTile->setStatus(num);
-                    }
-                }
-                else {
-                    utils::Logger::getInstance().log("handleTileEvent(): Player land on own tile but do not have enough money to build");
                 }
             }
             break;
         }
-
-        case Tile::prison:
-            player->setPrisonTime(0); // Set prison time to 0
-            waitForUserInput(Prisoned, static_cast<Prison*>(tile));
-            break;
-
-        case Tile::tax: {
-            Tax* taxTile = static_cast<Tax*>(tile);
-            cashType taxToPay = static_cast<cashType>(player->getCash() * taxTile->getTaxRate() / 100.0f) * 100; // Calculate tax to pay
-            utils::Logger::getInstance().log("handleTileEvent(): Player paid tax " + std::to_string(taxTile->getTaxRate()) + " * " + std::to_string(player->getCash()) + " = " + std::to_string(taxToPay) + ".");
-            player->addCash(-taxToPay); // Deduct tax from player
-            waitForUserInput(Taxed, taxRequest({ taxToPay, taxTile }));
-            break;
-        }
-
-        case Tile::random: {
-            std::random_device rd; // Obtain a random number from hardware
-            std::mt19937 gen(rd()); // Seed the generator
-            std::uniform_int_distribution<> distr(0, 5); // Define the range
-
-            int randomValue = distr(gen); // Generate the random number
-            utils::Logger::getInstance().log("handleTileEvent(): Generated random value: " + std::to_string(randomValue) + ".");
-
-            switch (randomValue) {
-            case 0: {
-                Prison* pri = static_cast<Prison*>(tiles[findNextTile(Tile::prison, player->getPosition())]);
-                if (pri != nullptr) {
-                    player->setPosition(findTile(pri));
-                    player->setPrisonTime(0);
-                    waitForUserInput(Prisoned, pri);
-                }
-                break;
+        case 4: {
+            auto ownTiles = findOwnTiles(player);
+            if (!ownTiles.empty()) {
+                int ran = std::uniform_int_distribution<>(0, ownTiles.size() - 1)(gen);
+                Buildable* bt = static_cast<Buildable*>(ownTiles[ran]);
+                bt->setOwner(nullptr);
+                bt->setStatus(Buildable::empty);
+                emit propertyChanged(bt);
+                emit randomEventTriggered(bt, QString("Random destruction! %1 lost tile #%2.")
+                    .arg(QString::fromStdString(player->getNickname()))
+                    .arg(findTile(bt)));
             }
-            case 1: {
-                Tax* tax = static_cast<Tax*>(tiles[findNextTile(Tile::tax, player->getPosition())]);
-                if (tax != nullptr) {
-                    cashType taxToPay = static_cast<cashType>(player->getCash() * tax->getTaxRate() / 100.0f) * 100;
-                    player->addCash(-taxToPay);
-                    waitForUserInput(Taxed, taxRequest({ taxToPay, tax }));
-                }
-                break;
-            }
-            case 2: {
-                Home* home = static_cast<Home*>(tiles[findNextTile(Tile::home, player->getPosition())]);
-                if (home != nullptr) {
-                    player->addCash(constant::homeReward);
-                    waitForUserInput(HomeReward, constant::homeReward);
-                }
-                break;
-            }
-            case 3: {
-                auto ownTiles = findOwnTiles(player);
-                if (!ownTiles.empty()) {
-                    int ran = std::uniform_int_distribution<>(0, ownTiles.size())(gen);
-                    Buildable* buildableTile = static_cast<Buildable*>(ownTiles[ran]);
-                    if (buildableTile->getStatus() < Buildable::buildStatus::hotel && player->getCash() >= buildableTile->getHouseCost()) {
-                        Buildable::buildStatus ret = std::any_cast<Buildable::buildStatus>(waitForUserInput(Build, buildableTile));
-                            if (ret) {
-                                utils::Logger::getInstance().log("handleTileEvent(): Player built " + std::to_string(ret - buildableTile->getStatus()) + " houses on tile #" + std::to_string(findTile(buildableTile)) + ".");
-                                int num = ret - buildableTile->getStatus();
-                                player->addCash(- buildableTile->getHouseCost() * num);
-                                buildableTile->setStatus(ret);
-                            }
-                    }
-                }
-                break;
-            }
-            case 4: {
-                auto ownTiles = findOwnTiles(player);
-                if (!ownTiles.empty()) {
-                    int ran = std::uniform_int_distribution<>(0, ownTiles.size())(gen);
-                    Buildable* buildableTile = static_cast<Buildable*>(ownTiles[ran]);
-                    buildableTile->setOwner(nullptr); // What a pity...
-                    buildableTile->setStatus(Buildable::empty); // Poor player...
-                    waitForUserInput(RandomDestruction, buildableTile);
-                }
-                break;
-            }
-            case 5: {
-                cashType cur = player->getCash();
-                player->setCash(cur * 2);
-                waitForUserInput(RandomEarn, cur);
-            }
-            }
-
             break;
         }
-
-        case Tile::home:
-            // Maybe some rewards?
+        case 5: {
+            cashType cur = player->getCash();
+            player->setCash(cur * 2);
+            emit playerUpdated(player);
+            emit randomEventTriggered(tile, QString("Random earn! %1's money doubled to $%2.")
+                .arg(QString::fromStdString(player->getNickname()))
+                .arg(cur * 2));
             break;
+        }
+        }
 
-        default:
-            break;
+        emit boardUpdateNeeded();
+        break;
+    }
+
+    case Tile::home:
+        // Nothing special — just landing on home
+        break;
+
+    default:
+        break;
+    }
+
+    // If we reached here (no async wait happened), advance to next turn
+    if (currentStep == GameStep::HandlingTile) {
+        currentStep = GameStep::TurnEnd;
+        advance();
     }
 }

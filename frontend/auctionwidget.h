@@ -18,7 +18,7 @@ class auctionWidget : public QWidget
 public:
     explicit auctionWidget(QWidget *parent = nullptr);
     ~auctionWidget();
-    void initialize();
+    void initialize(game::gamePlay::Buildable* tile, game::cashType reservePrice, game::cashType bidIncrement);
 
 private:
     Ui::auctionWidget *ui;

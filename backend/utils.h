@@ -4,7 +4,6 @@
 #include <fstream>
 #include <string>
 #include <ctime>
-#include <shared_mutex>
 
 namespace utils {
 
@@ -12,13 +11,12 @@ namespace utils {
     private:
         std::ofstream logFile;
         std::string logFileName;
-        mutable std::shared_mutex mtx;
 
         Logger();
         ~Logger();
 
-        Logger(const Logger&) = delete;             // disable copy constructor
-        Logger& operator=(const Logger&) = delete;  // disable copy assignment
+        Logger(const Logger&) = delete;
+        Logger& operator=(const Logger&) = delete;
 
         std::string generateLogFileName();
         std::string getCurrentTime();

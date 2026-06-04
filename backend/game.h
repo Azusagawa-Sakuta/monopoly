@@ -3,12 +3,10 @@
 
 #include <string>
 #include <vector>
-#include <functional>
 #include <array>
-#include <shared_mutex>
 #include <any>
-#include <condition_variable>
 #include <variant>
+#include <QObject>
 #include "constant.h"
 
 namespace game {
@@ -18,7 +16,6 @@ namespace game {
             cashType cash;
             int position;
             int prisonTime;
-            mutable std::shared_mutex mtx;
             std::string nickname;
             std::string imagePath;
             bool bankrupted;
@@ -44,9 +41,6 @@ namespace game {
         };
 
         class ComputerPlayer : public Player {
-        private:
-            std::shared_mutex mtxComputer;
-
         public:
             ComputerPlayer(cashType initialCash = constant::initialCash);
             ~ComputerPlayer() override;
@@ -61,7 +55,6 @@ namespace game {
 
         private:
             TileType type;
-            mutable std::shared_mutex mtx;
 
         public:
             Tile(TileType _type = placeholder);
@@ -82,13 +75,9 @@ namespace game {
             player::Player* owner;
             buildStatus status;
             int color;
-            mutable std::shared_mutex mtxBuildable;
-            mutable std::condition_variable_any cv;
-            mutable bool userInputReady = false;
-            mutable std::any userInputResult;
 
         public:
-            Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost, 
+            Buildable(cashType _plotCost = constant::defaultPlotCost, cashType _houseCost = constant::defaultHouseCost,
                       cashType _basicRent = constant::defaultBasicRent, std::array<game::cashType, 6>& _houseRent = constant::defaultHouseRent);
             ~Buildable() override;
 
@@ -106,18 +95,12 @@ namespace game {
         };
 
         class Home : public Tile {
-        private:
-            mutable std::shared_mutex mtxHome;
-
         public:
             Home();
             ~Home() override;
         };
 
         class Prison : public Tile {
-        private:
-            mutable std::shared_mutex mtxPrison;
-
         public:
             Prison();
             ~Prison() override;
@@ -126,7 +109,6 @@ namespace game {
         class Tax : public Tile {
         private:
             double taxRate;
-            mutable std::shared_mutex mtxTax;
 
         public:
             Tax(double _rate = constant::defaultTaxRate);
@@ -137,58 +119,38 @@ namespace game {
         };
 
         class Random : public Tile {
-        private:
-            mutable std::shared_mutex mtxRandom;
-
         public:
             Random();
             ~Random() override;
         };
 
-        class GameInstance {
-        public:
-            enum eventType {
-                None, Update, Dice, Prisoned, PrisonPayOut, PrisonDice, Buy, RentPaid, Taxed, HomeReward, Auction, Build, RandomDestruction, RandomEarn, Sell
-            };
+        // State machine steps for the game loop
+        enum class GameStep {
+            Idle,
+            RollingDice,
+            AnimatingDice,
+            MovingPlayer,
+            HandlingTile,
+            WaitingBuyDecision,
+            WaitingPrisonDice,
+            WaitingPrisonPayOut,
+            WaitingAuction,
+            WaitingBuild,
+            WaitingSell,
+            WaitingUpdate,
+            TurnEnd,
+            GameOver
+        };
 
-        private:
-            std::vector<Tile*> tiles;
-            std::vector<player::Player*> players;
-            int currentPlayerIndex;
-            mutable std::shared_mutex mtx;
-            mutable std::condition_variable_any cv;
-            mutable bool userInputReady = false;
-            mutable std::any userInputResult;
-            mutable eventType activeEvent;
-            mutable std::any eventParam;
-
-            GameInstance();
-            ~GameInstance();
-            GameInstance(const GameInstance&) = delete;
-            GameInstance& operator=(const GameInstance&) = delete;
-
-            void nextPlayer();
-            void movePlayer(player::Player* player, int steps);
-            void handleTileEvent(player::Player* player, Tile* tile);
+        class GameInstance : public QObject {
+            Q_OBJECT
 
         public:
-            std::function<void(player::Player* player)> callbackPlayerUpdate;
-            std::function<void(player::Player* player, int diceValue1, int diceValue2)> callbackDice;
-            std::function<void(player::Player* player, int diceValue3)> callbackDice3rd;
-            std::function<void(player::Player* player, Prison* tile)> callbackPrison;
-            std::function<void(player::Player* player, Prison* tile, cashType cashToPay)> callbackPrisonPayOut;
-            std::function<void(player::Player* player, Buildable* tile, cashType cashToPay)> callbackBuy;
-            std::function<void(player::Player* player, Buildable* tile, cashType cashPaid)> callbackRent;
-            std::function<void(player::Player* player, Tax* tile, cashType cashPaid)> callbackTax;
-            std::function<void(player::Player* player, Home* tile, cashType cashReceived)> callbackHomeReward;
-            std::function<void(Buildable* tile, cashType reservePrice, cashType bidIncrement)> callbackAuction;
-            std::function<void(Tile* tile)> callbackTileUpdate;
-
             struct auctionResult {
                 cashType price;
                 player::Player* player;
             };
-            
+
             struct auctionRequest {
                 cashType reservePrice;
                 cashType bidIncrement;
@@ -210,11 +172,28 @@ namespace game {
                 Tax* tile;
             };
 
-            eventType getActiveEvent() const;
-            std::any getActiveEventParam() const;
-            void endEvent();
-            void notifyUserInput(const std::any result);
-            std::any waitForUserInput(eventType event, std::any param = std::monostate());
+        private:
+            std::vector<Tile*> tiles;
+            std::vector<player::Player*> players;
+            int currentPlayerIndex;
+            GameStep currentStep;
+
+            // Saved context for resuming after user input
+            player::Player* savedPlayer;
+            Tile* savedTile;
+            cashType savedAmount;
+            GameStep returnStep;
+
+            GameInstance();
+            ~GameInstance();
+            GameInstance(const GameInstance&) = delete;
+            GameInstance& operator=(const GameInstance&) = delete;
+
+            void nextPlayer();
+            void movePlayer(player::Player* player, int steps);
+            void handleTileEvent(player::Player* player, Tile* tile);
+
+        public:
             static GameInstance& getInstance();
             const std::vector<Tile*>& getTiles() const;
             const std::vector<player::Player*>& getPlayers() const;
@@ -225,7 +204,42 @@ namespace game {
             void addTile(Tile* tile);
             void addPlayer(player::Player* player);
             player::Player* getCurrentPlayer() const;
-            void tick();
+
+            // New event-driven API
+            void advance();
+            void provideInput(const std::any& result);
+
+        signals:
+            // State transitions
+            void turnStarted(player::Player* player);
+            void gameEnded(player::Player* winner);
+
+            // Dice and movement
+            void diceRolled(player::Player* player, int dice1, int dice2);
+            void playerMoved(player::Player* player, int fromPosition, int toPosition);
+            void playerPassedGo(player::Player* player, cashType reward);
+
+            // Tile events (automatic — just notify UI)
+            void tileLanded(player::Player* player, Tile* tile);
+            void rentPaid(player::Player* payer, player::Player* owner, Buildable* tile, cashType amount);
+            void taxPaid(player::Player* player, Tax* tile, cashType amount);
+            void homeRewardCollected(player::Player* player, cashType amount);
+            void randomEventTriggered(Tile* tile, const QString& description);
+            void playerPrisoned(player::Player* player, Prison* tile);
+
+            // Tile events (need human input — UI must call provideInput)
+            void buyDecisionNeeded(player::Player* player, Buildable* tile, cashType cost);
+            void prisonDiceNeeded(player::Player* player);
+            void prisonPayOutNeeded(player::Player* player, cashType cost);
+            void auctionNeeded(Buildable* tile, cashType reservePrice, cashType bidIncrement);
+            void buildDecisionNeeded(player::Player* player, Buildable* tile, cashType houseCost, int maxLevels);
+            void sellDecisionNeeded(player::Player* player, cashType amountNeeded);
+
+            // State changes
+            void playerUpdated(player::Player* player);
+            void playerBankrupted(player::Player* player);
+            void propertyChanged(Buildable* tile);
+            void boardUpdateNeeded();
         };
     }
 }

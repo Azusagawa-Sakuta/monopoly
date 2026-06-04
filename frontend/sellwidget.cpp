@@ -4,6 +4,7 @@
 sellWidget::sellWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::sellWidget)
+    , rentAmount(0)
 {
     ui->setupUi(this);
 
@@ -16,15 +17,15 @@ sellWidget::~sellWidget()
     delete ui;
 }
 
-void sellWidget::initialize() {
+void sellWidget::initialize(game::cashType amountNeeded) {
+    rentAmount = amountNeeded;
     auto& gameInstance = game::gamePlay::GameInstance::getInstance();
     auto currentPlayer = gameInstance.getCurrentPlayer();
     game::cashType cash = currentPlayer->getCash();
-    auto rent = std::any_cast<game::cashType>(gameInstance.getActiveEventParam());
-    auto remaining = rent - cash;
+    auto remaining = rentAmount - cash;
 
     ui->labelIntro->setText(QString("You have %1$, but have to pay %2$. Still need to pay %3$.")
-                            .arg(cash).arg(rent).arg(remaining));
+                            .arg(cash).arg(rentAmount).arg(remaining));
 
     auto ownTiles = gameInstance.findOwnTiles(currentPlayer);
 
@@ -95,13 +96,13 @@ void sellWidget::on_sellButton_clicked() {
         }
     }
 
-    gameInstance.notifyUserInput(toSell);
+    gameInstance.provideInput(toSell);
     this->close();
 }
 
 void sellWidget::on_cancelButton_clicked() {
     std::vector<game::gamePlay::Buildable*> toSell;
-    game::gamePlay::GameInstance::getInstance().notifyUserInput(toSell);
+    game::gamePlay::GameInstance::getInstance().provideInput(toSell);
     this->close();
 }
 
@@ -109,7 +110,6 @@ void sellWidget::update() {
     auto& gameInstance = game::gamePlay::GameInstance::getInstance();
     auto currentPlayer = gameInstance.getCurrentPlayer();
     game::cashType cash = currentPlayer->getCash();
-    auto rent = std::any_cast<game::cashType>(gameInstance.getActiveEventParam());
 
     QStandardItemModel *model2 = static_cast<QStandardItemModel*>(ui->treeView2->model());
     int totalValue = 0;
@@ -120,7 +120,7 @@ void sellWidget::update() {
     int sellValue = totalValue / 2;
     ui->label2->setText(QString("Total Value: %1$").arg(sellValue));
 
-    if (sellValue + cash >= rent) {
+    if (sellValue + cash >= rentAmount) {
         ui->sellButton->setEnabled(true);
     } else {
         ui->sellButton->setEnabled(false);
