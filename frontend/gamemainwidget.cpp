@@ -2,6 +2,7 @@
 #include "ui_gamemainwidget.h"
 #include "auctionwidget.h"
 #include "sellwidget.h"
+
 #include <QGraphicsRectItem>
 #include <QMessageBox>
 #include <QInputDialog>
@@ -12,7 +13,9 @@
 #include <vector>
 #include <random>
 #include <QGuiApplication>
+#include <QTimer>
 #include <QMovie>
+
 #include "../backend/game.h"
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
@@ -114,16 +117,26 @@ void gameMainWidget::onDiceRolled(game::player::Player* player, int dice1, int d
     Q_UNUSED(dice1);
     Q_UNUSED(dice2);
     isPrisonDiceMode = false;
-    auto& g = game::gamePlay::GameInstance::getInstance();
 
     if (player->isComputer()) {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> distr(2, 17);
-        int sum = distr(gen);
-        QMessageBox::information(this, "Computer Roll Dice",
-            QString::fromStdString(player->getNickname()) + " rolled dice and moves to another tile.");
-        g.provideInput(sum);
+        std::uniform_int_distribution<> distr(1, 6);
+        int d1 = distr(gen);
+        int d2 = distr(gen);
+        int result = 0;
+        if (d1 == d2) {
+            int d3 = distr(gen);
+            result = (d1 == d3) ? (-3 * d3) : (d1 * 2 + d3);
+        } else {
+            result = d1 + d2;
+        }
+        QString msg = QString::fromStdString(player->getNickname())
+                      + " rolled " + QString::number(result) + ".";
+        QTimer::singleShot(200, this, [this, result, msg]() {
+            QMessageBox::information(this, "Computer Roll Dice", msg);
+            game::gamePlay::GameInstance::getInstance().provideInput(result);
+        });
     } else {
         ui->rollDiceButton->setDisabled(false);
     }
@@ -252,29 +265,31 @@ void gameMainWidget::onPlayerPrisoned(game::player::Player* player, game::gamePl
 
 void gameMainWidget::onPrisonDiceNeeded(game::player::Player* player) {
     isPrisonDiceMode = true;
-    auto& g = game::gamePlay::GameInstance::getInstance();
 
     if (player->isComputer()) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> distr(1, 6);
-        std::uniform_int_distribution<> distr2(1, 6);
-        if (distr(gen) == distr2(gen)) {
-            int value = distr(gen) * 2;
-            QMessageBox::information(this, "Computer Roll Dice In Prison",
-                QString::fromStdString(player->getNickname()) + " rolled doubles and escaped prison!");
-            g.provideInput(value);
-        } else {
-            QMessageBox::information(this, "Computer Roll Dice In Prison",
-                QString::fromStdString(player->getNickname()) + " failed to roll doubles.");
-            g.provideInput(0);
-        }
+        int d1 = distr(gen);
+        int d2 = distr(gen);
+        loadDice(d1, d2);
+
+        bool escaped = (d1 == d2);
+        int result = escaped ? (d1 + d2) : 0;
+        QString msg = QString::fromStdString(player->getNickname())
+                      + (escaped ? " rolled doubles (" + QString::number(result) + ") and escaped prison"
+                                 : " rolled " + QString::number(result) + ", not doubles");
+        QTimer::singleShot(1800, this, [this, result, msg]() {
+            QMessageBox::information(this, "Computer Roll Dice In Prison", msg);
+            game::gamePlay::GameInstance::getInstance().provideInput(result);
+        });
     } else {
         ui->rollDiceButton->setDisabled(false);
     }
 }
 
 void gameMainWidget::onPrisonPayOutNeeded(game::player::Player* player, game::cashType cost) {
+    Q_UNUSED(player);
     Q_UNUSED(cost);
     // UI doesn't support prison payout — always decline
     auto& g = game::gamePlay::GameInstance::getInstance();
@@ -305,6 +320,7 @@ void gameMainWidget::onPropertyChanged(game::gamePlay::Buildable* tile) {
 
 void gameMainWidget::onBoardUpdateNeeded() {
     update();
+    usleep(500000); // 0.5 sec
     auto& g = game::gamePlay::GameInstance::getInstance();
     g.provideInput(std::monostate());
 }
@@ -312,60 +328,61 @@ void gameMainWidget::onBoardUpdateNeeded() {
 // ─── Dice Rolling ─────────────────────────────────────────────────────────────
 
 void gameMainWidget::on_rollDiceButton_clicked() {
-    auto& g = game::gamePlay::GameInstance::getInstance();
+    ui->rollDiceButton->setDisabled(true);
 
     if (ui->rollDiceButton->text() == "Roll dice") {
-        // First roll: two dice
         int d1, d2;
         rollDice(d1, d2);
+
         if (d1 != d2) {
-            // Not doubles
-            if (isPrisonDiceMode) {
-                // Prison mode: non-doubles = fail
-                g.provideInput(0);
-            } else {
-                // Normal mode: sum of dice
-                g.provideInput(d1 + d2);
-            }
-            ui->rollDiceButton->setDisabled(true);
-            ui->rollDiceButton->setText("Roll dice");
-        } else {
-            // Doubles
-            if (isPrisonDiceMode) {
-                // Prison mode: doubles = success!
-                g.provideInput(d1 + d2);
-                ui->rollDiceButton->setDisabled(true);
+            // Not doubles - normal sum or prison fail
+            int result = isPrisonDiceMode ? 0 : (d1 + d2);
+            QTimer::singleShot(1800, this, [this, result]() {
+                game::gamePlay::GameInstance::getInstance().provideInput(result);
                 ui->rollDiceButton->setText("Roll dice");
+            });
+        } else {
+            if (isPrisonDiceMode) {
+                int result = d1 + d2;
+                QTimer::singleShot(1800, this, [this, result]() {
+                    game::gamePlay::GameInstance::getInstance().provideInput(result);
+                    ui->rollDiceButton->setText("Roll dice");
+                });
             } else {
-                // Normal mode: doubles → roll 3rd die
+                // Normal mode: doubles → prepare for 3rd die
                 firstDiceNumber = d1;
-                ui->rollDiceButton->setText("Roll dice again");
+                QTimer::singleShot(1800, this, [this]() {
+                    ui->rollDiceButton->setText("Roll dice again");
+                    ui->rollDiceButton->setDisabled(false);
+                });
             }
         }
     } else {
-        // Second roll: 3rd die
-        int d3 = rand() % 6 + 1;
-        QStringList numberList = {"1", "2", "3", "4", "5", "6"};
-        QString gifPath3 = ":/resources/dice/dice" + numberList[d3 - 1] + ".gif";
+        // Third die roll after doubles
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distr(1, 6);
+        int d3 = distr(gen);
+        QString gifPath3 = ":/resources/dice/dice" + QString::number(d3) + ".gif";
         QMovie* movie3 = new QMovie(gifPath3);
         ui->diceLabel_1->setMovie(movie3);
         movie3->start();
 
-        if (firstDiceNumber == d3) {
-            // Three same dice → prison!
-            g.provideInput(-3 * d3);
-        } else {
-            g.provideInput(2 * firstDiceNumber + d3);
-        }
-        ui->rollDiceButton->setDisabled(true);
-        ui->rollDiceButton->setText("Roll dice");
+        int result = (firstDiceNumber == d3) ? (-3 * d3) : (2 * firstDiceNumber + d3);
         firstDiceNumber = 0;
+        QTimer::singleShot(1800, this, [this, result]() {
+            game::gamePlay::GameInstance::getInstance().provideInput(result);
+            ui->rollDiceButton->setText("Roll dice");
+        });
     }
 }
 
 void gameMainWidget::rollDice(int& d1, int& d2) {
-    d1 = rand() % 6 + 1;
-    d2 = rand() % 6 + 1;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(1, 6);
+    d1 = distr(gen);
+    d2 = distr(gen);
     loadDice(d1, d2);
 }
 
@@ -435,7 +452,7 @@ void gameMainWidget::updatePlayerInfo() {
         if (typeid(*it) == typeid(game::player::ComputerPlayer)) {
             it->setNickname("Computer " + std::to_string(++computers));
         } else {
-            it->setNickname("Player" + std::to_string(++players));
+            it->setNickname("Player " + std::to_string(++players));
         }
 
         QGraphicsColorizeEffect* grayscaleEffect = new QGraphicsColorizeEffect();

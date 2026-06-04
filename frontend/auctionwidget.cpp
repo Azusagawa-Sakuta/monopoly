@@ -199,14 +199,14 @@ void auctionWidget::nextPlayer() {
     if (round == (int)game::gamePlay::GameInstance::getInstance().getPlayers().size() + 1 && maxBidPlayerIndex == -1) {
         QMessageBox::information(this, "Auction Ended", QString::fromStdString("No one bid for tile " + std::to_string(game::gamePlay::GameInstance::getInstance().findTile(req.tile)) + "."));
         game::gamePlay::GameInstance::getInstance().provideInput(game::gamePlay::GameInstance::auctionResult{0, nullptr});
-        this->close();
+        this->hide();
         return;
     }
 
     if (maxBidPlayerIndex == currentPlayerIndex) {
         QMessageBox::information(this, "Auction Ended", QString::fromStdString(game::gamePlay::GameInstance::getInstance().getPlayers()[maxBidPlayerIndex]->getNickname() + " won the auction for $" + std::to_string(currentBid) + "."));
         game::gamePlay::GameInstance::getInstance().provideInput(game::gamePlay::GameInstance::auctionResult{currentBid, game::gamePlay::GameInstance::getInstance().getPlayers()[currentPlayerIndex]});
-        this->close();
+        this->hide();
         return;
     }
 

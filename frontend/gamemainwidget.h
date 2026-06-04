@@ -67,6 +67,8 @@ private:
     void connectGameSignals();
     void paintMap();
     int loadImage();
+    void rollDice(int& d1, int& d2);
+    void rollDiceBackdoor(int d1, int d2);
     void loadDice(int d1, int d2);
     void update();
     void updatePlayerInfo();

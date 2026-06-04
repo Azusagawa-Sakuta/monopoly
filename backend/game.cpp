@@ -246,6 +246,14 @@ void GameInstance::advance() {
         return;
     }
 
+    // ── RollingDice → transition to dice animation ─────────────────────
+    case GameStep::RollingDice: {
+        Player* cp = getCurrentPlayer();
+        currentStep = GameStep::AnimatingDice;
+        emit diceRolled(cp, 0, 0);
+        return;
+    }
+
     // ── WaitingPrisonDice: resume with dice result from UI ─────────────
     // Handled entirely in provideInput()
 
@@ -311,14 +319,9 @@ void GameInstance::provideInput(const std::any& result) {
             // Successfully rolled out of prison
             utils::Logger::getInstance().log("provideInput(): Player escaped prison with dice.");
             movePlayer(cp, diceValue);
-            // movePlayer now emits signals and doesn't block
-            // It sets currentStep appropriately
-            if (currentStep == GameStep::WaitingUpdate || currentStep == GameStep::WaitingHomeReward) {
-                return; // movePlayer is waiting for UI
-            }
-            nextPlayer();
-            currentStep = GameStep::Idle;
-            advance();
+            // movePlayer emits boardUpdateNeeded, which triggers the full signal
+            // chain (handleTileEvent -> ... -> TurnEnd -> advance). Always return
+            // here - the chain handles advancing to the next player.
             return;
         }
 
@@ -395,14 +398,9 @@ void GameInstance::provideInput(const std::any& result) {
         }
 
         movePlayer(cp, std::abs(diceValue));
-        // movePlayer handles its own waiting states
-        if (currentStep == GameStep::WaitingUpdate || currentStep == GameStep::WaitingHomeReward) {
-            return; // Waiting for UI
-        }
-        // If movePlayer completed synchronously (no home pass, no update needed)
-        nextPlayer();
-        currentStep = GameStep::Idle;
-        advance();
+        // movePlayer emits boardUpdateNeeded, which triggers the full signal
+        // chain (handleTileEvent -> ... -> TurnEnd -> advance). Always return
+        // here - the chain handles advancing to the next player.
         break;
     }
 
