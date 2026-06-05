@@ -9,6 +9,7 @@
 #include <QPen>
 #include <QBrush>
 #include <QResizeEvent>
+#include <QThread>
 #include <cmath>
 #include <vector>
 #include <random>
@@ -320,7 +321,7 @@ void gameMainWidget::onPropertyChanged(game::gamePlay::Buildable* tile) {
 
 void gameMainWidget::onBoardUpdateNeeded() {
     update();
-    usleep(500000); // 0.5 sec
+    QThread::usleep(500000); // 0.5 sec
     auto& g = game::gamePlay::GameInstance::getInstance();
     g.provideInput(std::monostate());
 }
