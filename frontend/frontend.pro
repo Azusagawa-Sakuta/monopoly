@@ -3,12 +3,14 @@ QT     += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++23
+CONFIG -= c++17
 
 win32 {
     contains(QMAKE_COMPILER, gcc) {
         QMAKE_CXXFLAGS += -std=c++23
     } else {
         QMAKE_CXXFLAGS -= /std:c++17
+        QMAKE_CXXFLAGS -= -std:c++17
         QMAKE_CXXFLAGS += /std:c++23preview
     }
 }
