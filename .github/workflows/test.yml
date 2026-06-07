@@ -2,6 +2,7 @@ name: Qt Build 2
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
 
