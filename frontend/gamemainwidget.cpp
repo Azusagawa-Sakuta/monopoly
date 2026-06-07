@@ -16,8 +16,10 @@
 #include <QGuiApplication>
 #include <QTimer>
 #include <QMovie>
+#include <ranges>
 
 #include "../backend/game.h"
+
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
