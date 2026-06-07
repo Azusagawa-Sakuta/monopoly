@@ -4,6 +4,7 @@
 
 #include <QGraphicsColorizeEffect>
 #include <ranges>
+#include <utility>
 
 auctionWidget::auctionWidget(QWidget *parent)
     : QWidget(parent)
@@ -26,7 +27,7 @@ void auctionWidget::initialize(game::gamePlay::Buildable* tile, game::cashType r
 
     for (auto&& [playerAvatar, scenePlayer] : std::views::zip(
         ui->playerAvatars,
-        scenePlayers | std::views::as_const
+        std::as_const(scenePlayers)
     )) {
         playerAvatar->setScene(scenePlayer);
     }
@@ -37,11 +38,11 @@ void auctionWidget::initialize(game::gamePlay::Buildable* tile, game::cashType r
     const auto& playerList = g.getPlayers();
 
     auto zipped_views = std::views::zip(
-        playerList | std::views::as_const,
-        scenePlayers | std::views::as_const,
-        ui->playerAvatars | std::views::as_const,
-        ui->playerLabels | std::views::as_const,
-        ui->playerValues | std::views::as_const
+        std::as_const(playerList),
+        std::as_const(scenePlayers),
+        std::as_const(ui->playerAvatars),
+        std::as_const(ui->playerLabels),
+        std::as_const(ui->playerValues)
     );
     for (auto&& [it, scenePlayer, playerAvatar, playerLabel, playerValue] : zipped_views) {
         const QPixmap pixmap(QString::fromStdString(it->getImagePath()));
