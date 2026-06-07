@@ -13,12 +13,24 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Qt
+    - name: Set up Qt and Official MinGW
       uses: jurplel/install-qt-action@v4
       with:
         host: windows
         version: '6.8.3'
         arch: win64_mingw
+        tools: 'tools_mingw,qt.tools.win64_mingw1310'
+
+    - name: Force Qt MinGW Precedence
+      shell: bash
+      run: |
+        echo "${{ env.IQTA_TOOLS }}/mingw1310_64/bin" >> $GITHUB_PATH
+
+    - name: Verify Compiler Version
+      shell: cmd
+      run: |
+        g++ --version
+        where g++
 
     - name: Build Qt Project
       shell: cmd
