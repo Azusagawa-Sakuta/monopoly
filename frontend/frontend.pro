@@ -4,6 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++23
 CONFIG -= c++17
+CONFIG -= gnu++1z
 
 win32 {
     contains(QMAKE_COMPILER, gcc) {
@@ -21,6 +22,7 @@ unix:!macx {
 
 macx {
     QMAKE_CXXFLAGS += -std=c++23
+    QMAKE_CXXFLAGS -= -std=gnu++1z
 }
 
 # You can make your code fail to compile if it uses deprecated APIs.
