@@ -13,48 +13,47 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Qt (Only Library)
+    - name: Set up Qt
       uses: jurplel/install-qt-action@v4
       with:
         host: windows
         version: '6.8.3'
         arch: win64_mingw
 
-    - name: Force Pre-installed MSVCRT MinGW
-      shell: bash
-      run: |
-        echo "C:\msys64\mingw64\bin" >> $GITHUB_PATH
-
-    - name: Verify Compiler
-      shell: cmd
-      run: |
-        g++ --version
-        where g++
+    - name: Setup MSYS2 (MSVCRT MinGW)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        path-type: inherit
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-make
 
     - name: Build Qt Project
-      shell: cmd
+      shell: msys2 {0}
       run: |
-        mkdir build
+        g++ --version
+        which g++
+        
+        mkdir -p build
         cd build
-        qmake ..\frontend\frontend.pro
-        mingw32-make
+        qmake ../frontend/frontend.pro
+        mingw32-make -j$(nproc)
 
     - name: Deploy Qt Dependencies
-      shell: cmd
+      shell: msys2 {0}
       run: |
-        cd build\release
+        cd build/release
         windeployqt monopoly.exe --release --no-compiler-runtime
 
     - name: Clean up build directory
-      shell: cmd
+      shell: msys2 {0}
       run: |
-        del /s /q build\release\*.o
-        del /s /q build\release\*.a
-        del /s /q build\release\*.h
-        del /s /q build\release\*.cpp
+        cd build/release
+        rm -f *.o *.a *.h *.cpp
 
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Qt-Windows
-        path: build\release\**
+        path: build/release/**
         if-no-files-found: warn
