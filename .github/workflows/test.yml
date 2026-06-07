@@ -1,4 +1,4 @@
-name: Qt Build
+name: Qt Build 2
 
 on:
   workflow_dispatch:
