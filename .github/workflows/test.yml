@@ -20,7 +20,6 @@ on:
         default: true
 
 jobs:
-
   build-windows:
     if: ${{ inputs.build_windows }}
     runs-on: windows-latest
@@ -73,6 +72,7 @@ jobs:
         name: Monopoly-Qt-Windows
         path: build/release/**
         if-no-files-found: warn
+
   build-linux:
     if: ${{ inputs.build_linux }}
     runs-on: ubuntu-24.04
@@ -120,11 +120,15 @@ jobs:
         host: 'mac'
         version: '6.8.3'
 
+    - name: Install GNU GCC
+      run: |
+        brew install gcc@15
+
     - name: Build Qt Project
       run: |
         mkdir -p build
         cd build
-        qmake ../frontend/frontend.pro
+        qmake ../frontend/frontend.pro "QMAKE_CC=gcc-13" "QMAKE_CXX=g++-13" "QMAKE_LINK=g++-13"
         make -j$(sysctl -n hw.ncpu)
 
     - name: Deploy macOS App and create DMG
@@ -135,6 +139,5 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: Monopoly-Qt-macOS
-        # 直接上传打包好的 DMG 镜像，下载后就能直接在 Mac 上挂载运行
         path: build/monopoly.dmg
         if-no-files-found: warn
