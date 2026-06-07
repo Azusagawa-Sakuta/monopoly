@@ -2,7 +2,32 @@ QT     += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++23
+CONFIG += c++2b
+CONFIG -= c++11 c++14 c++17 c++1z
+
+QMAKE_CXXFLAGS_CXX17 =
+QMAKE_CXXFLAGS_GNU_CXX17 =
+QMAKE_CXXFLAGS_CXX1Z =
+QMAKE_CXXFLAGS_GNU_CXX1Z =
+
+win32 {
+    contains(QMAKE_COMPILER, gcc) {
+        QMAKE_CXXFLAGS += -std=c++23
+    } else {
+        QMAKE_CXXFLAGS -= /std:c++17
+        QMAKE_CXXFLAGS -= -std:c++17
+        QMAKE_CXXFLAGS += /std:c++23preview
+    }
+}
+
+unix:!macx {
+    QMAKE_CXXFLAGS += -std=c++23
+}
+
+macx {
+    QMAKE_CXXFLAGS += -std=c++23
+    QMAKE_CXXFLAGS -= -std=gnu++1z
+}
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

@@ -10,12 +10,11 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
-        version: '5.15.2'
         host: 'linux'
 
     - name: Install Build Tools
@@ -25,7 +24,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        qmake ../QtApp/test.pro
+        qmake ../frontend/frontend.pro
         make
 
     - uses: actions/upload-artifact@v4
@@ -40,12 +39,11 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
-        version: '5.15.2'
         host: 'mac'
 
     - name: Install Build Tools
@@ -55,7 +53,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        qmake ../QtApp/test.pro
+        qmake ../frontend/frontend.pro
         make
 
     - uses: actions/upload-artifact@v4
@@ -69,7 +67,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Visual Studio Environment
       uses: ilammy/msvc-dev-cmd@v1
@@ -77,11 +75,11 @@ jobs:
         arch: x64
 
     - name: Set up Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
-        version: '6.8'
-        host: 'windows'
-        arch: 'win64_msvc2022_64'
+        host: windows
+        version: '6.8.3'
+        arch: win64_msvc2022_64
 
     - name: Build Qt Project
       shell: cmd

@@ -2,13 +2,145 @@ name: Qt Build 2
 
 on:
   workflow_dispatch:
-  
+    inputs:
+      build_windows:
+        description: 'Build for Windows (MinGW)'
+        required: true
+        type: boolean
+        default: true
+      build_linux:
+        description: 'Build for Linux'
+        required: true
+        type: boolean
+        default: true
+      build_macos:
+        description: 'Build for macOS'
+        required: true
+        type: boolean
+        default: true
+
 jobs:
-  somejobs:
-      runs-on: ubuntu-24.04
-      if: false
-  
-      steps:
-      - name: Who cares
-        run: |
-          echo Good luck.
+  build-windows:
+    if: ${{ inputs.build_windows }}
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        host: windows
+        version: '6.8.3'
+        arch: win64_mingw
+
+    - name: Setup MSYS2 (MSVCRT MinGW)
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        path-type: inherit
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-make
+
+    - name: Build Qt Project
+      shell: msys2 {0}
+      run: |
+        g++ --version
+        which g++
+        
+        mkdir -p build
+        cd build
+        qmake ../frontend/frontend.pro
+        mingw32-make -j$(nproc)
+
+    - name: Deploy Qt Dependencies
+      shell: msys2 {0}
+      run: |
+        cd build/release
+        windeployqt monopoly.exe --release --no-compiler-runtime
+
+    - name: Clean up build directory
+      shell: msys2 {0}
+      run: |
+        cd build/release
+        rm -f *.o *.a *.h *.cpp
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-Windows
+        path: build/release/**
+        if-no-files-found: warn
+
+  build-linux:
+    if: ${{ inputs.build_linux }}
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        host: 'linux'
+        version: '6.8.3'
+        arch: 'linux_gcc_64'
+
+    - name: Install Build Tools & System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libgl1-mesa-dev g++-13
+
+    - name: Build Qt Project
+      run: |
+        mkdir -p build
+        cd build
+        qmake ../frontend/frontend.pro "QMAKE_CC=gcc-13" "QMAKE_CXX=g++-13" "QMAKE_LINK=g++-13"
+        make -j$(nproc)
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-Linux
+        path: build/monopoly
+        if-no-files-found: warn
+
+  build-macos:
+    if: ${{ inputs.build_macos }}
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        host: 'mac'
+        version: '6.8.3'
+
+    - name: Install LLVM Clang
+      run: |
+        brew install llvm
+
+    - name: Build Qt Project
+      run: |
+        mkdir -p build
+        cd build
+        qmake ../frontend/frontend.pro \
+          "QMAKE_CC=$(brew --prefix llvm)/bin/clang" \
+          "QMAKE_CXX=$(brew --prefix llvm)/bin/clang++" \
+          "QMAKE_LINK=$(brew --prefix llvm)/bin/clang++"
+        make -j$(sysctl -n hw.ncpu)
+
+    - name: Deploy macOS App and create DMG
+      run: |
+        cd build
+        macdeployqt monopoly.app -dmg
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Monopoly-Qt-macOS
+        path: build/monopoly.dmg
+        if-no-files-found: warn  

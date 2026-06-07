@@ -16,8 +16,10 @@
 #include <QGuiApplication>
 #include <QTimer>
 #include <QMovie>
+#include <ranges>
 
 #include "../backend/game.h"
+
 
 gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
@@ -45,7 +47,7 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
 
     for (auto&& [playerAvatarGraphics, scenePlayer] : std::views::zip(
         ui->playerAvatarGraphicses,
-        scenePlayers | std::views::as_const
+        std::as_const(scenePlayers)
     )) {
         playerAvatarGraphics->setScene(scenePlayer);
     }
@@ -577,9 +579,9 @@ int gameMainWidget::loadImage() {
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto playerList = g.getPlayers();
     for (auto&& [it, scenePlayer, playerAvatarGraphics] : std::views::zip(
-        playerList | std::views::as_const,
-        scenePlayers | std::views::as_const,
-        ui->playerAvatarGraphicses | std::views::as_const
+        std::as_const(playerList),
+        std::as_const(scenePlayers),
+        std::as_const(ui->playerAvatarGraphicses)
     )) {
         const QPixmap pixmap(QString::fromStdString(it->getImagePath()));
         const QPixmap scaledPixmap = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
