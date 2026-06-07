@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-linux:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: ubuntu-latest
 
     steps:
@@ -35,7 +35,7 @@ jobs:
         if-no-files-found: warn
 
   build-macos:
-    if: ${{ false }}
+    if: ${{ true }}
     runs-on: macos-latest
 
     steps:
