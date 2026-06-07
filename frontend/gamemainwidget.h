@@ -56,10 +56,15 @@ private slots:
 private:
     Ui::gameMainWidget *ui;
     QGraphicsScene *scene;
-    QGraphicsScene *scenePlayer1;
-    QGraphicsScene *scenePlayer2;
-    QGraphicsScene *scenePlayer3;
-    QGraphicsScene *scenePlayer4;
+    union {
+        struct {
+            QGraphicsScene *scenePlayer1;
+            QGraphicsScene *scenePlayer2;
+            QGraphicsScene *scenePlayer3;
+            QGraphicsScene *scenePlayer4;
+        };
+        std::array<QGraphicsScene*, 4> scenePlayers;
+    };
 
     int firstDiceNumber;
     bool isPrisonDiceMode;

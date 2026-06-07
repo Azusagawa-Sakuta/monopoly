@@ -125,21 +125,21 @@ namespace game {
 
         // State machine steps for the game loop
         enum class GameStep {
-            Idle,
-            RollingDice,
-            AnimatingDice,
-            MovingPlayer,
-            HandlingTile,
-            WaitingBuyDecision,
-            WaitingPrisonDice,
-            WaitingPrisonPayOut,
-            WaitingAuction,
-            WaitingBuild,
-            WaitingSell,
-            WaitingUpdate,
-            WaitingHomeReward,
-            TurnEnd,
-            GameOver
+            Idle                = 0,
+            RollingDice         = 1,
+            AnimatingDice       = 2,
+            MovingPlayer        = 3,
+            HandlingTile        = 4,
+            WaitingBuyDecision  = 5,
+            WaitingPrisonDice   = 6,
+            WaitingPrisonPayOut = 7,
+            WaitingAuction      = 8,
+            WaitingBuild        = 9,
+            WaitingSell         = 10,
+            WaitingUpdate       = 11,
+            WaitingHomeReward   = 12,
+            TurnEnd             = 13,
+            GameOver            = 14
         };
 
         class GameInstance : public QObject {

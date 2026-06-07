@@ -23,43 +23,43 @@ gameMainWidget::gameMainWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::gameMainWidget),
     scene(new QGraphicsScene(this)),
-    scenePlayer1(new QGraphicsScene(this)),
-    scenePlayer2(new QGraphicsScene(this)),
-    scenePlayer3(new QGraphicsScene(this)),
-    scenePlayer4(new QGraphicsScene(this)),
     firstDiceNumber(0),
     isPrisonDiceMode(false) {
+
+    for (auto& scenePlayer : scenePlayers) {
+        scenePlayer = new QGraphicsScene(this);
+    }
+
     ui->setupUi(this);
     showMaximized();
 
-    scenePlayer1->clear();
-    scenePlayer2->clear();
-    scenePlayer3->clear();
-    scenePlayer4->clear();
+    for (auto& scenePlayer : scenePlayers) {
+        scenePlayer->clear();
+    }
+
     int playerNum = loadImage();
     ui->mapView->setScene(scene);
 
     ui->rollDiceButton->setDisabled(true);
     rollDiceBackdoor(1, 1);
 
-    ui->playerAvatarGraphics_1->setScene(scenePlayer1);
-    ui->playerAvatarGraphics_2->setScene(scenePlayer2);
-    ui->playerAvatarGraphics_3->setScene(scenePlayer3);
-    ui->playerAvatarGraphics_4->setScene(scenePlayer4);
-    switch(playerNum) {
-    case 2:
-        ui->playerAvatarGraphics_3->hide();
-        ui->playerInfo_3_1->hide();
-        ui->playerInfo_3_2->hide();
-        ui->playerInfo_3_3->hide();
-        ui->playerNickname_3->hide();
-        [[fallthrough]];
-    case 3:
-        ui->playerAvatarGraphics_4->hide();
-        ui->playerInfo_4_1->hide();
-        ui->playerInfo_4_2->hide();
-        ui->playerInfo_4_3->hide();
-        ui->playerNickname_4->hide();
+    for (auto&& [playerAvatarGraphics, scenePlayer] : std::views::zip(
+        ui->playerAvatarGraphicses,
+        scenePlayers | std::views::as_const
+    )) {
+        playerAvatarGraphics->setScene(scenePlayer);
+    }
+
+    for (auto&& [playerAvatarGraphics, playerInfos, playerNickname] : std::views::zip(
+        ui->playerAvatarGraphicses,
+        ui->allPlayerInfos,
+        ui->playerNicknames
+    ) | std::views::drop(playerNum)) {
+        playerAvatarGraphics->hide();
+        for (auto& playerInfo : playerInfos) {
+            playerInfo->hide();
+        }
+        playerNickname->hide();
     }
 
     // Connect backend signals to UI slots
@@ -279,7 +279,7 @@ void gameMainWidget::onPrisonDiceNeeded(game::player::Player* player) {
         int result = escaped ? (d1 + d2) : 0;
         QString msg = QString::fromStdString(player->getNickname())
                       + (escaped ? " rolled doubles (" + QString::number(result) + ") and escaped prison"
-                                 : " rolled " + QString::number(result) + ", not doubles");
+                                 : " rolled " + QString::number(d1 + d2) + ", not doubles");
         QTimer::singleShot(1800, this, [this, result, msg]() {
             QMessageBox::information(this, "Computer Roll Dice In Prison", msg);
             game::gamePlay::GameInstance::getInstance().provideInput(result);
@@ -321,7 +321,6 @@ void gameMainWidget::onPropertyChanged(game::gamePlay::Buildable* tile) {
 
 void gameMainWidget::onBoardUpdateNeeded() {
     update();
-    QThread::usleep(500000); // 0.5 sec
     auto& g = game::gamePlay::GameInstance::getInstance();
     g.provideInput(std::monostate());
 }
@@ -417,32 +416,18 @@ void gameMainWidget::update() {
     updatePlayerInfo();
 
     auto& g = game::gamePlay::GameInstance::getInstance();
-    switch (g.findPlayerIndex(g.getCurrentPlayer())) {
-    case 0:
-        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::red);
-        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
-        break;
-    case 1:
-        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::cyan);
-        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
-        break;
-    case 2:
-        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::yellow);
-        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::transparent);
-        break;
-    case 3:
-        ui->playerAvatarGraphics_1->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_2->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_3->setBackgroundBrush(Qt::transparent);
-        ui->playerAvatarGraphics_4->setBackgroundBrush(Qt::green);
-        break;
+    const auto& player = g.findPlayerIndex(g.getCurrentPlayer());
+    for (auto& playerAvatarGraphics : ui->playerAvatarGraphicses) {
+        playerAvatarGraphics->setBackgroundBrush(Qt::transparent);
     }
+
+    const std::array<const Qt::GlobalColor, 4> backgroundColor = {
+        Qt::red,
+        Qt::yellow,
+        Qt::cyan,
+        Qt::green
+    };
+    ui->playerAvatarGraphicses[player]->setBackgroundBrush(backgroundColor[player]);
 }
 
 void gameMainWidget::updatePlayerInfo() {
@@ -460,44 +445,15 @@ void gameMainWidget::updatePlayerInfo() {
         grayscaleEffect->setColor(Qt::gray);
         grayscaleEffect->setStrength(1.0);
 
-        bool isBankrupt = it->getCash() == 0 && it->isBankrupted();
-        if (computers + players == 1) {
-            ui->playerNickname_1->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_1_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_1_2->hide();
-            ui->playerInfo_1_3->setText(QString("Color: Red"));
-            if (isBankrupt)
-                ui->playerAvatarGraphics_1->setGraphicsEffect(grayscaleEffect);
-            else
-                ui->playerAvatarGraphics_1->setGraphicsEffect(nullptr);
-        } else if (computers + players == 2) {
-            ui->playerNickname_2->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_2_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_2_2->hide();
-            ui->playerInfo_2_3->setText(QString("Color: Yellow"));
-            if (isBankrupt)
-                ui->playerAvatarGraphics_2->setGraphicsEffect(grayscaleEffect);
-            else
-                ui->playerAvatarGraphics_2->setGraphicsEffect(nullptr);
-        } else if (computers + players == 3) {
-            ui->playerNickname_3->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_3_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_3_2->hide();
-            ui->playerInfo_3_3->setText(QString("Color: Blue"));
-            if (isBankrupt)
-                ui->playerAvatarGraphics_3->setGraphicsEffect(grayscaleEffect);
-            else
-                ui->playerAvatarGraphics_3->setGraphicsEffect(nullptr);
-        } else if (computers + players == 4) {
-            ui->playerNickname_4->setText(QString::fromStdString(it->getNickname()));
-            ui->playerInfo_4_1->setText(QString::fromStdString("Value: $" + std::to_string(it->getCash())));
-            ui->playerInfo_4_2->hide();
-            ui->playerInfo_4_3->setText(QString("Color: Green"));
-            if (isBankrupt)
-                ui->playerAvatarGraphics_4->setGraphicsEffect(grayscaleEffect);
-            else
-                ui->playerAvatarGraphics_4->setGraphicsEffect(nullptr);
-        }
+        bool isBankrupt = it->getCash() <= 0 && it->isBankrupted();
+        const auto curPlayerIdx = computers + players - 1;
+        ui->playerNicknames[curPlayerIdx]->setText(QString::fromStdString(it->getNickname()));
+        const std::array<const QString, 4> colorStr = { "Red", "Yellow", "Blue", "Green" };
+        ui->allPlayerInfos[curPlayerIdx][0]->setText(QString::fromStdString("Value: $") + QString::number(it->getCash()));
+        ui->allPlayerInfos[curPlayerIdx][1]->hide();
+        ui->allPlayerInfos[curPlayerIdx][2]->setText(QString("Color: ") + colorStr[curPlayerIdx]);
+        if (isBankrupt) ui->playerAvatarGraphicses[curPlayerIdx]->setGraphicsEffect(grayscaleEffect);
+        else ui->playerAvatarGraphicses[curPlayerIdx]->setGraphicsEffect(nullptr);
     }
 }
 
@@ -620,33 +576,17 @@ void gameMainWidget::paintMap() {
 int gameMainWidget::loadImage() {
     auto& g = game::gamePlay::GameInstance::getInstance();
     auto playerList = g.getPlayers();
-    int i = 0;
-    for (const auto& it : playerList) {
-        i++;
-        QPixmap pixmap(QString::fromStdString(it->getImagePath()));
-        QPixmap scaledPixmap = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    for (auto&& [it, scenePlayer, playerAvatarGraphics] : std::views::zip(
+        playerList | std::views::as_const,
+        scenePlayers | std::views::as_const,
+        ui->playerAvatarGraphicses | std::views::as_const
+    )) {
+        const QPixmap pixmap(QString::fromStdString(it->getImagePath()));
+        const QPixmap scaledPixmap = pixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         QGraphicsPixmapItem *item = new QGraphicsPixmapItem(scaledPixmap);
-        switch(i) {
-        case 1:
-            scenePlayer1->addItem(item);
-            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
-            ui->playerAvatarGraphics_1->fitInView(scenePlayer1->sceneRect(), Qt::KeepAspectRatio);
-            break;
-        case 2:
-            scenePlayer2->addItem(item);
-            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
-            ui->playerAvatarGraphics_2->fitInView(scenePlayer2->sceneRect(), Qt::KeepAspectRatio);
-            break;
-        case 3:
-            scenePlayer3->addItem(item);
-            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
-            ui->playerAvatarGraphics_3->fitInView(scenePlayer3->sceneRect(), Qt::KeepAspectRatio);
-            break;
-        case 4:
-            scenePlayer4->addItem(item);
-            item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
-            ui->playerAvatarGraphics_4->fitInView(scenePlayer4->sceneRect(), Qt::KeepAspectRatio);
-        }
+        scenePlayer->addItem(item);
+        item->setPos(-scaledPixmap.width() / 2, -scaledPixmap.height() / 2);
+        playerAvatarGraphics->fitInView(scenePlayer->sceneRect(), Qt::KeepAspectRatio);
     }
-    return i;
+    return playerList.size();
 }

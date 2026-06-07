@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QMessageBox>
+
 #include "../backend/game.h"
 
 namespace Ui {
@@ -23,10 +24,15 @@ public:
 private:
     Ui::auctionWidget *ui;
     QGraphicsScene *sceneTile;
-    QGraphicsScene *scenePlayer1;
-    QGraphicsScene *scenePlayer2;
-    QGraphicsScene *scenePlayer3;
-    QGraphicsScene *scenePlayer4;
+    union {
+        struct {
+            QGraphicsScene *scenePlayer1;
+            QGraphicsScene *scenePlayer2;
+            QGraphicsScene *scenePlayer3;
+            QGraphicsScene *scenePlayer4;
+        };
+        std::array<QGraphicsScene*, 4> scenePlayers;
+    };
 
     int currentBid;
     int currentPlayerIndex;

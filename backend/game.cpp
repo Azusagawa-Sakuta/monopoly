@@ -4,6 +4,7 @@
 #include <random>
 #include <algorithm>
 #include <QString>
+#include <QTimer>
 
 using namespace game;
 using namespace player;
@@ -208,7 +209,9 @@ void GameInstance::advance() {
         Player* winner = nullptr;
         for (const auto& p : players) {
             if (p->getCash() > 500000) {
-                emit gameEnded(p);
+                QTimer::singleShot(0, this, [this, p]() {
+                    emit gameEnded(p);
+                });
                 currentStep = GameStep::GameOver;
                 return;
             }
@@ -218,7 +221,9 @@ void GameInstance::advance() {
             }
         }
         if (notBankrupt == 1) {
-            emit gameEnded(winner);
+            QTimer::singleShot(0, this, [this, winner]() {
+                emit gameEnded(winner);
+            });
             currentStep = GameStep::GameOver;
             return;
         }
@@ -282,6 +287,7 @@ void GameInstance::advance() {
     case GameStep::AnimatingDice:
     case GameStep::WaitingPrisonDice:
     case GameStep::WaitingPrisonPayOut:
+    case GameStep::WaitingHomeReward:
         // Waiting for UI input — nothing to do
         break;
 
@@ -502,9 +508,10 @@ void GameInstance::provideInput(const std::any& result) {
             creditorTile->getOwner()->addCash(total);
             cp->setCash(0);
             cp->setBankrupted(true);
-            emit playerBankrupted(cp);
-            emit playerUpdated(creditorTile->getOwner());
-            emit boardUpdateNeeded();
+            QTimer::singleShot(0, this, [this, cp, creditorTile]() {
+                emit playerBankrupted(cp);
+                emit playerUpdated(creditorTile->getOwner());
+            });
         } else {
             utils::Logger::getInstance().log("provideInput(): Player sold " + std::to_string(toSell.size()) + " tiles.");
             cashType totalSellValue = 0;
@@ -519,12 +526,21 @@ void GameInstance::provideInput(const std::any& result) {
             // Now pay the rent
             cp->addCash(-rentOwed);
             creditorTile->getOwner()->addCash(rentOwed);
-            emit playerUpdated(cp);
-            emit playerUpdated(creditorTile->getOwner());
-            emit rentPaid(cp, creditorTile->getOwner(), creditorTile, rentOwed);
-            emit boardUpdateNeeded();
+            QTimer::singleShot(0, this, [this, cp]() {
+                emit playerUpdated(cp);
+            });
+            QTimer::singleShot(0, this, [this, creditorTile]() {
+                emit playerUpdated(creditorTile->getOwner());
+            });
+            QTimer::singleShot(0, this, [this, cp, creditorTile, rentOwed]() {
+                emit rentPaid(cp, creditorTile->getOwner(), creditorTile, rentOwed);
+            });
         }
         currentStep = GameStep::TurnEnd;
+        // // Change the State before update board, or causing any_cast wrong;
+        // QTimer::singleShot(0, this, [this]() {
+        //     emit boardUpdateNeeded();
+        // });
         advance();
         break;
     }

@@ -55,10 +55,15 @@ private slots:
 private:
     Ui::Widget *ui;
     QGraphicsScene *scene;
-    QGraphicsScene *scenePlayer1;
-    QGraphicsScene *scenePlayer2;
-    QGraphicsScene *scenePlayer3;
-    QGraphicsScene *scenePlayer4;
+    union {
+        struct {
+            QGraphicsScene *scenePlayer1;
+            QGraphicsScene *scenePlayer2;
+            QGraphicsScene *scenePlayer3;
+            QGraphicsScene *scenePlayer4;
+        };
+        std::array<QGraphicsScene*, 4> scenePlayers;
+    };
     int selectedPlayers;
     QVector<bool> player;
     QStringList imagePaths;

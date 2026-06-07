@@ -25,33 +25,78 @@ QT_BEGIN_NAMESPACE
 class Ui_gameMainWidget
 {
 public:
+    union {
+        struct {
+            QGraphicsView *playerAvatarGraphics_1;
+            QGraphicsView *playerAvatarGraphics_2;
+            QGraphicsView *playerAvatarGraphics_3;
+            QGraphicsView *playerAvatarGraphics_4;
+        };
+        std::array<QGraphicsView*, 4> playerAvatarGraphicses;
+    };
+
+    union {
+        struct {
+            union {
+                struct {
+                    QLabel *playerInfo_1_1;
+                    QLabel *playerInfo_1_2;
+                    QLabel *playerInfo_1_3;
+                };
+                std::array<QLabel*, 3> playerInfo1;
+            };
+            union {
+                struct {
+                    QLabel *playerInfo_2_1;
+                    QLabel *playerInfo_2_2;
+                    QLabel *playerInfo_2_3;
+                };
+                std::array<QLabel*, 3> playerInfo2;
+            };
+            union {
+                struct {
+                    QLabel *playerInfo_3_1;
+                    QLabel *playerInfo_3_2;
+                    QLabel *playerInfo_3_3;
+                };
+                std::array<QLabel*, 3> playerInfo3;
+            };
+            union {
+                struct {
+                    QLabel *playerInfo_4_1;
+                    QLabel *playerInfo_4_2;
+                    QLabel *playerInfo_4_3;
+                };
+                std::array<QLabel*, 3> playerInfo4;
+            };
+        };
+        std::array<std::array<QLabel*, 3>, 4> allPlayerInfos;
+    };
+
+    union {
+        struct {
+            QLabel *playerNickname_1;
+            QLabel *playerNickname_2;
+            QLabel *playerNickname_3;
+            QLabel *playerNickname_4;
+        };
+        std::array<QLabel*, 4> playerNicknames;
+    };
     QGraphicsView *mapView;
     QGridLayout *mainLayout;
     QVBoxLayout *playerLayout_4;
-    QLabel *playerNickname_4;
     QHBoxLayout *playerMainLayout_4;
-    QGraphicsView *playerAvatarGraphics_4;
     QVBoxLayout *playerInfoLayout_4;
-    QLabel *playerInfo_4_1;
-    QLabel *playerInfo_4_2;
-    QLabel *playerInfo_4_3;
+
     QSpacerItem *verticalSpacer;
     QVBoxLayout *playerLayout_2;
-    QLabel *playerNickname_2;
     QHBoxLayout *playerMainLayout_2;
-    QGraphicsView *playerAvatarGraphics_2;
     QVBoxLayout *playerInfoLayout_2;
-    QLabel *playerInfo_2_1;
-    QLabel *playerInfo_2_2;
-    QLabel *playerInfo_2_3;
+
     QVBoxLayout *playerLayout_1;
-    QLabel *playerNickname_1;
     QHBoxLayout *playerMainLayout_1;
-    QGraphicsView *playerAvatarGraphics_1;
     QVBoxLayout *playerInfoLayout_1;
-    QLabel *playerInfo_1_1;
-    QLabel *playerInfo_1_2;
-    QLabel *playerInfo_1_3;
+
     QVBoxLayout *verticalLayout;
     QSpacerItem *verticalSpacer_3;
     QHBoxLayout *horizontalLayout;
@@ -66,13 +111,9 @@ public:
     QSpacerItem *verticalSpacer_2;
     QSpacerItem *horizontalSpacer;
     QVBoxLayout *playerLayout_3;
-    QLabel *playerNickname_3;
     QHBoxLayout *playerMainLayout_3;
-    QGraphicsView *playerAvatarGraphics_3;
     QVBoxLayout *playerInfoLayout_3;
-    QLabel *playerInfo_3_1;
-    QLabel *playerInfo_3_2;
-    QLabel *playerInfo_3_3;
+
 
     void setupUi(QWidget *gameMainWidget)
     {

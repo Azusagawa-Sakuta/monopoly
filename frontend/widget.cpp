@@ -136,36 +136,15 @@ void Widget::loadPhotos() {
 }
 
 void Widget::loadProfiles(int player, int index) {
-    finalImagePaths[player - 1] = imagePaths[index];
+    player -= 1;
+    finalImagePaths[player] = imagePaths[index];
     QPixmap pixmap(imagePaths[index]);
     QPixmap thumbnail = pixmap.scaled(300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     QGraphicsPixmapItem *item = new QGraphicsPixmapItem(thumbnail);
-    switch (player) {
-    case 1:
-        scenePlayer1->clear();
-        scenePlayer1->addItem(item);
-        ui->playerProfilePhoto_1->setScene(scenePlayer1);
-        ui->playerProfilePhoto_1->show();
-        break;
-    case 2:
-        scenePlayer2->clear();
-        scenePlayer2->addItem(item);
-        ui->playerProfilePhoto_2->setScene(scenePlayer2);
-        ui->playerProfilePhoto_2->show();
-        break;
-    case 3:
-        scenePlayer3->clear();
-        scenePlayer3->addItem(item);
-        ui->playerProfilePhoto_3->setScene(scenePlayer3);
-        ui->playerProfilePhoto_3->show();
-        break;
-    case 4:
-        scenePlayer4->clear();
-        scenePlayer4->addItem(item);
-        ui->playerProfilePhoto_4->setScene(scenePlayer4);
-        ui->playerProfilePhoto_4->show();
-        break;
-    }
+    scenePlayers[player]->clear();
+    scenePlayers[player]->addItem(item);
+    ui->playerProfilePhotos[player]->setScene(scenePlayers[player]);
+    ui->playerProfilePhotos[player]->show();
 }
 
 void Widget::handleThumbnailDoubleClick(int index) {

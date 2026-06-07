@@ -25,38 +25,64 @@ QT_BEGIN_NAMESPACE
 class Ui_Widget
 {
 public:
+    QLabel *gameTitle;
+
     QGridLayout *gridLayout;
     QVBoxLayout *mainLayout;
     QHBoxLayout *titleLayout;
-    QPushButton *manualButton;
-    QSpacerItem *horizontalSpacer;
-    QLabel *gameTitle;
-    QSpacerItem *horizontalSpacer_2;
-    QHBoxLayout *profileLayout;
-    QVBoxLayout *playerLayout_1;
-    QGraphicsView *playerProfilePhoto_1;
-    QSpacerItem *verticalSpacer_1;
-    QPushButton *addComputer_1;
-    QPushButton *addPlayer_1;
-    QVBoxLayout *playerLayout_2;
-    QGraphicsView *playerProfilePhoto_2;
-    QSpacerItem *verticalSpacer_9;
-    QPushButton *addComputer_2;
-    QPushButton *addPlayer_2;
-    QVBoxLayout *playerLayout_3;
-    QGraphicsView *playerProfilePhoto_3;
-    QSpacerItem *verticalSpacer_3;
-    QPushButton *addComputer_3;
-    QPushButton *addPlayer_3;
-    QVBoxLayout *playerLayout_4;
-    QGraphicsView *playerProfilePhoto_4;
-    QSpacerItem *verticalSpacer_4;
-    QPushButton *addComputer_4;
-    QPushButton *addPlayer_4;
-    QHBoxLayout *photoListLayout;
-    QGraphicsView *profilePhotoList;
     QHBoxLayout *functionLayout;
+
+    QPushButton *manualButton;
+
+    QHBoxLayout *profileLayout;
+
+    QVBoxLayout *playerLayout_1;
+    QVBoxLayout *playerLayout_2;
+    QVBoxLayout *playerLayout_3;
+    QVBoxLayout *playerLayout_4;
+
+    QSpacerItem *horizontalSpacer;
+    QSpacerItem *horizontalSpacer_2;
     QSpacerItem *horizontalSpacer_3;
+
+    QSpacerItem *verticalSpacer_1;
+    QSpacerItem *verticalSpacer_3;
+    QSpacerItem *verticalSpacer_4;
+    QSpacerItem *verticalSpacer_9;
+
+    union {
+        struct {
+            QGraphicsView *playerProfilePhoto_1;
+            QGraphicsView *playerProfilePhoto_2;
+            QGraphicsView *playerProfilePhoto_3;
+            QGraphicsView *playerProfilePhoto_4;
+        };
+        std::array<QGraphicsView*, 4> playerProfilePhotos;
+    };
+
+    union {
+        struct {
+            QPushButton *addComputer_1;
+            QPushButton *addComputer_2;
+            QPushButton *addComputer_3;
+            QPushButton *addComputer_4;
+        };
+        std::array<QPushButton*, 4> addComputers;
+    };
+
+    union {
+        struct {
+            QPushButton *addPlayer_1;
+            QPushButton *addPlayer_2;
+            QPushButton *addPlayer_3;
+            QPushButton *addPlayer_4;
+        };
+        std::array<QPushButton*, 4> addPlayers;
+    };
+
+    QGraphicsView *profilePhotoList;
+    QHBoxLayout *photoListLayout;
+
     QPushButton *commitButton;
     QPushButton *cancelButton;
 

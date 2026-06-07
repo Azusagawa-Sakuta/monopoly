@@ -26,33 +26,60 @@ QT_BEGIN_NAMESPACE
 class Ui_auctionWidget
 {
 public:
-    QVBoxLayout *verticalLayout;
-    QSpacerItem *verticalSpacer_2;
-    QLabel *auctionLabel;
-    QSpacerItem *verticalSpacer;
-    QHBoxLayout *horizontalLayout_2;
+    QGridLayout *gridLayout;
+
     QGraphicsView *tileGraphics;
     QLabel *tileLabel;
-    QSpacerItem *verticalSpacer_4;
-    QGridLayout *gridLayout;
-    QGraphicsView *playerAvatar_3;
-    QLabel *playerLabel_4;
-    QLabel *playerLabel_1;
-    QGraphicsView *playerAvatar_2;
-    QGraphicsView *playerAvatar_1;
-    QLabel *playerLabel_2;
-    QLabel *playerLabel_3;
-    QGraphicsView *playerAvatar_4;
-    QLabel *playerValue_1;
-    QLabel *playerValue_2;
-    QLabel *playerValue_3;
-    QLabel *playerValue_4;
-    QHBoxLayout *horizontalLayout;
+
+    QLabel *auctionLabel;
     QLabel *currentBidLabel;
     QSpinBox *bidInput;
     QPushButton *bidButton;
     QPushButton *passButton;
-    QSpacerItem *verticalSpacer_3;
+
+    union {
+        struct {
+            QGraphicsView *playerAvatar_1;
+            QGraphicsView *playerAvatar_2;
+            QGraphicsView *playerAvatar_3;
+            QGraphicsView *playerAvatar_4;
+        };
+        std::array<QGraphicsView*, 4> playerAvatars;
+    };
+
+    union {
+        struct {
+            QSpacerItem *verticalSpacer;
+            QSpacerItem *verticalSpacer_2;
+            QSpacerItem *verticalSpacer_3;
+            QSpacerItem *verticalSpacer_4;
+        };
+        std::array<QSpacerItem*, 4> verticalSpacers;
+    };
+
+    union {
+        struct {
+            QLabel *playerLabel_1;
+            QLabel *playerLabel_2;
+            QLabel *playerLabel_3;
+            QLabel *playerLabel_4;
+        };
+        std::array<QLabel*, 4> playerLabels;
+    };
+
+    union {
+        struct {
+            QLabel *playerValue_1;
+            QLabel *playerValue_2;
+            QLabel *playerValue_3;
+            QLabel *playerValue_4;
+        };
+        std::array<QLabel*, 4> playerValues;
+    };
+
+    QHBoxLayout *horizontalLayout;
+    QHBoxLayout *horizontalLayout_2;
+    QVBoxLayout *verticalLayout;
 
     void setupUi(QWidget *auctionWidget)
     {

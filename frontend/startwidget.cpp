@@ -1,5 +1,4 @@
 #include "startwidget.h"
-#include "gamemainwidget.h"
 #include "ui_startwidget.h"
 #include <QMessageBox>
 #include <QDialog>
@@ -87,7 +86,7 @@ void startWidget::on_closeButton_clicked()
 void startWidget::on_aboutUsButton_clicked()
 {
     QMessageBox::information(this, "About us", "Code: IcaS66, Azusagawa-Sakuta\n"
-                                               "UI Design: IcaS66, Azusagawa-Sakut, Octopusa\n"
+                                               "UI Design: 155TuT, IcaS66, Azusagawa-Sakuta, Octopusa\n"
                                                "Test: IcaS66, 155TuT, Eleina, Azusagawa-Sakuta");
 }
 
